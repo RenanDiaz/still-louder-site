@@ -16,7 +16,8 @@
   <link rel="canonical" href="https://stillouder.space/" />
   <link rel="icon" href="https://i.imgur.com/CoA13WN.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://i.imgur.com/CoA13WN.jpg">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/comentarios.css">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:locale" content="es_PA" />
@@ -55,9 +56,18 @@
       </audio>
       <!-- Comentarios -->
       <div class="comment-box">
-        <label for="comentario" style="display:none;">Comentario</label>
-        <textarea id="comentario" placeholder="¿Qué te pareció la canción? Déjanos tu comentario..."
-          aria-label="Caja de comentarios"></textarea>
+        <form id="comentario-form" class="comentario-form">
+          <label for="comentario" class="comentario-label">Comentario</label>
+          <textarea id="comentario" name="comentario" placeholder="¿Qué te pareció la canción? Déjanos tu comentario..."
+            aria-label="Caja de comentarios" rows="3" class="comentario-textarea"></textarea>
+          <button id="enviar-comentario" type="submit" aria-label="Enviar comentario" class="comentario-boton">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+              <path
+                d="M15.854.146a.5.5 0 0 0-.527-.116l-15 6a.5.5 0 0 0 .036.94l6.57 2.19 2.19 6.57a.5.5 0 0 0 .94.036l6-15a.5.5 0 0 0-.116-.527zm-2.612 2.612-4.753 4.753-5.385-1.797 10.138-2.956zm-4.06 5.474 4.753-4.753-2.956 10.138-1.797-5.385z" />
+            </svg>
+          </button>
+        </form>
+        <div id="comentario-mensaje" class="comentario-mensaje"></div>
       </div>
       <footer class="footer-social">
         <div class="social-links">
@@ -113,6 +123,7 @@
         <div class="footer-text">&copy; Still Louder 2025</div>
       </footer>
     </div>
+    <script src="assets/js/script.js"></script>
   </main>
 </body>
 
