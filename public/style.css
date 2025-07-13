@@ -2,7 +2,7 @@
 .footer-social {
   width: 100%;
   padding: 18px 0 8px 0;
-  margin-top: 32px;
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,15 +34,16 @@
 @media (max-width: 600px) {
   .footer-social {
     padding: 12px 0 6px 0;
-    margin-top: 18px;
+    margin-top: 12px;
   }
   .footer-social .social-links {
-    gap: 12px;
+    gap: 18px;
   }
   .footer-social .footer-text {
     font-size: 0.85rem;
   }
 }
+
 body {
   margin: 0;
   background: black;
@@ -113,29 +114,6 @@ audio {
   color: black;
 }
 
-.heart-container {
-  margin-top: 15px;
-}
-
-.heart {
-  width: 40px;
-  height: 40px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.heart svg {
-  fill: #444;
-  transition: fill 0.3s ease;
-}
-
-.heart.active svg {
-  fill: #ff2e63;
-  transform: scale(1.2);
-}
-
 .comment-box {
   margin-top: 20px;
   width: 100%;
@@ -160,8 +138,9 @@ textarea {
 @media (max-width: 600px) {
   body {
     padding: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
     font-size: 16px;
+    background-position: top center;
   }
   .overlay {
     padding: 12px 4vw;
@@ -185,13 +164,6 @@ textarea {
     padding: 10px;
     margin: 10px 0;
     border-radius: 6px;
-  }
-  .heart-container {
-    margin-top: 10px;
-  }
-  .heart {
-    width: 32px;
-    height: 32px;
   }
   .comment-box {
     margin-top: 12px;
