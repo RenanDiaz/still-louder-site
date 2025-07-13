@@ -58,6 +58,6 @@
   .comentario-boton {
     align-self: flex-end;
     margin-top: 2px;
-    display: none;
+    display: none !important;
   }
 }
