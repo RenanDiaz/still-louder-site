@@ -43,4 +43,16 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.disabled = false;
       });
   });
+
+  // Seguimiento de reproducciones del audio
+  const audio = document.querySelector("audio");
+  if (audio && typeof window.gtag === "function") {
+    audio.addEventListener("play", function () {
+      window.gtag("event", "audio_play", {
+        event_category: "Audio",
+        event_label: "Al Vacío",
+        value: 1,
+      });
+    });
+  }
 });
