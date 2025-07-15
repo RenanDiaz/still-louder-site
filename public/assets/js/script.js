@@ -1,3 +1,17 @@
+// Seguimiento de clics en social links
+const socialLinks = document.querySelectorAll(".social-links a[aria-label]");
+if (typeof window.gtag === "function") {
+  socialLinks.forEach(function (link) {
+    link.addEventListener("click", function () {
+      const label = link.getAttribute("aria-label") || link.href;
+      window.gtag("event", "social_click", {
+        event_category: "Social",
+        event_label: label,
+        value: 1,
+      });
+    });
+  });
+}
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("comentario-form");
   const btn = document.getElementById("enviar-comentario");
