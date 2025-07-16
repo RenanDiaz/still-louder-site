@@ -77,24 +77,12 @@ document.addEventListener("DOMContentLoaded", function () {
       img.classList.toggle("active", i === n);
     });
   }
-  function moveSponsorSlide(dir) {
-    sponsorIndex += dir;
-    if (sponsorIndex < 0) sponsorIndex = sponsorImgs.length - 1;
-    if (sponsorIndex >= sponsorImgs.length) sponsorIndex = 0;
+  function nextSponsorSlide() {
+    sponsorIndex = (sponsorIndex + 1) % sponsorImgs.length;
     showSponsorSlide(sponsorIndex);
   }
   // Inicializar
   if (sponsorImgs.length > 0) showSponsorSlide(sponsorIndex);
   // Auto-slide
-  let sponsorInterval = setInterval(() => {
-    moveSponsorSlide(1);
-  }, 3000);
-  // Pausar auto-slide al interactuar
-  const sponsorsCarousel = document.getElementById("sponsors-carousel");
-  if (sponsorsCarousel) {
-    sponsorsCarousel.addEventListener("mouseenter", () => clearInterval(sponsorInterval));
-    sponsorsCarousel.addEventListener("mouseleave", () => {
-      sponsorInterval = setInterval(() => moveSponsorSlide(1), 3000);
-    });
-  }
+  setInterval(nextSponsorSlide, 3000);
 });

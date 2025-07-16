@@ -50,19 +50,6 @@
   display: block;
   opacity: 1;
 }
-.carousel-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 2rem;
-  cursor: pointer;
-  padding: 0 0.3rem;
-  transition: color 0.2s;
-  user-select: none;
-}
-.carousel-btn:hover {
-  color: #ffb300;
-}
 @media (max-width: 600px) {
   .sponsors-carousel-container {
     max-width: 98vw;
