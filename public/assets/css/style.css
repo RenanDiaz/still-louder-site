@@ -1,5 +1,5 @@
 /* Footer social styles */
-.footer-social {
+.social {
   width: 100%;
   padding: 18px 0 8px 0;
   margin-top: 20px;
@@ -8,38 +8,38 @@
   align-items: center;
   box-sizing: border-box;
 }
-.footer-social .social-links {
+.social .social-links {
   display: flex;
   gap: 18px;
   justify-content: center;
   margin-bottom: 8px;
 }
-.footer-social .social-icon {
+.social .social-icon {
   color: #00ffcc;
   transition: color 0.2s, transform 0.2s;
   display: flex;
   align-items: center;
   text-decoration: none;
 }
-.footer-social .social-icon:hover {
+.social .social-icon:hover {
   color: #ff2e63;
   transform: scale(1.15);
 }
-.footer-social .footer-text {
+.social .footer-text {
   color: #aaa;
   font-size: 0.95rem;
   text-align: center;
 }
 
 @media (max-width: 600px) {
-  .footer-social {
+  .social {
     padding: 12px 0 6px 0;
     margin-top: 12px;
   }
-  .footer-social .social-links {
+  .social .social-links {
     gap: 18px;
   }
-  .footer-social .footer-text {
+  .social .footer-text {
     font-size: 0.85rem;
   }
 }

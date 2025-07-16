@@ -22,6 +22,7 @@
   <link rel="canonical" href="https://stillouder.space/" />
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/comentarios.css">
+  <link rel="stylesheet" href="assets/css/sponsors-carousel.css">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:locale" content="es_PA" />
@@ -89,7 +90,7 @@
         </form>
         <div id="comentario-mensaje" class="comentario-mensaje"></div>
       </div>
-      <footer class="footer-social">
+      <div class="social">
         <div class="social-links">
           <a href="https://instagram.com/stilllouder.pa" target="_blank" rel="noopener" aria-label="Instagram"
             class="social-icon">
@@ -141,7 +142,22 @@
           </a>
         </div>
         <div class="footer-text">&copy; Still Louder 2025</div>
-      </footer>
+      </div>
+      <!-- Carrusel de Sponsors -->
+      <div class="sponsors-carousel-container">
+        <h3 class="sponsors-title">Patrocinadores</h3>
+        <div class="sponsors-carousel" id="sponsors-carousel">
+          <button class="carousel-btn prev" aria-label="Anterior" onclick="moveSponsorSlide(-1)">&#10094;</button>
+          <div class="carousel-track" id="carousel-track">
+            <img src="assets/images/sponsors/full-drop.jpeg" alt="Sponsor Full Drop" class="sponsor-img" />
+            <img src="assets/images/sponsors/ron-abuelo-white.jpeg" alt="Sponsor Ron Abuelo White"
+              class="sponsor-img" />
+            <img src="assets/images/sponsors/seco-herrerano-full-white.jpeg" alt="Sponsor Seco Herrerano Full White"
+              class="sponsor-img" />
+          </div>
+          <button class="carousel-btn next" aria-label="Siguiente" onclick="moveSponsorSlide(1)">&#10095;</button>
+        </div>
+      </div>
     </div>
     <script src="assets/js/script.js"></script>
   </main>

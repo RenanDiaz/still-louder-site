@@ -1,0 +1,78 @@
+.sponsors-carousel-container {
+  margin: 2.5rem auto 0 auto;
+  max-width: 420px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 16px 0 #000a;
+  padding: 1.2rem 0 1.5rem 0;
+  text-align: center;
+}
+.sponsors-title {
+  color: #fff;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.7rem;
+  font-family: inherit;
+  font-weight: 600;
+  text-shadow: 0 1px 8px #000a;
+}
+.sponsors-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  min-height: 110px;
+}
+.carousel-track {
+  width: 180px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin: 0 0.5rem;
+  border-radius: 0.7rem;
+}
+.sponsor-img {
+  max-width: 100%;
+  max-height: 90px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 6px #0005;
+  background: #fff2;
+  display: none;
+  transition: opacity 0.4s;
+}
+.sponsor-img.active {
+  display: block;
+  opacity: 1;
+}
+.carousel-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  transition: color 0.2s;
+  user-select: none;
+}
+.carousel-btn:hover {
+  color: #ffb300;
+}
+@media (max-width: 600px) {
+  .sponsors-carousel-container {
+    max-width: 98vw;
+    padding: 0.7rem 0 1rem 0;
+  }
+  .carousel-track {
+    width: 120px;
+    height: 70px;
+  }
+  .sponsor-img {
+    max-height: 60px;
+  }
+}
