@@ -1,185 +1,67 @@
-/* Footer social styles */
-.social {
-  width: 100%;
-  padding: 18px 0 8px 0;
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
-}
-.social .social-links {
-  display: flex;
-  gap: 18px;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-.social .social-icon {
-  color: #00ffcc;
-  transition: color 0.2s, transform 0.2s;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-}
-.social .social-icon:hover {
-  color: #ff2e63;
-  transform: scale(1.15);
-}
-.social .footer-text {
-  color: #aaa;
-  font-size: 0.95rem;
-  text-align: center;
-}
-
-@media (max-width: 600px) {
-  .social {
-    padding: 12px 0 6px 0;
-    margin-top: 12px;
-  }
-  .social .social-links {
-    gap: 18px;
-  }
-  .social .footer-text {
-    font-size: 0.85rem;
-  }
-}
-
+/* CSS for Landing Page */
 body {
+  background: #181818;
+  color: #fff;
+  font-family: "Montserrat", Arial, sans-serif;
   margin: 0;
-  background: black;
-  background-image: url("https://i.imgur.com/N1DNYjI.jpg");
-  background-size: cover;
-  background-position: top -120px center;
-  background-repeat: no-repeat;
-  min-height: 100dvh;
+  padding: 0;
+}
+.landing-container {
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
-  font-family: Arial, sans-serif;
-  color: white;
-  text-shadow: 0 0 10px black;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
 }
-
-.overlay {
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 30px;
-  border-radius: 15px;
-  backdrop-filter: blur(8px);
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-  max-width: 95vw;
-  width: 420px;
-  box-sizing: border-box;
+.release-art {
+  max-width: 320px;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
 }
-
-.cover-image {
-  width: 180px;
-  max-width: 80vw;
-  height: auto;
-  margin-bottom: 20px;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.9);
-}
-
 h1 {
-  font-size: 1.7rem;
-  margin-bottom: 15px;
-  text-transform: uppercase;
-  word-break: break-word;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
 }
-
-audio {
-  width: 100%;
-  margin-top: 10px;
+.release-date {
+  font-size: 1.1rem;
+  color: #1db954;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
-
-.button {
-  display: block;
-  width: 100%;
-  margin: 15px 0;
-  padding: 12px;
-  border: 2px solid #00ff99;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  background-color: rgba(0, 0, 0, 0.85);
-  color: #00ffcc;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
+.platform-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
 }
-
-.button:hover {
-  background-color: #00ff99;
-  color: black;
+.platform-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #222;
+  border-radius: 0.7rem;
+  padding: 0.7rem 1.2rem;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
-
-.comment-box {
-  margin-top: 20px;
-  width: 100%;
-  box-sizing: border-box;
+.platform-link:hover {
+  background: #1db954;
+  color: #181818;
 }
-
-textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  resize: vertical;
-  font-size: 1rem;
-  font-family: Arial, sans-serif;
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-  box-sizing: border-box;
+.platform-icon {
+  width: 28px;
+  height: 28px;
 }
-/* Responsive styles */
-@media (max-width: 600px) {
-  body {
-    padding: 0;
-    min-height: 100dvh;
-    font-size: 16px;
-    background-position: top center;
-  }
-  .overlay {
-    padding: 12px 4vw;
-    width: 98vw;
-    max-width: 100vw;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .cover-image {
-    width: 90vw;
-    max-width: 95vw;
-    margin-bottom: 12px;
-    border-radius: 8px;
-  }
-  h1 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-  }
-  .button {
-    font-size: 1rem;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 6px;
-  }
-  .comment-box {
-    margin-top: 12px;
-  }
-  textarea {
-    font-size: 0.95rem;
-    min-height: 60px;
-    padding: 8px;
-    border-radius: 6px;
-  }
-  audio {
-    width: 100%;
-    min-width: 0;
-  }
-}
-
-textarea::placeholder {
+.footer-text {
+  text-align: center;
+  font-size: 0.95rem;
   color: #aaa;
+  margin-top: 2.5rem;
 }
