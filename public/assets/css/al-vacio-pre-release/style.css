@@ -1,3 +1,45 @@
+/* Accessibility: Skip Link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: #000;
+  color: #fff;
+  text-decoration: none;
+  border: 2px solid #00ffcc;
+  border-radius: 8px;
+}
+
+.skip-link:focus {
+  left: 10px !important;
+  top: 10px !important;
+}
+
+/* Accessibility: Screen Reader Only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Accessibility: respect motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Footer social styles */
 .social {
   width: 100%;
@@ -109,9 +151,15 @@ audio {
   box-sizing: border-box;
 }
 
-.button:hover {
+.button:hover,
+.button:focus {
   background-color: #00ff99;
   color: black;
+}
+
+.button:focus-visible {
+  outline: 3px solid #00ffcc;
+  outline-offset: 3px;
 }
 
 .comment-box {
@@ -134,6 +182,12 @@ textarea {
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
   box-sizing: border-box;
 }
+
+textarea:focus {
+  outline: 2px solid #00ffcc;
+  outline-offset: 2px;
+}
+
 /* Responsive styles */
 @media (max-width: 600px) {
   body {
@@ -182,4 +236,10 @@ textarea {
 
 textarea::placeholder {
   color: #aaa;
+}
+
+/* Improve focus visibility for accessibility */
+:focus-visible {
+  outline: 2px solid #00ffcc;
+  outline-offset: 2px;
 }

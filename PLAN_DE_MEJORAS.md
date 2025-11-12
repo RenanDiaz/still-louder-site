@@ -129,12 +129,12 @@ Ninguna - esta fase es independiente
 ### Tareas
 
 #### 2.1 Service Worker
-- [ ] Crear Service Worker con Workbox o implementación manual
-- [ ] Implementar estrategia de caching offline-first para assets críticos
-- [ ] Configurar estrategia network-first para contenido dinámico
-- [ ] Implementar precaching de páginas principales
-- [ ] Agregar manejo de errores offline con página fallback personalizada
-- [ ] Implementar actualización automática de Service Worker
+- [x] Crear Service Worker con Workbox o implementación manual
+- [x] Implementar estrategia de caching offline-first para assets críticos
+- [x] Configurar estrategia network-first para contenido dinámico
+- [x] Implementar precaching de páginas principales
+- [x] Agregar manejo de errores offline con página fallback personalizada
+- [x] Implementar actualización automática de Service Worker
 
 **Archivo**: `public/sw.js`
 ```javascript
@@ -156,12 +156,12 @@ workbox.routing.registerRoute(
 ```
 
 #### 2.2 Mejorar Web App Manifest
-- [ ] Revisar y mejorar `site.webmanifest` existente
-- [ ] Agregar más tamaños de iconos (192x192, 512x512, maskable)
-- [ ] Configurar `display: "standalone"` y `theme_color`
+- [x] Revisar y mejorar `site.webmanifest` existente
+- [x] Agregar más tamaños de iconos (192x192, 512x512, maskable)
+- [x] Configurar `display: "standalone"` y `theme_color`
 - [ ] Agregar screenshots para instalación mejorada
-- [ ] Definir `start_url` y `scope` correctamente
-- [ ] Agregar `shortcuts` para acceso rápido
+- [x] Definir `start_url` y `scope` correctamente
+- [x] Agregar `shortcuts` para acceso rápido
 
 **Ejemplo de manifest mejorado**:
 ```json
@@ -200,18 +200,18 @@ workbox.routing.registerRoute(
 ```
 
 #### 2.3 Estrategia Offline
-- [ ] Crear página offline personalizada con branding
-- [ ] Precachear assets críticos (CSS, JS, fonts)
-- [ ] Implementar sincronización en background cuando vuelva conexión
-- [ ] Mostrar estado de conexión al usuario
-- [ ] Guardar intención de clicks en plataformas cuando esté offline
+- [x] Crear página offline personalizada con branding
+- [x] Precachear assets críticos (CSS, JS, fonts)
+- [x] Implementar sincronización en background cuando vuelva conexión
+- [x] Mostrar estado de conexión al usuario
+- [x] Guardar intención de clicks en plataformas cuando esté offline
 
 #### 2.4 Instalabilidad
-- [ ] Registrar Service Worker en index.html
-- [ ] Implementar prompt de instalación personalizado
-- [ ] Agregar evento `beforeinstallprompt` para control de instalación
-- [ ] Tracking de instalaciones en Analytics
-- [ ] Mostrar banner "Agrega a pantalla de inicio" en dispositivos móviles
+- [x] Registrar Service Worker en index.html
+- [x] Implementar prompt de instalación personalizado
+- [x] Agregar evento `beforeinstallprompt` para control de instalación
+- [x] Tracking de instalaciones en Analytics
+- [x] Mostrar banner "Agrega a pantalla de inicio" en dispositivos móviles
 
 **Registro del SW**:
 ```javascript
@@ -251,11 +251,11 @@ if ('serviceWorker' in navigator) {
 ### Tareas
 
 #### 3.1 Structured Data (JSON-LD)
-- [ ] Implementar schema.org MusicRecording para "Al Vacío"
-- [ ] Agregar schema.org MusicGroup para "Still Louder"
-- [ ] Implementar BreadcrumbList si se agregan más páginas
-- [ ] Validar con Google Rich Results Test
-- [ ] Implementar Organization schema con redes sociales
+- [x] Implementar schema.org MusicRecording para "Al Vacío"
+- [x] Agregar schema.org MusicGroup para "Still Louder"
+- [x] Implementar BreadcrumbList si se agregan más páginas
+- [x] Validar con Google Rich Results Test
+- [x] Implementar Organization schema con redes sociales
 
 **Ejemplo de implementación**:
 ```html
@@ -293,10 +293,10 @@ if ('serviceWorker' in navigator) {
 ```
 
 #### 3.2 Sitemap y Robots
-- [ ] Crear `sitemap.xml` con todas las páginas
-- [ ] Crear `robots.txt` optimizado
-- [ ] Configurar prioridades y frecuencias de actualización
-- [ ] Enviar sitemap a Google Search Console
+- [x] Crear `sitemap.xml` con todas las páginas
+- [x] Crear `robots.txt` optimizado
+- [x] Configurar prioridades y frecuencias de actualización
+- [x] Enviar sitemap a Google Search Console
 - [ ] Agregar sitemap a Google Analytics
 
 **sitemap.xml**:
@@ -330,28 +330,28 @@ Disallow: /assets/css/
 ```
 
 #### 3.3 Mejoras de Accesibilidad
-- [ ] Auditar con Lighthouse Accessibility
-- [ ] Agregar atributos ARIA donde sean necesarios
-- [ ] Mejorar contraste de colores (verificar WCAG AA)
-- [ ] Implementar skip links para navegación por teclado
-- [ ] Agregar labels descriptivos en enlaces (evitar "click aquí")
-- [ ] Verificar orden de headings (h1, h2, h3)
-- [ ] Agregar `lang` en elementos con idioma diferente
-- [ ] Test con lectores de pantalla (NVDA, JAWS)
+- [x] Auditar con Lighthouse Accessibility
+- [x] Agregar atributos ARIA donde sean necesarios
+- [x] Mejorar contraste de colores (verificar WCAG AA)
+- [x] Implementar skip links para navegación por teclado
+- [x] Agregar labels descriptivos en enlaces (evitar "click aquí")
+- [x] Verificar orden de headings (h1, h2, h3)
+- [x] Agregar `lang` en elementos con idioma diferente
+- [x] Test con lectores de pantalla (NVDA, JAWS)
 
 #### 3.4 Meta Tags Adicionales
 - [ ] Agregar `alternate` para versiones de idioma (si aplica)
-- [ ] Implementar `rel="me"` para verificación de redes sociales
-- [ ] Agregar geo tags si es relevante (Panamá)
-- [ ] Mejorar meta description (actualmente muy larga)
-- [ ] Agregar JSON-LD para artista verificado
+- [x] Implementar `rel="me"` para verificación de redes sociales
+- [x] Agregar geo tags si es relevante (Panamá)
+- [x] Mejorar meta description (actualmente muy larga)
+- [x] Agregar JSON-LD para artista verificado
 
 #### 3.5 Open Graph Mejorado
-- [ ] Agregar `og:audio` con preview del track (si está disponible)
-- [ ] Implementar `music:preview_url` con Spotify preview
-- [ ] Verificar con Facebook Sharing Debugger
-- [ ] Verificar con Twitter Card Validator
-- [ ] Optimizar imagen OG (1200x630 ideal para shares)
+- [x] Agregar `og:audio` con preview del track (si está disponible)
+- [x] Implementar `music:preview_url` con Spotify preview
+- [x] Verificar con Facebook Sharing Debugger
+- [x] Verificar con Twitter Card Validator
+- [x] Optimizar imagen OG (1200x630 ideal para shares)
 
 ### Criterios de Éxito
 - ✅ Lighthouse SEO Score = 100
