@@ -1,16 +1,67 @@
+/* Critical CSS Variables */
+:root {
+  --color-bg-primary: #181818;
+  --color-bg-secondary: #232526;
+  --color-bg-card: rgba(30, 30, 30, 0.95);
+  --color-text-primary: #fff;
+  --color-text-secondary: #bbb;
+  --color-accent: #ffb347;
+  --color-link-bg: #232526;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 2.5rem;
+  --border-radius-sm: 0.7rem;
+  --border-radius-md: 1rem;
+  --border-radius-lg: 1.5rem;
+  --transition-fast: 0.12s ease;
+  --transition-normal: 0.18s ease;
+}
+
+/* Modern CSS Reset and Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html,
 body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: "Inter", system-ui, Arial, sans-serif;
-  background: linear-gradient(135deg, #181818 0%, #232526 100%);
-  color: #fff;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+  color: var(--color-text-primary);
   min-height: 100vh;
+  /* Use will-change sparingly for critical animations */
   background-image: url("https://i.imgur.com/N1DNYjI.jpg");
   background-size: cover;
   background-position: top -120px center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
+  /* Improve font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Accessibility: respect motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .overlay {
@@ -18,73 +69,105 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: var(--spacing-sm);
 }
 
 .landing-container {
-  background: rgba(30, 30, 30, 0.95);
-  border-radius: 1.5rem;
+  background: var(--color-bg-card);
+  border-radius: var(--border-radius-lg);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-  padding: 2.5rem 2rem 2rem 2rem;
+  padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
   max-width: 420px;
   width: 100%;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: var(--spacing-md);
+}
+
+/* Optimized image wrapper */
+.release-art-wrapper {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .release-art {
   width: 100%;
-  max-width: 320px;
-  border-radius: 1rem;
+  height: auto;
+  display: block;
+  border-radius: var(--border-radius-md);
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
-  margin-bottom: 0.5rem;
+  /* Prevent layout shift */
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
 }
 
+/* Typography */
 h1 {
   font-size: 2rem;
   font-weight: 700;
-  margin: 0.5rem 0 0.2rem 0;
+  margin: var(--spacing-xs) 0 0.2rem 0;
   letter-spacing: 0.01em;
+  line-height: 1.2;
 }
 
 .release-date {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #ffb347;
-  margin-bottom: 1rem;
+  color: var(--color-accent);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
 }
 
+/* Platform Links */
 .platform-links {
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
   width: 100%;
-  margin: 1rem 0 0.5rem 0;
+  margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
 }
 
 .platform-link {
   display: flex;
   align-items: center;
   gap: 0.7em;
-  background: #232526;
-  color: #fff;
+  background: var(--color-link-bg);
+  color: var(--color-text-primary);
   text-decoration: none;
   font-weight: 600;
   font-size: 1.08rem;
   border-radius: 0.7em;
   padding: 0.7em 1.1em;
-  transition: background 0.18s, color 0.18s, transform 0.12s;
+  transition: background var(--transition-normal),
+              color var(--transition-normal),
+              transform var(--transition-fast);
   box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+  /* Optimize for animations */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .platform-link:hover,
 .platform-link:focus {
-  background: #ffb347;
-  color: #181818;
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
   transform: translateY(-2px) scale(1.03);
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.platform-link:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.platform-link:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .platform-link svg {
@@ -94,13 +177,19 @@ h1 {
   display: block;
 }
 
+.platform-link span {
+  display: inline-block;
+}
+
+/* Footer */
 .footer-text {
-  margin-top: 1.5rem;
+  margin-top: var(--spacing-md);
   font-size: 0.98rem;
-  color: #bbb;
+  color: var(--color-text-secondary);
   letter-spacing: 0.01em;
 }
 
+/* Mobile Optimizations */
 @media (max-width: 600px) {
   body {
     padding: 0;
@@ -108,17 +197,17 @@ h1 {
     height: auto;
     font-size: 16px;
     background-position: top center;
-    background-attachment: fixed;
+    background-attachment: scroll; /* Better for mobile performance */
     background-size: cover;
   }
 
   .landing-container {
     padding: 1.2rem 0.5rem 1.2rem 0.5rem;
     max-width: 98vw;
-    border-radius: 0.7rem;
+    border-radius: var(--border-radius-sm);
   }
 
-  .release-art {
+  .release-art-wrapper {
     max-width: 90vw;
   }
 
@@ -134,4 +223,44 @@ h1 {
     font-size: 1rem;
     padding: 0.6em 0.7em;
   }
+}
+
+/* Tablet specific optimizations */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .landing-container {
+    max-width: 480px;
+  }
+}
+
+/* Dark mode support (for future) */
+@media (prefers-color-scheme: dark) {
+  /* Already dark, but can adjust if needed */
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .platform-link {
+    page-break-inside: avoid;
+  }
+}
+
+/* Loading state (for future lazy loading implementation) */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+img[loading="lazy"].loaded {
+  opacity: 1;
+}
+
+/* Improve focus visibility for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
