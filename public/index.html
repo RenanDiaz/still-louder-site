@@ -281,6 +281,36 @@
       gtag('config', 'G-ZZ4XG8CD88');
     }
   </script>
+
+  <!-- Share Button Styles -->
+  <style>
+    .share-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      background: var(--color-link-bg);
+      color: var(--color-text-primary);
+      border: 2px solid var(--color-accent);
+      padding: 0.6em 1em;
+      border-radius: 0.7em;
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      margin-top: var(--spacing-md);
+    }
+
+    .share-button:hover {
+      background: var(--color-accent);
+      color: var(--color-primary);
+      transform: translateY(-2px);
+    }
+
+    .share-button svg {
+      width: 20px;
+      height: 20px;
+    }
+  </style>
 </head>
 
 <body>
@@ -370,6 +400,9 @@
           </a>
         </nav>
 
+        <!-- Share Button Container -->
+        <div id="share-container"></div>
+
         <footer class="footer-text" role="contentinfo">
           <p>&copy; 2025 Still Louder. Todos los derechos reservados.</p>
         </footer>
@@ -396,6 +429,39 @@
             'platform_name': platform
           });
         }
+      });
+  </script>
+
+  <!-- Enhanced modular scripts -->
+  <script type="module">
+    // Import modules
+    import analytics from './assets/js/analytics.js';
+    import shareManager from './assets/js/share.js';
+    import errorHandler from './assets/js/error-handler.js';
+    import uiUtils from './assets/js/ui-utils.js';
+
+    // Initialize error handling
+    errorHandler.init();
+
+    // Initialize analytics tracking
+    analytics.initAutoTracking();
+
+    // Add share button
+    const shareContainer = document.getElementById('share-container');
+    const shareButton = shareManager.createShareButton({
+      label: 'Compartir',
+      className: 'share-button'
+    });
+    shareContainer.appendChild(shareButton);
+
+    // Initialize lazy loading for images
+    uiUtils.initLazyLoading();
+
+    // Add fade-in animation to loaded images
+    const releaseArt = document.querySelector('.release-art');
+    if (releaseArt) {
+      uiUtils.handleImageLoading(releaseArt, {
+        fallback: '/assets/images/fallback-cover.jpg'
       });
     });
 
@@ -433,7 +499,7 @@
       const platformMap = {
         'spotify': 'https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f',
         'apple': 'https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538',
-        'youtube': 'https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCdSvT9y'
+        'youtube': 'https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCbSvT9y'
       };
 
       if (platformMap[action]) {
@@ -442,6 +508,14 @@
         }, 500);
       }
     }
+  </script>
+
+    }
+
+    // Log page load
+    console.log('%c Still Louder - Al Vacío ', 'background: #000; color: #ffb347; font-size: 18px; font-weight: bold; padding: 10px;');
+    console.log('%c Now playing on all platforms! ', 'background: #232526; color: #fff; font-size: 14px; padding: 5px;');
+  </script>
   </script>
 </body>
 
