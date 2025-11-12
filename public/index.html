@@ -413,9 +413,6 @@
   <!-- Service Worker Registration -->
   <script src="assets/js/sw-register.js"></script>
 
-  <!-- Main Script -->
-  <script src="assets/js/script.js"></script>
-
   <!-- Enhanced script with platform tracking and accessibility -->
   <script>
     // Track clicks on platform links
@@ -430,6 +427,7 @@
           });
         }
       });
+    });
   </script>
 
   <!-- Enhanced modular scripts -->
@@ -463,7 +461,7 @@
       uiUtils.handleImageLoading(releaseArt, {
         fallback: '/assets/images/fallback-cover.jpg'
       });
-    });
+    }
 
     // Make skip link visible on focus
     const skipLink = document.querySelector('.skip-link');
@@ -508,14 +506,10 @@
         }, 500);
       }
     }
-  </script>
-
-    }
 
     // Log page load
     console.log('%c Still Louder - Al Vacío ', 'background: #000; color: #ffb347; font-size: 18px; font-weight: bold; padding: 10px;');
     console.log('%c Now playing on all platforms! ', 'background: #232526; color: #fff; font-size: 14px; padding: 5px;');
-  </script>
   </script>
 </body>
 
