@@ -1,0 +1,337 @@
+/**
+ * Design System - CSS Variables
+ * Centralized design tokens for consistency and maintainability
+ */
+
+:root {
+  /* ============================================
+     COLORS
+     ============================================ */
+
+  /* Primary Colors */
+  --color-primary: #000000;
+  --color-secondary: #ffffff;
+  --color-accent: #ffb347;
+  --color-accent-hover: #ffa31a;
+
+  /* Background Colors */
+  --color-bg-primary: #181818;
+  --color-bg-secondary: #232526;
+  --color-bg-tertiary: #1a1a1a;
+  --color-bg-card: rgba(30, 30, 30, 0.95);
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Text Colors */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #bbbbbb;
+  --color-text-muted: #aaaaaa;
+  --color-text-dark: #333333;
+
+  /* Interactive Colors */
+  --color-link-bg: #232526;
+  --color-link-hover: var(--color-accent);
+  --color-success: #4caf50;
+  --color-error: #f44336;
+  --color-warning: #ff9800;
+  --color-info: #2196f3;
+
+  /* Social Media Brand Colors */
+  --color-instagram: #e4405f;
+  --color-facebook: #1877f2;
+  --color-youtube: #ff0000;
+  --color-spotify: #1db954;
+  --color-apple-music: #fa243c;
+  --color-deezer: #ff0092;
+  --color-amazon-music: #232f3e;
+
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+
+  /* Font Families */
+  --font-primary: 'Inter', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-fallback: system-ui, -apple-system, sans-serif;
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-md: 1.125rem;    /* 18px */
+  --font-size-lg: 1.25rem;     /* 20px */
+  --font-size-xl: 1.5rem;      /* 24px */
+  --font-size-2xl: 2rem;       /* 32px */
+  --font-size-3xl: 2.5rem;     /* 40px */
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.4;
+  --line-height-relaxed: 1.6;
+
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.01em;
+  --letter-spacing-wider: 0.05em;
+
+  /* ============================================
+     SPACING
+     ============================================ */
+
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 2.5rem;   /* 40px */
+  --spacing-3xl: 3rem;     /* 48px */
+  --spacing-4xl: 4rem;     /* 64px */
+
+  /* ============================================
+     BORDERS & RADIUS
+     ============================================ */
+
+  /* Border Radius */
+  --border-radius-xs: 0.25rem;  /* 4px */
+  --border-radius-sm: 0.5rem;   /* 8px */
+  --border-radius-md: 0.7rem;   /* 11px */
+  --border-radius-lg: 1rem;     /* 16px */
+  --border-radius-xl: 1.2rem;   /* 19px */
+  --border-radius-2xl: 1.5rem;  /* 24px */
+  --border-radius-full: 9999px;
+
+  /* Border Widths */
+  --border-width-thin: 1px;
+  --border-width-normal: 2px;
+  --border-width-thick: 3px;
+
+  /* ============================================
+     SHADOWS
+     ============================================ */
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  --shadow-2xl: 0 16px 48px 0 rgba(0, 0, 0, 0.35);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  /* ============================================
+     TRANSITIONS
+     ============================================ */
+
+  --transition-fast: 120ms ease;
+  --transition-normal: 180ms ease;
+  --transition-slow: 300ms ease;
+  --transition-slower: 500ms ease;
+
+  /* Transition Timing Functions */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ============================================
+     Z-INDEX
+     ============================================ */
+
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+
+  /* ============================================
+     BREAKPOINTS (for reference in JS)
+     ============================================ */
+
+  --breakpoint-mobile: 480px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-wide: 1280px;
+
+  /* ============================================
+     LAYOUT
+     ============================================ */
+
+  --container-max-width: 1200px;
+  --card-max-width: 420px;
+  --content-max-width: 720px;
+
+  /* ============================================
+     ANIMATIONS
+     ============================================ */
+
+  --animation-duration-fast: 200ms;
+  --animation-duration-normal: 300ms;
+  --animation-duration-slow: 500ms;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Loading Skeleton */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-secondary) 25%,
+    var(--color-bg-tertiary) 50%,
+    var(--color-bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: var(--border-radius-md);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Fade In Animation */
+.fade-in {
+  animation: fade-in var(--animation-duration-normal) ease-in forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide Up Animation */
+.slide-up {
+  animation: slide-up var(--animation-duration-normal) ease-out forwards;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scale In Animation */
+.scale-in {
+  animation: scale-in var(--animation-duration-fast) var(--ease-out) forwards;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--color-bg-secondary);
+  border-top-color: var(--color-accent);
+  border-radius: var(--border-radius-full);
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading State for Images */
+.image-loading {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+}
+
+.image-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Accessibility: Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton,
+  .image-loading::before {
+    animation: none !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-accent: #ffc470;
+    --border-width-normal: 3px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  :root {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #ffffff;
+    --color-text-primary: #000000;
+    --color-text-secondary: #333333;
+  }
+
+  .skeleton,
+  .spinner,
+  .image-loading::before {
+    display: none !important;
+  }
+}

@@ -86,6 +86,36 @@
       gtag('config', 'G-ZZ4XG8CD88');
     }
   </script>
+
+  <!-- Share Button Styles -->
+  <style>
+    .share-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      background: var(--color-link-bg);
+      color: var(--color-text-primary);
+      border: 2px solid var(--color-accent);
+      padding: 0.6em 1em;
+      border-radius: 0.7em;
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      margin-top: var(--spacing-md);
+    }
+
+    .share-button:hover {
+      background: var(--color-accent);
+      color: var(--color-primary);
+      transform: translateY(-2px);
+    }
+
+    .share-button svg {
+      width: 20px;
+      height: 20px;
+    }
+  </style>
 </head>
 
 <body>
@@ -190,26 +220,50 @@
           </a>
         </div>
 
+        <!-- Share Button Container -->
+        <div id="share-container"></div>
+
         <div class="footer-text">&copy; 2025 Still Louder</div>
       </div>
     </div>
   </main>
 
-  <!-- Enhanced script with platform tracking -->
-  <script>
-    // Track platform link clicks
-    document.querySelectorAll('.platform-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        const platformId = this.id.replace('-link', '');
-        if (typeof gtag !== 'undefined') {
-          gtag('event', 'click_platform', {
-            'event_category': 'streaming',
-            'event_label': platformId,
-            'platform_name': platformId
-          });
-        }
-      });
+  <!-- Enhanced modular scripts -->
+  <script type="module">
+    // Import modules
+    import analytics from './assets/js/analytics.js';
+    import shareManager from './assets/js/share.js';
+    import errorHandler from './assets/js/error-handler.js';
+    import uiUtils from './assets/js/ui-utils.js';
+
+    // Initialize error handling
+    errorHandler.init();
+
+    // Initialize analytics tracking
+    analytics.initAutoTracking();
+
+    // Add share button
+    const shareContainer = document.getElementById('share-container');
+    const shareButton = shareManager.createShareButton({
+      label: 'Compartir',
+      className: 'share-button'
     });
+    shareContainer.appendChild(shareButton);
+
+    // Initialize lazy loading for images
+    uiUtils.initLazyLoading();
+
+    // Add fade-in animation to loaded images
+    const releaseArt = document.querySelector('.release-art');
+    if (releaseArt) {
+      uiUtils.handleImageLoading(releaseArt, {
+        fallback: '/assets/images/fallback-cover.jpg'
+      });
+    }
+
+    // Log page load
+    console.log('%c Still Louder - Al Vacío ', 'background: #000; color: #ffb347; font-size: 18px; font-weight: bold; padding: 10px;');
+    console.log('%c Now playing on all platforms! ', 'background: #232526; color: #fff; font-size: 14px; padding: 5px;');
   </script>
 </body>
 
