@@ -1,0 +1,22 @@
+Contact: mailto:security@stillouder.space
+Expires: 2026-01-11T00:00:00.000Z
+Preferred-Languages: es, en
+Canonical: https://stillouder.space/.well-known/security.txt
+
+# Security Policy
+# If you discover a security vulnerability, please report it responsibly
+
+# What to include in your report:
+# - Description of the vulnerability
+# - Steps to reproduce
+# - Potential impact
+# - Any relevant screenshots or proof-of-concept
+
+# Please allow 48 hours for initial response
+# We appreciate responsible disclosure and will credit reporters
+
+# This site is hosted on Vercel
+# For Vercel platform issues: https://vercel.com/security
+
+# Acknowledgments
+# We thank security researchers who help keep our site secure

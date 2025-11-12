@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://stillouder.space/</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://i.imgur.com/CoA13WN.jpg</image:loc>
+      <image:title>Portada del sencillo Al Vacío de Still Louder</image:title>
+      <image:caption>Artwork oficial del sencillo Al Vacío de Still Louder, banda de rock panameña</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://stillouder.space/al-vacio-pre-release</loc>
+    <lastmod>2025-01-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.imgur.com/CoA13WN.jpg</image:loc>
+      <image:title>Portada del sencillo Al Vacío de Still Louder</image:title>
+    </image:image>
+  </url>
+</urlset>
