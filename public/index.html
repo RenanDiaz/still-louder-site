@@ -26,6 +26,8 @@
   <link rel="shortcut icon" href="/assets/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="Still Louder" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/assets/site.webmanifest" />
   <link rel="canonical" href="https://stillouder.space/" />
 
@@ -272,6 +274,9 @@
     if (params.get('source') === 'qr') {
       gtag('config', 'G-ZZ4XG8CD88', { 'custom_map': { 'dimension1': 'source' } });
       gtag('event', 'page_view', { 'source': 'qr' });
+    } else if (params.get('source') === 'pwa') {
+      gtag('config', 'G-ZZ4XG8CD88', { 'custom_map': { 'dimension1': 'source' } });
+      gtag('event', 'page_view', { 'source': 'pwa' });
     } else {
       gtag('config', 'G-ZZ4XG8CD88');
     }
@@ -285,24 +290,10 @@
   <main id="main-content" role="main">
     <div class="overlay">
       <div class="landing-container">
-        <!-- Optimized album art with responsive image formats -->
-        <picture class="release-art-wrapper">
-          <source type="image/avif" srcset="https://i.imgur.com/CoA13WN.jpg" />
-          <source type="image/webp" srcset="https://i.imgur.com/CoA13WN.jpg" />
-          <img
-            src="https://i.imgur.com/CoA13WN.jpg"
-            alt="Portada del sencillo Al Vacío de Still Louder"
-            class="release-art"
-            width="320"
-            height="320"
-            fetchpriority="high"
-            decoding="async"
-          >
-        </picture>
-
+        <img src="https://i.imgur.com/CoA13WN.jpg" alt="Portada del sencillo Al Vacío de Still Louder"
+          class="release-art">
         <h1>Still Louder - Al Vacío</h1>
         <h2 class="release-date">¡Ya disponible en todas las plataformas digitales!</h2>
-
         <nav class="platform-links" aria-label="Enlaces a plataformas de streaming" role="navigation">
           <a href="https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f"
              class="platform-link"
@@ -314,8 +305,7 @@
               viewBox="0 0 16 16" aria-hidden="true" focusable="false">
               <path
                 d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.669 11.538a.5.5 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686m.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858m.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288" />
-            </svg>
-            <span>Spotify</span>
+            </svg>Spotify
           </a>
 
           <a href="https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538"
@@ -328,8 +318,7 @@
               viewBox="0 0 16 16" aria-hidden="true" focusable="false">
               <path fill-rule="evenodd"
                 d="m10.995 0 .573.001q.241 0 .483.007c.35.01.705.03 1.051.093.352.063.68.166.999.329a3.36 3.36 0 0 1 1.47 1.468c.162.32.265.648.328 1 .063.347.084.7.093 1.051q.007.241.007.483l.001.573v5.99l-.001.573q0 .241-.008.483c-.01.35-.03.704-.092 1.05a3.5 3.5 0 0 1-.33 1 3.36 3.36 0 0 1-1.468 1.468 3.5 3.5 0 0 1-1 .33 7 7 0 0 1-1.05.092q-.241.007-.483.008l-.573.001h-5.99l-.573-.001q-.241 0-.483-.008a7 7 0 0 1-1.052-.092 3.6 3.6 0 0 1-.998-.33 3.36 3.36 0 0 1-1.47-1.468 3.6 3.6 0 0 1-.328-1 7 7 0 0 1-.093-1.05Q.002 11.81 0 11.568V5.005l.001-.573q0-.241.007-.483c.01-.35.03-.704.093-1.05a3.6 3.6 0 0 1 .329-1A3.36 3.36 0 0 1 1.9.431 3.5 3.5 0 0 1 2.896.1 7 7 0 0 1 3.95.008Q4.19.002 4.432 0h.573zm-.107 2.518-4.756.959H6.13a.66.66 0 0 0-.296.133.5.5 0 0 0-.16.31c-.004.027-.01.08-.01.16v5.952c0 .14-.012.275-.106.39-.095.115-.21.15-.347.177l-.31.063c-.393.08-.65.133-.881.223a1.4 1.4 0 0 0-.519.333 1.25 1.25 0 0 0-.332.995c.031.297.166.582.395.792.156.142.35.25.578.296.236.047.49.031.858-.043.196-.04.38-.102.555-.205a1.4 1.4 0 0 0 .438-.405 1.5 1.5 0 0 0 .233-.55c.042-.202.052-.386.052-.588V6.347c0-.276.08-.35.302-.404.024-.005 3.954-.797 4.138-.833.257-.049.378.025.378.294v3.524c0 .14-.001.28-.096.396-.094.115-.211.15-.348.178l-.31.062c-.393.08-.649.133-.88.223a1.4 1.4 0 0 0-.52.334 1.26 1.26 0 0 0-.34.994c.03.297.174.582.404.792a1.2 1.2 0 0 0 .577.294c.237.048.49.03.858-.044.197-.04.381-.098.556-.202a1.4 1.4 0 0 0 .438-.405q.173-.252.233-.549a2.7 2.7 0 0 0 .044-.589V2.865c0-.273-.143-.443-.4-.42-.04.003-.383.064-.424.073" />
-            </svg>
-            <span>Apple Music</span>
+            </svg>Apple Music
           </a>
 
           <a href="https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCdSvT9y"
@@ -342,8 +331,7 @@
               <path fill="currentColor"
                 d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0m0 5.727a6.274 6.274 0 0 1 0 12.546a6.274 6.274 0 0 1 0-12.546m0 .546A5.735 5.735 0 0 0 6.273 12A5.727 5.727 0 0 0 12 17.727A5.727 5.727 0 0 0 17.727 12A5.735 5.735 0 0 0 12 6.273m-2.182 2.59l5.318 3l-5.318 3.273Z">
               </path>
-            </svg>
-            <span>YouTube</span>
+            </svg>YouTube
           </a>
 
           <a href="https://link.deezer.com/s/30BAvwIohgJLbpIWKmFld"
@@ -356,8 +344,7 @@
               <path fill="currentColor"
                 d="M18.81 4.16v3.03H24V4.16h-5.19zM6.27 8.38v3.027h5.189V8.38h-5.19zm12.54 0v3.027H24V8.38h-5.19zM6.27 12.594v3.027h5.189v-3.027h-5.19zm6.271 0v3.027h5.19v-3.027h-5.19zm6.27 0v3.027H24v-3.027h-5.19zM0 16.81v3.029h5.19v-3.03H0zm6.27 0v3.029h5.189v-3.03h-5.19zm6.271 0v3.029h5.19v-3.03h-5.19zm6.27 0v3.029H24v-3.03h-5.19Z">
               </path>
-            </svg>
-            <span>Deezer</span>
+            </svg>Deezer
           </a>
 
           <a href="https://music.amazon.com/tracks/B0FK3D2CK6"
@@ -379,7 +366,7 @@
                 d="M31.88 20.125v5.3m-5.34-.452a2.25 2.25 0 0 0 1.646.447h.448a1.324 1.324 0 0 0 1.322-1.325h0a1.324 1.324 0 0 0-1.322-1.325h-.897a1.324 1.324 0 0 1-1.322-1.325h0a1.324 1.324 0 0 1 1.322-1.325h.449a2.25 2.25 0 0 1 1.644.448m7.77 3.85a2 2 0 0 1-1.737 1.007h0a2 2 0 0 1-2-2v-1.3a2 2 0 0 1 2-2h0a2 2 0 0 1 1.735 1.004">
               </path>
             </svg>
-            <span>Amazon Music</span>
+            Amazon Music
           </a>
         </nav>
 
@@ -390,17 +377,23 @@
     </div>
   </main>
 
+  <!-- Service Worker Registration -->
+  <script src="assets/js/sw-register.js"></script>
+
+  <!-- Main Script -->
+  <script src="assets/js/script.js"></script>
+
   <!-- Enhanced script with platform tracking and accessibility -->
   <script>
-    // Track platform link clicks
+    // Track clicks on platform links
     document.querySelectorAll('.platform-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        const platformId = this.id.replace('-link', '');
+      link.addEventListener('click', (e) => {
+        const platform = e.currentTarget.id.replace('-link', '');
         if (typeof gtag !== 'undefined') {
           gtag('event', 'click_platform', {
             'event_category': 'streaming',
-            'event_label': platformId,
-            'platform_name': platformId
+            'event_label': platform,
+            'platform_name': platform
           });
         }
       });
@@ -421,6 +414,33 @@
       skipLink.addEventListener('blur', function() {
         this.style.left = '-9999px';
       });
+    }
+
+    // Handle shortcuts from manifest
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+
+    if (action) {
+      // Track shortcut usage
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'pwa_shortcut', {
+          'event_category': 'pwa',
+          'event_label': action
+        });
+      }
+
+      // Auto-redirect based on action
+      const platformMap = {
+        'spotify': 'https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f',
+        'apple': 'https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538',
+        'youtube': 'https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCdSvT9y'
+      };
+
+      if (platformMap[action]) {
+        setTimeout(() => {
+          window.open(platformMap[action], '_blank');
+        }, 500);
+      }
     }
   </script>
 </body>

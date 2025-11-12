@@ -26,6 +26,8 @@
   <link rel="shortcut icon" href="/assets/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="Still Louder" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/assets/site.webmanifest" />
   <link rel="canonical" href="https://stillouder.space/al-vacio-pre-release" />
 
@@ -203,6 +205,9 @@
     if (params.get('source') === 'qr') {
       gtag('config', 'G-ZZ4XG8CD88', { 'custom_map': { 'dimension1': 'source' } });
       gtag('event', 'page_view', { 'source': 'qr' });
+    } else if (params.get('source') === 'pwa') {
+      gtag('config', 'G-ZZ4XG8CD88', { 'custom_map': { 'dimension1': 'source' } });
+      gtag('event', 'page_view', { 'source': 'pwa' });
     } else {
       gtag('config', 'G-ZZ4XG8CD88');
     }
@@ -323,6 +328,10 @@
     </div>
   </main>
 
+  <!-- Service Worker Registration -->
+  <script src="assets/js/sw-register.js"></script>
+
+  <!-- Main Script -->
   <script src="assets/js/al-vacio-pre-release/script.js"></script>
 
   <!-- Accessibility enhancement for skip link -->
@@ -343,6 +352,23 @@
         this.style.left = '-9999px';
       });
     }
+  </script>
+
+  <!-- Analytics tracking for social clicks -->
+  <script>
+    // Track clicks on social links
+    document.querySelectorAll('.social-icons a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const platform = e.currentTarget.getAttribute('aria-label');
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'click_social', {
+            'event_category': 'social',
+            'event_label': platform,
+            'platform_name': platform
+          });
+        }
+      });
+    });
   </script>
 </body>
 
