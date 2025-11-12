@@ -1,0 +1,45 @@
+# Robots.txt para Still Louder - Al Vacío
+# Optimizado para SEO y descubrimiento de contenido
+
+User-agent: *
+Allow: /
+
+# Permitir acceso a todas las páginas principales
+Allow: /index.html
+Allow: /al-vacio-pre-release.html
+
+# Permitir acceso a imágenes para mejor indexación
+Allow: /assets/images/
+
+# Bloquear archivos innecesarios para crawlers
+Disallow: /assets/js/
+Disallow: /assets/css/
+Disallow: /*.mp3$
+
+# Bloquear archivos de sistema
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /dist/
+
+# Sitemap
+Sitemap: https://stillouder.space/sitemap.xml
+
+# Tiempo de crawl delay (cortesía)
+Crawl-delay: 0
+
+# Bots específicos
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /assets/images/
+
+User-agent: Bingbot
+Allow: /
+
+# Bots maliciosos conocidos
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10

@@ -7,12 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
   <title>Still Louder - Al Vacío | Lanzamiento Oficial 2025</title>
   <meta name="description"
-    content="¡Ya disponible! Escucha 'Al Vacío', el nuevo sencillo de Still Louder, en todas las plataformas digitales. Rock panameño, streaming, enlaces a Spotify, Apple Music, Deezer, YouTube, Google Play y Amazon Music. Descubre la banda y síguenos en redes sociales." />
+    content="Escucha 'Al Vacío' de Still Louder en Spotify, Apple Music, YouTube, Deezer y Amazon Music. Rock panameño disponible ahora en todas las plataformas digitales." />
   <meta name="keywords"
     content="Still Louder, Al Vacío, música, sencillo, rock, Panamá, lanzamiento, banda, streaming, Spotify, Apple Music, Deezer, YouTube, Google Play, Amazon Music, 2025, nueva música, rock panameño, escuchar, plataformas digitales" />
   <meta name="author" content="Still Louder" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <meta name="theme-color" content="#000000" />
+
+  <!-- Geo Tags for Panama -->
+  <meta name="geo.region" content="PA" />
+  <meta name="geo.placename" content="Panamá" />
+  <meta name="geo.position" content="9.1450;-79.9870" />
+  <meta name="ICBM" content="9.1450, -79.9870" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
@@ -23,7 +29,12 @@
   <link rel="manifest" href="/assets/site.webmanifest" />
   <link rel="canonical" href="https://stillouder.space/" />
 
-  <!-- Social Media -->
+  <!-- Social Media Verification -->
+  <link rel="me" href="https://www.instagram.com/stilllouder/" />
+  <link rel="me" href="https://www.facebook.com/stilllouder/" />
+  <link rel="me" href="https://www.youtube.com/@StillLouder" />
+
+  <!-- Social Media - Legacy Support -->
   <meta name="og:see_also" content="https://www.instagram.com/stilllouder/" />
   <meta name="og:see_also" content="https://www.facebook.com/stilllouder/" />
   <meta name="og:see_also" content="https://www.youtube.com/@StillLouder" />
@@ -42,27 +53,39 @@
 
   <!-- Open Graph / Facebook -->
   <meta property="og:locale" content="es_PA" />
-  <meta property="og:type" content="music.album" />
+  <meta property="og:type" content="music.song" />
   <meta property="og:title" content="Still Louder - Al Vacío | Lanzamiento Oficial 2025" />
   <meta property="og:description"
-    content="¡Ya disponible! Escucha 'Al Vacío', el nuevo sencillo de Still Louder, en todas las plataformas digitales. Rock panameño, streaming, enlaces a Spotify, Apple Music, Deezer, YouTube, Google Play y Amazon Music." />
+    content="Escucha 'Al Vacío' de Still Louder en Spotify, Apple Music, YouTube, Deezer y Amazon Music. Rock panameño disponible ahora." />
   <meta property="og:url" content="https://stillouder.space/" />
   <meta property="og:site_name" content="Still Louder" />
   <meta property="og:image" content="https://i.imgur.com/CoA13WN.jpg" />
+  <meta property="og:image:secure_url" content="https://i.imgur.com/CoA13WN.jpg" />
   <meta property="og:image:alt" content="Portada del sencillo Al Vacío de Still Louder" />
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="1200" />
-  <meta property="music:musician" content="Still Louder" />
+
+  <!-- Music-specific Open Graph -->
+  <meta property="music:musician" content="https://stillouder.space/" />
   <meta property="music:release_date" content="2025-07-28" />
-  <meta property="music:album" content="Al Vacío" />
-  <meta property="music:genre" content="Rock" />
+  <meta property="music:song" content="https://stillouder.space/" />
+  <meta property="music:duration" content="240" />
+
+  <!-- Spotify Preview URL (if available in the future) -->
+  <!-- <meta property="og:audio" content="https://p.scdn.co/mp3-preview/..." /> -->
+  <!-- <meta property="og:audio:type" content="audio/mpeg" /> -->
+
+  <!-- Platform Links for Discovery -->
+  <meta property="music:preview_url:spotify" content="https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj" />
+  <meta property="music:preview_url:apple_music" content="https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538" />
+  <meta property="music:preview_url:youtube" content="https://youtu.be/L1JoCgyumzY" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Still Louder - Al Vacío | Lanzamiento Oficial 2025" />
   <meta name="twitter:description"
-    content="¡Ya disponible! Escucha 'Al Vacío', el nuevo sencillo de Still Louder, en todas las plataformas digitales. Rock panameño, streaming, enlaces a Spotify, Apple Music, Deezer, YouTube, Google Play y Amazon Music." />
+    content="Escucha 'Al Vacío' de Still Louder en Spotify, Apple Music, YouTube, Deezer y Amazon Music. Rock panameño disponible ahora." />
   <meta name="twitter:image" content="https://i.imgur.com/CoA13WN.jpg" />
   <meta name="twitter:image:alt" content="Portada del sencillo Al Vacío de Still Louder" />
   <meta name="twitter:site" content="@StillLouder" />
@@ -71,6 +94,173 @@
   <meta name="twitter:data1" content="Rock" />
   <meta name="twitter:label2" content="Año" />
   <meta name="twitter:data2" content="2025" />
+
+  <!-- JSON-LD Structured Data - MusicRecording -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicRecording",
+    "name": "Al Vacío",
+    "url": "https://stillouder.space/",
+    "image": "https://i.imgur.com/CoA13WN.jpg",
+    "datePublished": "2025-07-28",
+    "genre": ["Rock", "Alternative Rock"],
+    "inLanguage": "es",
+    "duration": "PT4M",
+    "isrcCode": "",
+    "byArtist": {
+      "@type": "MusicGroup",
+      "@id": "https://stillouder.space/#band",
+      "name": "Still Louder",
+      "genre": ["Rock", "Alternative Rock"],
+      "foundingLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "PA",
+          "addressLocality": "Panamá"
+        }
+      },
+      "sameAs": [
+        "https://www.instagram.com/stilllouder/",
+        "https://www.facebook.com/stilllouder/",
+        "https://www.youtube.com/@StillLouder",
+        "https://open.spotify.com/artist/5BLVv7MvjmdCCWYFVlwY83",
+        "https://music.apple.com/pa/artist/still-louder/1829334535"
+      ]
+    },
+    "recordingOf": {
+      "@type": "MusicComposition",
+      "name": "Al Vacío",
+      "composer": {
+        "@type": "MusicGroup",
+        "@id": "https://stillouder.space/#band"
+      },
+      "inLanguage": "es",
+      "iswcCode": ""
+    },
+    "inAlbum": {
+      "@type": "MusicAlbum",
+      "name": "Al Vacío",
+      "albumReleaseType": "Single",
+      "datePublished": "2025-07-28",
+      "byArtist": {
+        "@id": "https://stillouder.space/#band"
+      }
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "availability": "https://schema.org/InStock",
+      "offerCount": "5",
+      "offers": [
+        {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj",
+          "seller": {
+            "@type": "Organization",
+            "name": "Spotify"
+          }
+        },
+        {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538",
+          "seller": {
+            "@type": "Organization",
+            "name": "Apple Music"
+          }
+        },
+        {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://youtu.be/L1JoCgyumzY",
+          "seller": {
+            "@type": "Organization",
+            "name": "YouTube"
+          }
+        }
+      ]
+    }
+  }
+  </script>
+
+  <!-- JSON-LD Structured Data - Organization/MusicGroup -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicGroup",
+    "@id": "https://stillouder.space/#band",
+    "name": "Still Louder",
+    "alternateName": "Still Louder Band",
+    "url": "https://stillouder.space/",
+    "logo": "https://i.imgur.com/CoA13WN.jpg",
+    "image": "https://i.imgur.com/CoA13WN.jpg",
+    "genre": ["Rock", "Alternative Rock"],
+    "foundingDate": "2020",
+    "foundingLocation": {
+      "@type": "Place",
+      "name": "Panamá",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "PA",
+        "addressLocality": "Panamá"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "9.1450",
+        "longitude": "-79.9870"
+      }
+    },
+    "sameAs": [
+      "https://www.instagram.com/stilllouder/",
+      "https://www.facebook.com/stilllouder/",
+      "https://www.youtube.com/@StillLouder",
+      "https://open.spotify.com/artist/5BLVv7MvjmdCCWYFVlwY83",
+      "https://music.apple.com/pa/artist/still-louder/1829334535",
+      "https://www.deezer.com/artist/...",
+      "https://music.amazon.com/artists/..."
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Fan Engagement",
+      "availableLanguage": ["es", "en"]
+    },
+    "memberOf": {
+      "@type": "Organization",
+      "name": "Independent Artists"
+    }
+  }
+  </script>
+
+  <!-- JSON-LD Structured Data - WebSite -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://stillouder.space/",
+    "name": "Still Louder - Official Website",
+    "description": "Sitio oficial de Still Louder. Escucha nuestra música en todas las plataformas digitales.",
+    "inLanguage": "es",
+    "publisher": {
+      "@id": "https://stillouder.space/#band"
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://www.google.com/search?q=site:stillouder.space+{search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZZ4XG8CD88"></script>
@@ -89,7 +279,10 @@
 </head>
 
 <body>
-  <main>
+  <!-- Skip to main content link for keyboard navigation -->
+  <a href="#main-content" class="skip-link" style="position: absolute; left: -9999px; z-index: 999;">Saltar al contenido principal</a>
+
+  <main id="main-content" role="main">
     <div class="overlay">
       <div class="landing-container">
         <!-- Optimized album art with responsive image formats -->
@@ -110,15 +303,15 @@
         <h1>Still Louder - Al Vacío</h1>
         <h2 class="release-date">¡Ya disponible en todas las plataformas digitales!</h2>
 
-        <div class="platform-links">
+        <nav class="platform-links" aria-label="Enlaces a plataformas de streaming" role="navigation">
           <a href="https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f"
              class="platform-link"
              id="spotify-link"
              target="_blank"
              rel="noopener noreferrer"
-             aria-label="Escuchar en Spotify">
+             aria-label="Escuchar Al Vacío en Spotify (se abre en nueva ventana)">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-spotify"
-              viewBox="0 0 16 16" aria-hidden="true">
+              viewBox="0 0 16 16" aria-hidden="true" focusable="false">
               <path
                 d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.669 11.538a.5.5 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686m.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858m.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288" />
             </svg>
@@ -130,9 +323,9 @@
              id="apple-link"
              target="_blank"
              rel="noopener noreferrer"
-             aria-label="Escuchar en Apple Music">
+             aria-label="Escuchar Al Vacío en Apple Music (se abre en nueva ventana)">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-apple-music"
-              viewBox="0 0 16 16" aria-hidden="true">
+              viewBox="0 0 16 16" aria-hidden="true" focusable="false">
               <path fill-rule="evenodd"
                 d="m10.995 0 .573.001q.241 0 .483.007c.35.01.705.03 1.051.093.352.063.68.166.999.329a3.36 3.36 0 0 1 1.47 1.468c.162.32.265.648.328 1 .063.347.084.7.093 1.051q.007.241.007.483l.001.573v5.99l-.001.573q0 .241-.008.483c-.01.35-.03.704-.092 1.05a3.5 3.5 0 0 1-.33 1 3.36 3.36 0 0 1-1.468 1.468 3.5 3.5 0 0 1-1 .33 7 7 0 0 1-1.05.092q-.241.007-.483.008l-.573.001h-5.99l-.573-.001q-.241 0-.483-.008a7 7 0 0 1-1.052-.092 3.6 3.6 0 0 1-.998-.33 3.36 3.36 0 0 1-1.47-1.468 3.6 3.6 0 0 1-.328-1 7 7 0 0 1-.093-1.05Q.002 11.81 0 11.568V5.005l.001-.573q0-.241.007-.483c.01-.35.03-.704.093-1.05a3.6 3.6 0 0 1 .329-1A3.36 3.36 0 0 1 1.9.431 3.5 3.5 0 0 1 2.896.1 7 7 0 0 1 3.95.008Q4.19.002 4.432 0h.573zm-.107 2.518-4.756.959H6.13a.66.66 0 0 0-.296.133.5.5 0 0 0-.16.31c-.004.027-.01.08-.01.16v5.952c0 .14-.012.275-.106.39-.095.115-.21.15-.347.177l-.31.063c-.393.08-.65.133-.881.223a1.4 1.4 0 0 0-.519.333 1.25 1.25 0 0 0-.332.995c.031.297.166.582.395.792.156.142.35.25.578.296.236.047.49.031.858-.043.196-.04.38-.102.555-.205a1.4 1.4 0 0 0 .438-.405 1.5 1.5 0 0 0 .233-.55c.042-.202.052-.386.052-.588V6.347c0-.276.08-.35.302-.404.024-.005 3.954-.797 4.138-.833.257-.049.378.025.378.294v3.524c0 .14-.001.28-.096.396-.094.115-.211.15-.348.178l-.31.062c-.393.08-.649.133-.88.223a1.4 1.4 0 0 0-.52.334 1.26 1.26 0 0 0-.34.994c.03.297.174.582.404.792a1.2 1.2 0 0 0 .577.294c.237.048.49.03.858-.044.197-.04.381-.098.556-.202a1.4 1.4 0 0 0 .438-.405q.173-.252.233-.549a2.7 2.7 0 0 0 .044-.589V2.865c0-.273-.143-.443-.4-.42-.04.003-.383.064-.424.073" />
             </svg>
@@ -144,8 +337,8 @@
              id="youtube-link"
              target="_blank"
              rel="noopener noreferrer"
-             aria-label="Ver en YouTube">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+             aria-label="Ver Al Vacío en YouTube (se abre en nueva ventana)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
               <path fill="currentColor"
                 d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0m0 5.727a6.274 6.274 0 0 1 0 12.546a6.274 6.274 0 0 1 0-12.546m0 .546A5.735 5.735 0 0 0 6.273 12A5.727 5.727 0 0 0 12 17.727A5.727 5.727 0 0 0 17.727 12A5.735 5.735 0 0 0 12 6.273m-2.182 2.59l5.318 3l-5.318 3.273Z">
               </path>
@@ -158,8 +351,8 @@
              id="deezer-link"
              target="_blank"
              rel="noopener noreferrer"
-             aria-label="Escuchar en Deezer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
+             aria-label="Escuchar Al Vacío en Deezer (se abre en nueva ventana)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true" focusable="false">
               <path fill="currentColor"
                 d="M18.81 4.16v3.03H24V4.16h-5.19zM6.27 8.38v3.027h5.189V8.38h-5.19zm12.54 0v3.027H24V8.38h-5.19zM6.27 12.594v3.027h5.189v-3.027h-5.19zm6.271 0v3.027h5.19v-3.027h-5.19zm6.27 0v3.027H24v-3.027h-5.19zM0 16.81v3.029h5.19v-3.03H0zm6.27 0v3.029h5.189v-3.03h-5.19zm6.271 0v3.029h5.19v-3.03h-5.19zm6.27 0v3.029H24v-3.03h-5.19Z">
               </path>
@@ -172,8 +365,8 @@
              id="amazon-link"
              target="_blank"
              rel="noopener noreferrer"
-             aria-label="Escuchar en Amazon Music">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28" aria-hidden="true">
+             aria-label="Escuchar Al Vacío en Amazon Music (se abre en nueva ventana)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28" aria-hidden="true" focusable="false">
               <circle cx="24" cy="24" r="21.5" fill="none" stroke="currentColor" strokeLinecap="round"
                 strokeLinejoin="round"></circle>
               <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
@@ -188,14 +381,16 @@
             </svg>
             <span>Amazon Music</span>
           </a>
-        </div>
+        </nav>
 
-        <div class="footer-text">&copy; 2025 Still Louder</div>
+        <footer class="footer-text" role="contentinfo">
+          <p>&copy; 2025 Still Louder. Todos los derechos reservados.</p>
+        </footer>
       </div>
     </div>
   </main>
 
-  <!-- Enhanced script with platform tracking -->
+  <!-- Enhanced script with platform tracking and accessibility -->
   <script>
     // Track platform link clicks
     document.querySelectorAll('.platform-link').forEach(link => {
@@ -210,6 +405,23 @@
         }
       });
     });
+
+    // Make skip link visible on focus
+    const skipLink = document.querySelector('.skip-link');
+    if (skipLink) {
+      skipLink.addEventListener('focus', function() {
+        this.style.left = '10px';
+        this.style.top = '10px';
+        this.style.padding = '10px';
+        this.style.backgroundColor = '#000';
+        this.style.color = '#fff';
+        this.style.textDecoration = 'none';
+        this.style.border = '2px solid #fff';
+      });
+      skipLink.addEventListener('blur', function() {
+        this.style.left = '-9999px';
+      });
+    }
   </script>
 </body>
 
