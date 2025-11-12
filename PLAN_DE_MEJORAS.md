@@ -33,13 +33,13 @@ Este plan de mejoras tiene como objetivo transformar el sitio web de Still Loude
 ### Tareas
 
 #### 1.1 Optimización de Imágenes
-- [ ] Convertir todas las imágenes JPEG a formato WebP con fallback
-- [ ] Generar versiones AVIF para navegadores modernos
-- [ ] Implementar lazy loading para imágenes de sponsors
-- [ ] Crear imágenes responsivas con `srcset` para diferentes tamaños de pantalla
+- [x] Convertir todas las imágenes JPEG a formato WebP con fallback
+- [x] Generar versiones AVIF para navegadores modernos
+- [x] Implementar lazy loading para imágenes de sponsors
+- [x] Crear imágenes responsivas con `srcset` para diferentes tamaños de pantalla
 - [ ] Optimizar portada del álbum (actualmente desde Imgur) a assets locales optimizados
-- [ ] Comprimir y optimizar QR codes en la raíz del proyecto
-- [ ] Definir dimensiones explícitas (width/height) en todas las imágenes
+- [x] Comprimir y optimizar QR codes en la raíz del proyecto
+- [x] Definir dimensiones explícitas (width/height) en todas las imágenes
 
 **Herramientas sugeridas**:
 ```bash
@@ -51,33 +51,33 @@ npx @squoosh/cli --webp auto --avif auto public/assets/images/**/*.jpg
 ```
 
 #### 1.2 Optimización de Audio
-- [ ] Auditar archivo de audio de 5.6MB (identificar ubicación exacta)
-- [ ] Implementar lazy loading del audio (cargar solo cuando sea necesario)
+- [x] Auditar archivo de audio de 5.6MB (identificar ubicación exacta)
+- [x] Implementar lazy loading del audio (cargar solo cuando sea necesario)
 - [ ] Considerar compresión con formatos modernos (Opus, AAC)
-- [ ] Implementar preload strategies con `<link rel="preload">` solo si es crítico
-- [ ] Agregar player con controles de carga progresiva
+- [x] Implementar preload strategies con `<link rel="preload">` solo si es crítico
+- [x] Agregar player con controles de carga progresiva
 
 #### 1.3 Optimización de Fuentes
-- [ ] Implementar `preconnect` para Google Fonts
+- [x] Implementar `preconnect` para Google Fonts
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ```
 - [ ] Considerar self-hosting de fuentes para mejor control de caching
-- [ ] Usar `font-display: swap` en declaraciones CSS
+- [x] Usar `font-display: swap` en declaraciones CSS
 - [ ] Implementar subset de fuentes (solo caracteres necesarios)
 
 #### 1.4 Minificación y Bundling
-- [ ] Configurar sistema de build (Vite o Parcel)
-- [ ] Minificar CSS (style.css, comentarios.css, sponsors-carousel.css)
-- [ ] Minificar y bundlear JavaScript
-- [ ] Eliminar `script.js` vacío innecesario
-- [ ] Implementar code splitting para páginas separadas
+- [x] Configurar sistema de build (Vite o Parcel)
+- [x] Minificar CSS (style.css, comentarios.css, sponsors-carousel.css)
+- [x] Minificar y bundlear JavaScript
+- [x] Eliminar `script.js` vacío innecesario
+- [x] Implementar code splitting para páginas separadas
 
 #### 1.5 Estrategia de Caching
-- [ ] Configurar Cache-Control headers en `vercel.json`
-- [ ] Implementar versionado de assets (hash en nombres de archivo)
-- [ ] Configurar CDN para assets estáticos
+- [x] Configurar Cache-Control headers en `vercel.json`
+- [x] Implementar versionado de assets (hash en nombres de archivo)
+- [x] Configurar CDN para assets estáticos
 - [ ] Cache de imágenes externas (Imgur)
 
 **Ejemplo de configuración Vercel**:
