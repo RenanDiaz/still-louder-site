@@ -129,12 +129,12 @@ Ninguna - esta fase es independiente
 ### Tareas
 
 #### 2.1 Service Worker
-- [ ] Crear Service Worker con Workbox o implementación manual
-- [ ] Implementar estrategia de caching offline-first para assets críticos
-- [ ] Configurar estrategia network-first para contenido dinámico
-- [ ] Implementar precaching de páginas principales
-- [ ] Agregar manejo de errores offline con página fallback personalizada
-- [ ] Implementar actualización automática de Service Worker
+- [x] Crear Service Worker con Workbox o implementación manual
+- [x] Implementar estrategia de caching offline-first para assets críticos
+- [x] Configurar estrategia network-first para contenido dinámico
+- [x] Implementar precaching de páginas principales
+- [x] Agregar manejo de errores offline con página fallback personalizada
+- [x] Implementar actualización automática de Service Worker
 
 **Archivo**: `public/sw.js`
 ```javascript
@@ -156,12 +156,12 @@ workbox.routing.registerRoute(
 ```
 
 #### 2.2 Mejorar Web App Manifest
-- [ ] Revisar y mejorar `site.webmanifest` existente
-- [ ] Agregar más tamaños de iconos (192x192, 512x512, maskable)
-- [ ] Configurar `display: "standalone"` y `theme_color`
+- [x] Revisar y mejorar `site.webmanifest` existente
+- [x] Agregar más tamaños de iconos (192x192, 512x512, maskable)
+- [x] Configurar `display: "standalone"` y `theme_color`
 - [ ] Agregar screenshots para instalación mejorada
-- [ ] Definir `start_url` y `scope` correctamente
-- [ ] Agregar `shortcuts` para acceso rápido
+- [x] Definir `start_url` y `scope` correctamente
+- [x] Agregar `shortcuts` para acceso rápido
 
 **Ejemplo de manifest mejorado**:
 ```json
@@ -200,18 +200,18 @@ workbox.routing.registerRoute(
 ```
 
 #### 2.3 Estrategia Offline
-- [ ] Crear página offline personalizada con branding
-- [ ] Precachear assets críticos (CSS, JS, fonts)
-- [ ] Implementar sincronización en background cuando vuelva conexión
-- [ ] Mostrar estado de conexión al usuario
-- [ ] Guardar intención de clicks en plataformas cuando esté offline
+- [x] Crear página offline personalizada con branding
+- [x] Precachear assets críticos (CSS, JS, fonts)
+- [x] Implementar sincronización en background cuando vuelva conexión
+- [x] Mostrar estado de conexión al usuario
+- [x] Guardar intención de clicks en plataformas cuando esté offline
 
 #### 2.4 Instalabilidad
-- [ ] Registrar Service Worker en index.html
-- [ ] Implementar prompt de instalación personalizado
-- [ ] Agregar evento `beforeinstallprompt` para control de instalación
-- [ ] Tracking de instalaciones en Analytics
-- [ ] Mostrar banner "Agrega a pantalla de inicio" en dispositivos móviles
+- [x] Registrar Service Worker en index.html
+- [x] Implementar prompt de instalación personalizado
+- [x] Agregar evento `beforeinstallprompt` para control de instalación
+- [x] Tracking de instalaciones en Analytics
+- [x] Mostrar banner "Agrega a pantalla de inicio" en dispositivos móviles
 
 **Registro del SW**:
 ```javascript
