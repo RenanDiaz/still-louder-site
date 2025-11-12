@@ -251,11 +251,11 @@ if ('serviceWorker' in navigator) {
 ### Tareas
 
 #### 3.1 Structured Data (JSON-LD)
-- [ ] Implementar schema.org MusicRecording para "Al Vacío"
-- [ ] Agregar schema.org MusicGroup para "Still Louder"
-- [ ] Implementar BreadcrumbList si se agregan más páginas
-- [ ] Validar con Google Rich Results Test
-- [ ] Implementar Organization schema con redes sociales
+- [x] Implementar schema.org MusicRecording para "Al Vacío"
+- [x] Agregar schema.org MusicGroup para "Still Louder"
+- [x] Implementar BreadcrumbList si se agregan más páginas
+- [x] Validar con Google Rich Results Test
+- [x] Implementar Organization schema con redes sociales
 
 **Ejemplo de implementación**:
 ```html
@@ -293,10 +293,10 @@ if ('serviceWorker' in navigator) {
 ```
 
 #### 3.2 Sitemap y Robots
-- [ ] Crear `sitemap.xml` con todas las páginas
-- [ ] Crear `robots.txt` optimizado
-- [ ] Configurar prioridades y frecuencias de actualización
-- [ ] Enviar sitemap a Google Search Console
+- [x] Crear `sitemap.xml` con todas las páginas
+- [x] Crear `robots.txt` optimizado
+- [x] Configurar prioridades y frecuencias de actualización
+- [x] Enviar sitemap a Google Search Console
 - [ ] Agregar sitemap a Google Analytics
 
 **sitemap.xml**:
@@ -330,28 +330,28 @@ Disallow: /assets/css/
 ```
 
 #### 3.3 Mejoras de Accesibilidad
-- [ ] Auditar con Lighthouse Accessibility
-- [ ] Agregar atributos ARIA donde sean necesarios
-- [ ] Mejorar contraste de colores (verificar WCAG AA)
-- [ ] Implementar skip links para navegación por teclado
-- [ ] Agregar labels descriptivos en enlaces (evitar "click aquí")
-- [ ] Verificar orden de headings (h1, h2, h3)
-- [ ] Agregar `lang` en elementos con idioma diferente
-- [ ] Test con lectores de pantalla (NVDA, JAWS)
+- [x] Auditar con Lighthouse Accessibility
+- [x] Agregar atributos ARIA donde sean necesarios
+- [x] Mejorar contraste de colores (verificar WCAG AA)
+- [x] Implementar skip links para navegación por teclado
+- [x] Agregar labels descriptivos en enlaces (evitar "click aquí")
+- [x] Verificar orden de headings (h1, h2, h3)
+- [x] Agregar `lang` en elementos con idioma diferente
+- [x] Test con lectores de pantalla (NVDA, JAWS)
 
 #### 3.4 Meta Tags Adicionales
 - [ ] Agregar `alternate` para versiones de idioma (si aplica)
-- [ ] Implementar `rel="me"` para verificación de redes sociales
-- [ ] Agregar geo tags si es relevante (Panamá)
-- [ ] Mejorar meta description (actualmente muy larga)
-- [ ] Agregar JSON-LD para artista verificado
+- [x] Implementar `rel="me"` para verificación de redes sociales
+- [x] Agregar geo tags si es relevante (Panamá)
+- [x] Mejorar meta description (actualmente muy larga)
+- [x] Agregar JSON-LD para artista verificado
 
 #### 3.5 Open Graph Mejorado
-- [ ] Agregar `og:audio` con preview del track (si está disponible)
-- [ ] Implementar `music:preview_url` con Spotify preview
-- [ ] Verificar con Facebook Sharing Debugger
-- [ ] Verificar con Twitter Card Validator
-- [ ] Optimizar imagen OG (1200x630 ideal para shares)
+- [x] Agregar `og:audio` con preview del track (si está disponible)
+- [x] Implementar `music:preview_url` con Spotify preview
+- [x] Verificar con Facebook Sharing Debugger
+- [x] Verificar con Twitter Card Validator
+- [x] Optimizar imagen OG (1200x630 ideal para shares)
 
 ### Criterios de Éxito
 - ✅ Lighthouse SEO Score = 100

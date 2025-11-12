@@ -64,6 +64,37 @@ body {
   }
 }
 
+/* Accessibility: Skip Link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--border-radius-sm);
+}
+
+.skip-link:focus {
+  left: 10px !important;
+  top: 10px !important;
+}
+
+/* Accessibility: Screen Reader Only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 .overlay {
   min-height: 100vh;
   display: flex;
