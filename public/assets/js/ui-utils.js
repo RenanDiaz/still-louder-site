@@ -129,33 +129,41 @@ class UIUtils {
     }
 
     // Handle load
-    img.addEventListener('load', () => {
-      img.classList.remove('image-loading');
-      img.classList.add('fade-in');
+    img.addEventListener(
+      'load',
+      () => {
+        img.classList.remove('image-loading');
+        img.classList.add('fade-in');
 
-      // Remove skeleton
-      const skeleton = img.parentElement?.querySelector('.skeleton');
-      if (skeleton) {
-        skeleton.remove();
-      }
-    }, { once: true });
+        // Remove skeleton
+        const skeleton = img.parentElement?.querySelector('.skeleton');
+        if (skeleton) {
+          skeleton.remove();
+        }
+      },
+      { once: true }
+    );
 
     // Handle error
-    img.addEventListener('error', () => {
-      img.classList.remove('image-loading');
-      img.classList.add('image-error');
+    img.addEventListener(
+      'error',
+      () => {
+        img.classList.remove('image-loading');
+        img.classList.add('image-error');
 
-      // Remove skeleton
-      const skeleton = img.parentElement?.querySelector('.skeleton');
-      if (skeleton) {
-        skeleton.remove();
-      }
+        // Remove skeleton
+        const skeleton = img.parentElement?.querySelector('.skeleton');
+        if (skeleton) {
+          skeleton.remove();
+        }
 
-      // Use fallback if provided
-      if (options.fallback) {
-        img.src = options.fallback;
-      }
-    }, { once: true });
+        // Use fallback if provided
+        if (options.fallback) {
+          img.src = options.fallback;
+        }
+      },
+      { once: true }
+    );
   }
 
   /**
@@ -166,19 +174,22 @@ class UIUtils {
     if ('IntersectionObserver' in window) {
       const images = document.querySelectorAll(selector);
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            this.handleImageLoading(img, { showSkeleton: true });
-            observer.unobserve(img);
-          }
-        });
-      }, {
-        rootMargin: '50px'
-      });
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              this.handleImageLoading(img, { showSkeleton: true });
+              observer.unobserve(img);
+            }
+          });
+        },
+        {
+          rootMargin: '50px'
+        }
+      );
 
-      images.forEach(img => observer.observe(img));
+      images.forEach((img) => observer.observe(img));
     }
   }
 
@@ -216,9 +227,7 @@ class UIUtils {
    * @param {Object} options - Scroll options
    */
   smoothScrollTo(target, options = {}) {
-    const element = typeof target === 'string'
-      ? document.querySelector(target)
-      : target;
+    const element = typeof target === 'string' ? document.querySelector(target) : target;
 
     if (!element) return;
 
@@ -264,7 +273,7 @@ class UIUtils {
       if (!inThrottle) {
         func.apply(this, args);
         inThrottle = true;
-        setTimeout(() => inThrottle = false, limit);
+        setTimeout(() => (inThrottle = false), limit);
       }
     };
   }
@@ -345,7 +354,7 @@ class UIUtils {
    * Clean up loading states
    */
   cleanup() {
-    this.loadingElements.forEach(element => {
+    this.loadingElements.forEach((element) => {
       this.removeLoadingState(element);
     });
     this.loadingElements.clear();

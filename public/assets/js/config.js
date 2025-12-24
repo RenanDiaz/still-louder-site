@@ -57,6 +57,13 @@ export const CONFIG = {
     }
   },
 
+  // Store / Merchandise (Cuanto App)
+  store: {
+    name: 'Tienda Oficial',
+    url: 'https://cuanto.app/still_louder',
+    platform: 'Cuanto'
+  },
+
   // Analytics Configuration
   analytics: {
     id: 'G-ZZ4XG8CD88',
@@ -77,14 +84,16 @@ export const CONFIG = {
   site: {
     name: 'Still Louder',
     url: 'https://stillouder.space/',
-    description: '¡Ya disponible! Escucha "Al Vacío", el nuevo sencillo de Still Louder, en todas las plataformas digitales.',
+    description:
+      '¡Ya disponible! Escucha "Al Vacío", el nuevo sencillo de Still Louder, en todas las plataformas digitales.',
     locale: 'es_PA',
     themeColor: '#000000'
   },
 
   // Comments Form (Google Forms)
   comments: {
-    formUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSe8YfvuBNMBNjpclU3-0d0O_N5429TlJ4QWPpLwv_o0uh8n0A/formResponse',
+    formUrl:
+      'https://docs.google.com/forms/d/e/1FAIpQLSe8YfvuBNMBNjpclU3-0d0O_N5429TlJ4QWPpLwv_o0uh8n0A/formResponse',
     nameField: 'entry.1365306044',
     commentField: 'entry.1365306044'
   },
@@ -158,5 +167,6 @@ Object.freeze(CONFIG.comments);
 Object.freeze(CONFIG.features);
 Object.freeze(CONFIG.ui);
 Object.freeze(CONFIG.messages);
+Object.freeze(CONFIG.store);
 
 export default CONFIG;

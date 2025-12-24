@@ -58,7 +58,9 @@
 }
 .social .social-icon {
   color: #00ffcc;
-  transition: color 0.2s, transform 0.2s;
+  transition:
+    color 0.2s,
+    transform 0.2s;
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -89,7 +91,7 @@
 body {
   margin: 0;
   background: black;
-  background-image: url("https://i.imgur.com/N1DNYjI.jpg");
+  background-image: url('https://i.imgur.com/N1DNYjI.jpg');
   background-size: cover;
   background-position: top -120px center;
   background-repeat: no-repeat;

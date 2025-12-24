@@ -118,7 +118,7 @@ class Analytics {
     // Track at various milestones
     const milestones = [10, 30, 60, 120, 300]; // seconds
 
-    milestones.forEach(milestone => {
+    milestones.forEach((milestone) => {
       if (timeSpent === milestone) {
         this.trackEvent('engagement_time', {
           event_category: 'engagement',
@@ -211,7 +211,7 @@ class Analytics {
    * Track all platform links automatically
    */
   trackPlatformLinks() {
-    document.querySelectorAll('.platform-link').forEach(link => {
+    document.querySelectorAll('.platform-link').forEach((link) => {
       link.addEventListener('click', (e) => {
         const platformId = link.id.replace('-link', '');
         this.trackPlatformClick(platformId);
@@ -223,12 +223,14 @@ class Analytics {
    * Track all social media links automatically
    */
   trackSocialLinks() {
-    document.querySelectorAll('.social-links a[aria-label], .social-icons a[aria-label]').forEach(link => {
-      link.addEventListener('click', (e) => {
-        const network = link.getAttribute('aria-label');
-        this.trackSocialClick(network);
+    document
+      .querySelectorAll('.social-links a[aria-label], .social-icons a[aria-label]')
+      .forEach((link) => {
+        link.addEventListener('click', (e) => {
+          const network = link.getAttribute('aria-label');
+          this.trackSocialClick(network);
+        });
       });
-    });
   }
 
   /**
@@ -239,7 +241,7 @@ class Analytics {
     if (!audio) return;
 
     const events = ['play', 'pause', 'ended', 'error'];
-    events.forEach(eventName => {
+    events.forEach((eventName) => {
       audio.addEventListener(eventName, () => {
         this.trackAudioEvent(eventName);
       });
@@ -270,7 +272,7 @@ class Analytics {
         (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
       );
 
-      milestones.forEach(milestone => {
+      milestones.forEach((milestone) => {
         if (scrollPercent >= milestone && !triggered.has(milestone)) {
           triggered.add(milestone);
           this.trackScrollDepth(milestone);

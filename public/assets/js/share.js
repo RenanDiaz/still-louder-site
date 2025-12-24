@@ -203,7 +203,7 @@ class ShareManager {
   initShareButtons(selector = '.share-container') {
     const containers = document.querySelectorAll(selector);
 
-    containers.forEach(container => {
+    containers.forEach((container) => {
       const button = this.createShareButton({
         shareData: {
           title: container.dataset.shareTitle,

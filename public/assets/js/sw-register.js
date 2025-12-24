@@ -1,7 +1,7 @@
 // Still Louder - Service Worker Registration & Install Prompt
 // Version 1.0.0
 
-(function() {
+(function () {
   'use strict';
 
   // Configuration
@@ -426,7 +426,7 @@
     // Find install buttons in the page
     const installButtons = document.querySelectorAll('[data-pwa-install]');
 
-    installButtons.forEach(button => {
+    installButtons.forEach((button) => {
       button.addEventListener('click', async (e) => {
         e.preventDefault();
 
@@ -469,9 +469,11 @@
       }
 
       // Dispatch custom event
-      window.dispatchEvent(new CustomEvent('connectionchange', {
-        detail: { online: isOnline }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('connectionchange', {
+          detail: { online: isOnline }
+        })
+      );
     }
 
     window.addEventListener('online', updateOnlineStatus);
@@ -543,5 +545,4 @@
       }
     }
   };
-
 })();

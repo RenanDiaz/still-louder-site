@@ -17,6 +17,7 @@
   "devDependencies": {
     "@squoosh/cli": "^0.7.3",
     "eslint": "^8.56.0",
+    "globals": "^16.5.0",
     "prettier": "^3.2.4",
     "sharp": "^0.33.2",
     "terser": "^5.27.0",
