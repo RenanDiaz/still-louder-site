@@ -1,7 +1,7 @@
-Contact: mailto:security@stillouder.space
+Contact: mailto:security@stilllouder.space
 Expires: 2026-01-11T00:00:00.000Z
 Preferred-Languages: es, en
-Canonical: https://stillouder.space/.well-known/security.txt
+Canonical: https://stilllouder.space/.well-known/security.txt
 
 # Security Policy
 # If you discover a security vulnerability, please report it responsibly

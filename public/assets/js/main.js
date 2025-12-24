@@ -15,7 +15,7 @@ const CONFIG = {
   share: {
     title: 'Still Louder - Al Vacío',
     text: 'Escucha "Al Vacío" de Still Louder - Rock panameño disponible ahora en todas las plataformas.',
-    url: 'https://stillouder.space/'
+    url: 'https://stilllouder.space/'
   },
   analytics: {
     enabled: typeof gtag !== 'undefined'

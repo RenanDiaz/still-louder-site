@@ -1,6 +1,6 @@
 # Robots.txt para Still Louder - Al Vacío
 # Optimizado para SEO y descubrimiento de contenido
-# https://stillouder.space/
+# https://stilllouder.space/
 
 User-agent: *
 Allow: /
@@ -19,7 +19,7 @@ Disallow: /node_modules/
 Disallow: /dist/
 
 # Sitemap
-Sitemap: https://stillouder.space/sitemap.xml
+Sitemap: https://stilllouder.space/sitemap.xml
 
 # Crawl delay para bots no principales
 User-agent: *
