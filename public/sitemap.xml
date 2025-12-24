@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://stillouder.space/</loc>
+    <loc>https://stilllouder.space/</loc>
     <lastmod>2025-01-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -13,7 +13,7 @@
     </image:image>
   </url>
   <url>
-    <loc>https://stillouder.space/al-vacio-pre-release</loc>
+    <loc>https://stilllouder.space/al-vacio-pre-release</loc>
     <lastmod>2025-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

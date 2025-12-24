@@ -83,7 +83,7 @@ export const CONFIG = {
   // Site Information
   site: {
     name: 'Still Louder',
-    url: 'https://stillouder.space/',
+    url: 'https://stilllouder.space/',
     description:
       '¡Ya disponible! Escucha "Al Vacío", el nuevo sencillo de Still Louder, en todas las plataformas digitales.',
     locale: 'es_PA',
