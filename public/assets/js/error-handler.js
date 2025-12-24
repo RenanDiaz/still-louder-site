@@ -257,9 +257,11 @@ class ErrorHandler {
    * @returns {boolean}
    */
   isDevelopment() {
-    return window.location.hostname === 'localhost' ||
-           window.location.hostname === '127.0.0.1' ||
-           window.location.port !== '';
+    return (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.port !== ''
+    );
   }
 
   /**

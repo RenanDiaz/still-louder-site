@@ -33,14 +33,16 @@ self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing Service Worker...', event);
 
   event.waitUntil(
-    caches.open(PRECACHE_NAME)
+    caches
+      .open(PRECACHE_NAME)
       .then((cache) => {
         console.log('[Service Worker] Precaching critical assets');
-        return cache.addAll(PRECACHE_URLS.map(url => new Request(url, { cache: 'no-cache' })));
+        return cache.addAll(PRECACHE_URLS.map((url) => new Request(url, { cache: 'no-cache' })));
       })
       .then(() => {
         // Cache offline page separately to ensure it's always available
-        return caches.open(OFFLINE_CACHE_NAME)
+        return caches
+          .open(OFFLINE_CACHE_NAME)
           .then((cache) => cache.add(new Request('/offline.html', { cache: 'no-cache' })));
       })
       .then(() => self.skipWaiting()) // Force waiting service worker to become active
@@ -52,15 +54,18 @@ self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Activating Service Worker...', event);
 
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             // Delete old caches that don't match current version
-            if (cacheName !== PRECACHE_NAME &&
-                cacheName !== RUNTIME_CACHE_NAME &&
-                cacheName !== IMAGE_CACHE_NAME &&
-                cacheName !== OFFLINE_CACHE_NAME) {
+            if (
+              cacheName !== PRECACHE_NAME &&
+              cacheName !== RUNTIME_CACHE_NAME &&
+              cacheName !== IMAGE_CACHE_NAME &&
+              cacheName !== OFFLINE_CACHE_NAME
+            ) {
               console.log('[Service Worker] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -87,15 +92,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Handle Google Analytics separately (network-only)
-  if (url.hostname === 'www.google-analytics.com' ||
-      url.hostname === 'www.googletagmanager.com' ||
-      url.pathname.includes('/gtag/')) {
+  if (
+    url.hostname === 'www.google-analytics.com' ||
+    url.hostname === 'www.googletagmanager.com' ||
+    url.pathname.includes('/gtag/')
+  ) {
     event.respondWith(fetch(request).catch(() => new Response()));
     return;
   }
 
   // Strategy: Cache First for images (external and local)
-  if (request.destination === 'image' || url.pathname.match(/\.(jpg|jpeg|png|gif|svg|webp|avif|ico)$/)) {
+  if (
+    request.destination === 'image' ||
+    url.pathname.match(/\.(jpg|jpeg|png|gif|svg|webp|avif|ico)$/)
+  ) {
     event.respondWith(cacheFirstStrategy(request, IMAGE_CACHE_NAME));
     return;
   }
@@ -228,15 +238,17 @@ async function staleWhileRevalidateStrategy(request, cacheName) {
   const cached = await cache.match(request);
 
   // Fetch in background and update cache
-  const fetchPromise = fetch(request).then((response) => {
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  }).catch((error) => {
-    console.error('[Service Worker] Background fetch failed:', error);
-    return cached; // Return cached if fetch fails
-  });
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch((error) => {
+      console.error('[Service Worker] Background fetch failed:', error);
+      return cached; // Return cached if fetch fails
+    });
 
   // Return cached immediately if available, otherwise wait for fetch
   return cached || fetchPromise;
@@ -253,9 +265,7 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
       caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
+        return Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
       })
     );
   }
@@ -307,9 +317,7 @@ self.addEventListener('push', (event) => {
     ]
   };
 
-  event.waitUntil(
-    self.registration.showNotification('Still Louder', options)
-  );
+  event.waitUntil(self.registration.showNotification('Still Louder', options));
 });
 
 // Notification click handler
@@ -319,9 +327,7 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
+    event.waitUntil(clients.openWindow('/'));
   }
 });
 
