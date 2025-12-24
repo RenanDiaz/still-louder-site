@@ -56,9 +56,9 @@
     <!-- Critical CSS -->
     <link rel="stylesheet" href="assets/css/style.css" />
 
-    <!-- Modern font with font-display swap for better performance -->
+    <!-- Modern fonts -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap"
       rel="stylesheet"
     />
 
@@ -84,10 +84,6 @@
     <meta property="music:release_date" content="2025-07-28" />
     <meta property="music:song" content="https://stillouder.space/" />
     <meta property="music:duration" content="240" />
-
-    <!-- Spotify Preview URL (if available in the future) -->
-    <!-- <meta property="og:audio" content="https://p.scdn.co/mp3-preview/..." /> -->
-    <!-- <meta property="og:audio:type" content="audio/mpeg" /> -->
 
     <!-- Platform Links for Discovery -->
     <meta
@@ -303,61 +299,116 @@
         gtag('config', 'G-ZZ4XG8CD88');
       }
     </script>
-
-    <!-- Share Button Styles -->
-    <style>
-      .share-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5em;
-        background: var(--color-link-bg);
-        color: var(--color-text-primary);
-        border: 2px solid var(--color-accent);
-        padding: 0.6em 1em;
-        border-radius: 0.7em;
-        font-weight: var(--font-weight-semibold);
-        font-size: var(--font-size-sm);
-        cursor: pointer;
-        transition: all var(--transition-normal);
-        margin-top: var(--spacing-md);
-      }
-
-      .share-button:hover {
-        background: var(--color-accent);
-        color: var(--color-primary);
-        transform: translateY(-2px);
-      }
-
-      .share-button svg {
-        width: 20px;
-        height: 20px;
-      }
-    </style>
   </head>
 
   <body>
     <!-- Skip to main content link for keyboard navigation -->
-    <a
-      href="#main-content"
-      class="skip-link"
-      style="position: absolute; left: -9999px; z-index: 999"
-      >Saltar al contenido principal</a
-    >
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <!-- Fixed Navigation Header -->
+    <header class="site-header" id="site-header">
+      <div class="header-content">
+        <a href="#hero" class="header-logo">Still Louder</a>
+        <nav class="header-nav" aria-label="Navegación principal">
+          <a href="#hero" class="nav-link active" data-section="hero">Inicio</a>
+          <a href="#escuchar" class="nav-link" data-section="escuchar">Escuchar</a>
+          <a href="#about" class="nav-link" data-section="about">Banda</a>
+          <a href="#conectar" class="nav-link" data-section="conectar">Conectar</a>
+        </nav>
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menú">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-menu" id="mobile-menu">
+      <nav class="mobile-nav" aria-label="Navegación móvil">
+        <a href="#hero" class="mobile-nav-link" data-section="hero">Inicio</a>
+        <a href="#escuchar" class="mobile-nav-link" data-section="escuchar">Escuchar</a>
+        <a href="#about" class="mobile-nav-link" data-section="about">Banda</a>
+        <a href="#conectar" class="mobile-nav-link" data-section="conectar">Conectar</a>
+      </nav>
+    </div>
 
     <main id="main-content" role="main">
-      <div class="overlay">
-        <div class="landing-container">
-          <img
-            src="https://i.imgur.com/CoA13WN.jpg"
-            alt="Portada del sencillo Al Vacío de Still Louder"
-            class="release-art"
-          />
-          <h1>Still Louder - Al Vacío</h1>
-          <h2 class="release-date">¡Ya disponible en todas las plataformas digitales!</h2>
+      <!-- Hero Section -->
+      <section class="hero" id="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <div class="hero-album">
+            <img
+              src="https://i.imgur.com/CoA13WN.jpg"
+              alt="Portada del sencillo Al Vacío de Still Louder"
+              class="album-cover"
+            />
+            <div class="album-glow"></div>
+          </div>
+          <div class="hero-text">
+            <p class="hero-subtitle reveal-up">Nuevo Sencillo</p>
+            <h1 class="hero-title reveal-up">Al Vacío</h1>
+            <p class="hero-artist reveal-up">Still Louder</p>
+            <p class="hero-available reveal-up">
+              <span class="pulse-dot"></span>
+              Ya disponible en todas las plataformas
+            </p>
+          </div>
+          <div class="hero-cta reveal-up">
+            <a href="#escuchar" class="btn btn-primary">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Escuchar Ahora
+            </a>
+            <button class="btn btn-secondary" id="share-btn" aria-label="Compartir">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              Compartir
+            </button>
+          </div>
+        </div>
+        <a href="#escuchar" class="scroll-indicator" aria-label="Desplazarse hacia abajo">
+          <span class="scroll-arrow"></span>
+        </a>
+      </section>
+
+      <!-- Listen Section -->
+      <section class="section section-listen" id="escuchar">
+        <div class="section-container">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Escuchar</h2>
+            <p class="section-subtitle reveal-up">Disponible en tu plataforma favorita</p>
+          </header>
 
           <!-- Audio Player Preview -->
-          <section class="audio-player-section" aria-label="Escuchar preview">
-            <div class="audio-player" id="audio-player">
+          <div class="audio-player-wrapper reveal-up">
+            <div class="audio-player glass-card" id="audio-player">
               <audio id="audio-preview" preload="metadata">
                 <source src="assets/Still Louder - Al Vacío.mp3" type="audio/mpeg" />
                 Tu navegador no soporta el elemento de audio.
@@ -388,11 +439,14 @@
                   fill="currentColor"
                   aria-hidden="true"
                   focusable="false"
-                  style="display: none"
                 >
                   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                 </svg>
               </button>
+              <div class="audio-info">
+                <span class="audio-title">Al Vacío</span>
+                <span class="audio-artist">Still Louder</span>
+              </div>
               <div class="audio-progress-container">
                 <div class="audio-progress-bar" id="progress-bar">
                   <div class="audio-progress" id="audio-progress"></div>
@@ -403,168 +457,316 @@
                 </div>
               </div>
             </div>
-          </section>
+          </div>
 
+          <!-- Platform Links Grid -->
           <nav
-            class="platform-links"
+            class="platforms-grid"
             aria-label="Enlaces a plataformas de streaming"
             role="navigation"
           >
             <a
               href="https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f"
-              class="platform-link"
+              class="platform-card glass-card reveal-up"
               id="spotify-link"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Escuchar Al Vacío en Spotify (se abre en nueva ventana)"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                fill="currentColor"
-                class="bi bi-spotify"
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.669 11.538a.5.5 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686m.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858m.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288"
-                /></svg
-              >Spotify
+              <div class="platform-icon platform-icon--spotify">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.669 11.538a.5.5 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686m.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858m.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288"
+                  />
+                </svg>
+              </div>
+              <span class="platform-name">Spotify</span>
+              <span class="platform-action">Reproducir</span>
             </a>
 
             <a
               href="https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538"
-              class="platform-link"
+              class="platform-card glass-card reveal-up"
               id="apple-link"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Escuchar Al Vacío en Apple Music (se abre en nueva ventana)"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                fill="currentColor"
-                class="bi bi-apple-music"
-                viewBox="0 0 16 16"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="m10.995 0 .573.001q.241 0 .483.007c.35.01.705.03 1.051.093.352.063.68.166.999.329a3.36 3.36 0 0 1 1.47 1.468c.162.32.265.648.328 1 .063.347.084.7.093 1.051q.007.241.007.483l.001.573v5.99l-.001.573q0 .241-.008.483c-.01.35-.03.704-.092 1.05a3.5 3.5 0 0 1-.33 1 3.36 3.36 0 0 1-1.468 1.468 3.5 3.5 0 0 1-1 .33 7 7 0 0 1-1.05.092q-.241.007-.483.008l-.573.001h-5.99l-.573-.001q-.241 0-.483-.008a7 7 0 0 1-1.052-.092 3.6 3.6 0 0 1-.998-.33 3.36 3.36 0 0 1-1.47-1.468 3.6 3.6 0 0 1-.328-1 7 7 0 0 1-.093-1.05Q.002 11.81 0 11.568V5.005l.001-.573q0-.241.007-.483c.01-.35.03-.704.093-1.05a3.6 3.6 0 0 1 .329-1A3.36 3.36 0 0 1 1.9.431 3.5 3.5 0 0 1 2.896.1 7 7 0 0 1 3.95.008Q4.19.002 4.432 0h.573zm-.107 2.518-4.756.959H6.13a.66.66 0 0 0-.296.133.5.5 0 0 0-.16.31c-.004.027-.01.08-.01.16v5.952c0 .14-.012.275-.106.39-.095.115-.21.15-.347.177l-.31.063c-.393.08-.65.133-.881.223a1.4 1.4 0 0 0-.519.333 1.25 1.25 0 0 0-.332.995c.031.297.166.582.395.792.156.142.35.25.578.296.236.047.49.031.858-.043.196-.04.38-.102.555-.205a1.4 1.4 0 0 0 .438-.405 1.5 1.5 0 0 0 .233-.55c.042-.202.052-.386.052-.588V6.347c0-.276.08-.35.302-.404.024-.005 3.954-.797 4.138-.833.257-.049.378.025.378.294v3.524c0 .14-.001.28-.096.396-.094.115-.211.15-.348.178l-.31.062c-.393.08-.649.133-.88.223a1.4 1.4 0 0 0-.52.334 1.26 1.26 0 0 0-.34.994c.03.297.174.582.404.792a1.2 1.2 0 0 0 .577.294c.237.048.49.03.858-.044.197-.04.381-.098.556-.202a1.4 1.4 0 0 0 .438-.405q.173-.252.233-.549a2.7 2.7 0 0 0 .044-.589V2.865c0-.273-.143-.443-.4-.42-.04.003-.383.064-.424.073"
-                /></svg
-              >Apple Music
+              <div class="platform-icon platform-icon--apple">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="m10.995 0 .573.001q.241 0 .483.007c.35.01.705.03 1.051.093.352.063.68.166.999.329a3.36 3.36 0 0 1 1.47 1.468c.162.32.265.648.328 1 .063.347.084.7.093 1.051q.007.241.007.483l.001.573v5.99l-.001.573q0 .241-.008.483c-.01.35-.03.704-.092 1.05a3.5 3.5 0 0 1-.33 1 3.36 3.36 0 0 1-1.468 1.468 3.5 3.5 0 0 1-1 .33 7 7 0 0 1-1.05.092q-.241.007-.483.008l-.573.001h-5.99l-.573-.001q-.241 0-.483-.008a7 7 0 0 1-1.052-.092 3.6 3.6 0 0 1-.998-.33 3.36 3.36 0 0 1-1.47-1.468 3.6 3.6 0 0 1-.328-1 7 7 0 0 1-.093-1.05Q.002 11.81 0 11.568V5.005l.001-.573q0-.241.007-.483c.01-.35.03-.704.093-1.05a3.6 3.6 0 0 1 .329-1A3.36 3.36 0 0 1 1.9.431 3.5 3.5 0 0 1 2.896.1 7 7 0 0 1 3.95.008Q4.19.002 4.432 0h.573zm-.107 2.518-4.756.959H6.13a.66.66 0 0 0-.296.133.5.5 0 0 0-.16.31c-.004.027-.01.08-.01.16v5.952c0 .14-.012.275-.106.39-.095.115-.21.15-.347.177l-.31.063c-.393.08-.65.133-.881.223a1.4 1.4 0 0 0-.519.333 1.25 1.25 0 0 0-.332.995c.031.297.166.582.395.792.156.142.35.25.578.296.236.047.49.031.858-.043.196-.04.38-.102.555-.205a1.4 1.4 0 0 0 .438-.405 1.5 1.5 0 0 0 .233-.55c.042-.202.052-.386.052-.588V6.347c0-.276.08-.35.302-.404.024-.005 3.954-.797 4.138-.833.257-.049.378.025.378.294v3.524c0 .14-.001.28-.096.396-.094.115-.211.15-.348.178l-.31.062c-.393.08-.649.133-.88.223a1.4 1.4 0 0 0-.52.334 1.26 1.26 0 0 0-.34.994c.03.297.174.582.404.792a1.2 1.2 0 0 0 .577.294c.237.048.49.03.858-.044.197-.04.381-.098.556-.202a1.4 1.4 0 0 0 .438-.405q.173-.252.233-.549a2.7 2.7 0 0 0 .044-.589V2.865c0-.273-.143-.443-.4-.42-.04.003-.383.064-.424.073"
+                  />
+                </svg>
+              </div>
+              <span class="platform-name">Apple Music</span>
+              <span class="platform-action">Reproducir</span>
             </a>
 
             <a
               href="https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCdSvT9y"
-              class="platform-link"
+              class="platform-card glass-card reveal-up"
               id="youtube-link"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Ver Al Vacío en YouTube (se abre en nueva ventana)"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="28"
-                height="28"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  fill="currentColor"
-                  d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0m0 5.727a6.274 6.274 0 0 1 0 12.546a6.274 6.274 0 0 1 0-12.546m0 .546A5.735 5.735 0 0 0 6.273 12A5.727 5.727 0 0 0 12 17.727A5.727 5.727 0 0 0 17.727 12A5.735 5.735 0 0 0 12 6.273m-2.182 2.59l5.318 3l-5.318 3.273Z"
-                ></path></svg
-              >YouTube
+              <div class="platform-icon platform-icon--youtube">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+                  ></path>
+                </svg>
+              </div>
+              <span class="platform-name">YouTube</span>
+              <span class="platform-action">Ver Video</span>
             </a>
 
             <a
               href="https://link.deezer.com/s/30BAvwIohgJLbpIWKmFld"
-              class="platform-link"
+              class="platform-card glass-card reveal-up"
               id="deezer-link"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Escuchar Al Vacío en Deezer (se abre en nueva ventana)"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 28 28"
-                width="28"
-                height="28"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  fill="currentColor"
-                  d="M18.81 4.16v3.03H24V4.16h-5.19zM6.27 8.38v3.027h5.189V8.38h-5.19zm12.54 0v3.027H24V8.38h-5.19zM6.27 12.594v3.027h5.189v-3.027h-5.19zm6.271 0v3.027h5.19v-3.027h-5.19zm6.27 0v3.027H24v-3.027h-5.19zM0 16.81v3.029h5.19v-3.03H0zm6.27 0v3.029h5.189v-3.03h-5.19zm6.271 0v3.029h5.19v-3.03h-5.19zm6.27 0v3.029H24v-3.03h-5.19Z"
-                ></path></svg
-              >Deezer
+              <div class="platform-icon platform-icon--deezer">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 28 28"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M18.81 4.16v3.03H24V4.16h-5.19zM6.27 8.38v3.027h5.189V8.38h-5.19zm12.54 0v3.027H24V8.38h-5.19zM6.27 12.594v3.027h5.189v-3.027h-5.19zm6.271 0v3.027h5.19v-3.027h-5.19zm6.27 0v3.027H24v-3.027h-5.19zM0 16.81v3.029h5.19v-3.03H0zm6.27 0v3.029h5.189v-3.03h-5.19zm6.271 0v3.029h5.19v-3.03h-5.19zm6.27 0v3.029H24v-3.03h-5.19Z"
+                  ></path>
+                </svg>
+              </div>
+              <span class="platform-name">Deezer</span>
+              <span class="platform-action">Reproducir</span>
             </a>
 
             <a
               href="https://music.amazon.com/tracks/B0FK3D2CK6"
-              class="platform-link"
+              class="platform-card glass-card reveal-up"
               id="amazon-link"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Escuchar Al Vacío en Amazon Music (se abre en nueva ventana)"
             >
+              <div class="platform-icon platform-icon--amazon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 48 48"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="21.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></circle>
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M32.28 29.7c1.113-.45 3.092-1.048 3.688-.326c.644.781-.17 2.477-.92 3.794"
+                  ></path>
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11.798 30.223c1.759 1.397 6.954 3.535 12.488 3.535a17 17 0 0 0 10.167-3.08M20.404 20.125v3.3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-3.3m0 3.3v2m-14.004-3.2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3.2m-4-5.2v5.2m4-3.2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3.2"
+                  ></path>
+                  <circle cx="31.88" cy="17.675" r=".7" fill="currentColor"></circle>
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M31.88 20.125v5.3m-5.34-.452a2.25 2.25 0 0 0 1.646.447h.448a1.324 1.324 0 0 0 1.322-1.325h0a1.324 1.324 0 0 0-1.322-1.325h-.897a1.324 1.324 0 0 1-1.322-1.325h0a1.324 1.324 0 0 1 1.322-1.325h.449a2.25 2.25 0 0 1 1.644.448m7.77 3.85a2 2 0 0 1-1.737 1.007h0a2 2 0 0 1-2-2v-1.3a2 2 0 0 1 2-2h0a2 2 0 0 1 1.735 1.004"
+                  ></path>
+                </svg>
+              </div>
+              <span class="platform-name">Amazon Music</span>
+              <span class="platform-action">Reproducir</span>
+            </a>
+          </nav>
+        </div>
+      </section>
+
+      <!-- About Section -->
+      <section class="section section-about" id="about">
+        <div class="section-container">
+          <div class="about-grid">
+            <div class="about-image reveal-left">
+              <div class="about-image-frame">
+                <img
+                  src="https://i.imgur.com/N1DNYjI.jpg"
+                  alt="Still Louder - Banda de heavy metal de Panamá"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div class="about-content">
+              <header class="section-header section-header--left">
+                <h2 class="section-title reveal-up">Still Louder</h2>
+                <p class="section-subtitle reveal-up">Heavy Metal desde Panamá</p>
+              </header>
+              <div class="about-text">
+                <p class="reveal-up">
+                  <strong>Still Louder</strong> es una banda de heavy metal originaria de
+                  <strong>Chiriquí, Panamá</strong>, formada en 2009. Su primer toque oficial fue el
+                  31 de octubre de ese año.
+                </p>
+                <p class="reveal-up">
+                  Con un sonido que fusiona heavy metal clásico con elementos modernos, la banda ha
+                  sido influenciada por Metallica, Megadeth, Ángeles del Infierno y Rata Blanca.
+                </p>
+                <p class="reveal-up">
+                  Ganadores del <strong>Hard Rock Rising Panamá 2013</strong>, han compartido
+                  escenario con bandas internacionales como 2 Minutos (Argentina) y Mantra (Costa
+                  Rica).
+                </p>
+                <p class="reveal-up">
+                  <em
+                    >"Al Vacío" marca una nueva etapa en su trayectoria, explorando temas de
+                    introspección y la búsqueda de significado.</em
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connect Section -->
+      <section class="section section-connect" id="conectar">
+        <div class="section-container">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Conectar</h2>
+            <p class="section-subtitle reveal-up">Síguenos en redes sociales</p>
+          </header>
+
+          <div class="social-grid reveal-up">
+            <a
+              href="https://www.instagram.com/stilllouder/"
+              class="social-card glass-card social-card--instagram"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Seguir a Still Louder en Instagram (se abre en nueva ventana)"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 48 48"
-                width="28"
-                height="28"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
                 aria-hidden="true"
                 focusable="false"
               >
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="21.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                ></circle>
                 <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M32.28 29.7c1.113-.45 3.092-1.048 3.688-.326c.644.781-.17 2.477-.92 3.794"
-                ></path>
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M11.798 30.223c1.759 1.397 6.954 3.535 12.488 3.535a17 17 0 0 0 10.167-3.08M20.404 20.125v3.3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-3.3m0 3.3v2m-14.004-3.2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3.2m-4-5.2v5.2m4-3.2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3.2"
-                ></path>
-                <circle cx="31.88" cy="17.675" r=".7" fill="currentColor"></circle>
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M31.88 20.125v5.3m-5.34-.452a2.25 2.25 0 0 0 1.646.447h.448a1.324 1.324 0 0 0 1.322-1.325h0a1.324 1.324 0 0 0-1.322-1.325h-.897a1.324 1.324 0 0 1-1.322-1.325h0a1.324 1.324 0 0 1 1.322-1.325h.449a2.25 2.25 0 0 1 1.644.448m7.77 3.85a2 2 0 0 1-1.737 1.007h0a2 2 0 0 1-2-2v-1.3a2 2 0 0 1 2-2h0a2 2 0 0 1 1.735 1.004"
-                ></path>
+                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+                />
               </svg>
-              Amazon Music
+              <span class="social-name">Instagram</span>
+              <span class="social-handle">@stilllouder</span>
             </a>
-          </nav>
 
-          <!-- Share Button Container -->
-          <div id="share-container"></div>
+            <a
+              href="https://www.facebook.com/stilllouder/"
+              class="social-card glass-card social-card--facebook"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Seguir a Still Louder en Facebook (se abre en nueva ventana)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                />
+              </svg>
+              <span class="social-name">Facebook</span>
+              <span class="social-handle">/stilllouder</span>
+            </a>
 
-          <!-- Store / Merchandise Section -->
-          <section class="store-section" aria-label="Tienda oficial">
+            <a
+              href="https://www.youtube.com/@StillLouder"
+              class="social-card glass-card social-card--youtube"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Suscribirse al canal de Still Louder en YouTube (se abre en nueva ventana)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+                />
+              </svg>
+              <span class="social-name">YouTube</span>
+              <span class="social-handle">@StillLouder</span>
+            </a>
+          </div>
+
+          <!-- Store Link -->
+          <div class="store-wrapper reveal-up">
             <a
               href="https://cuanto.app/still_louder"
-              class="store-link"
+              class="store-card glass-card"
               id="cuanto-link"
               target="_blank"
               rel="noopener noreferrer"
@@ -572,8 +774,8 @@
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="28"
+                height="28"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -587,334 +789,31 @@
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
               </svg>
-              Tienda Oficial
-            </a>
-          </section>
-
-          <!-- About the Band -->
-          <section class="about-section" aria-label="Sobre la banda">
-            <details class="about-details">
-              <summary class="about-summary">
-                <span>Sobre Still Louder</span>
-                <svg
-                  class="about-chevron"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </summary>
-              <div class="about-content">
-                <p>
-                  <strong>Still Louder</strong> es una banda de heavy metal originaria de
-                  <strong>Chiriquí, Panamá</strong>, formada en 2009. Su primer toque oficial fue el
-                  31 de octubre de ese año. Con un sonido que fusiona heavy metal clásico con
-                  elementos modernos, la banda ha sido influenciada por Metallica, Megadeth, Ángeles
-                  del Infierno y Rata Blanca.
-                </p>
-                <p>
-                  Ganadores del <strong>Hard Rock Rising Panamá 2013</strong>, han compartido
-                  escenario con bandas internacionales como 2 Minutos (Argentina) y Mantra (Costa
-                  Rica). "Al Vacío" marca una nueva etapa en su trayectoria, explorando temas de
-                  introspección y la búsqueda de significado.
-                </p>
+              <div class="store-text">
+                <span class="store-title">Tienda Oficial</span>
+                <span class="store-subtitle">Merch & más</span>
               </div>
-            </details>
-          </section>
-
-          <!-- Social Media Links -->
-          <section class="social-section" aria-label="Redes sociales">
-            <div class="social-links">
-              <a
-                href="https://www.instagram.com/stilllouder/"
-                class="social-link social-link--instagram"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Seguir a Still Louder en Instagram (se abre en nueva ventana)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path
-                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://www.facebook.com/stilllouder/"
-                class="social-link social-link--facebook"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Seguir a Still Louder en Facebook (se abre en nueva ventana)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path
-                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://www.youtube.com/@StillLouder"
-                class="social-link social-link--youtube"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Suscribirse al canal de Still Louder en YouTube (se abre en nueva ventana)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path
-                    d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
-                  />
-                </svg>
-              </a>
-            </div>
-          </section>
-
-          <footer class="footer-text" role="contentinfo">
-            <p>&copy; 2025 Still Louder. Todos los derechos reservados.</p>
-          </footer>
+            </a>
+          </div>
         </div>
-      </div>
+      </section>
     </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-content">
+        <p class="footer-copyright">&copy; 2025 Still Louder. Todos los derechos reservados.</p>
+        <p class="footer-location">Chiriquí, Panamá</p>
+      </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <!-- Service Worker Registration -->
     <script src="assets/js/sw-register.js"></script>
 
-    <!-- Enhanced script with platform tracking and accessibility -->
-    <script>
-      // Track clicks on platform links
-      document.querySelectorAll('.platform-link').forEach((link) => {
-        link.addEventListener('click', (e) => {
-          const platform = e.currentTarget.id.replace('-link', '');
-          if (typeof gtag !== 'undefined') {
-            gtag('event', 'click_platform', {
-              event_category: 'streaming',
-              event_label: platform,
-              platform_name: platform
-            });
-          }
-        });
-      });
-    </script>
-
-    <!-- Enhanced modular scripts -->
-    <script type="module">
-      // Import modules
-      import analytics from './assets/js/analytics.js';
-      import shareManager from './assets/js/share.js';
-      import errorHandler from './assets/js/error-handler.js';
-      import uiUtils from './assets/js/ui-utils.js';
-
-      // Initialize error handling
-      errorHandler.init();
-
-      // Initialize analytics tracking
-      analytics.initAutoTracking();
-
-      // Add share button
-      const shareContainer = document.getElementById('share-container');
-      const shareButton = shareManager.createShareButton({
-        label: 'Compartir',
-        className: 'share-button'
-      });
-      shareContainer.appendChild(shareButton);
-
-      // Initialize lazy loading for images
-      uiUtils.initLazyLoading();
-
-      // Add fade-in animation to loaded images
-      const releaseArt = document.querySelector('.release-art');
-      if (releaseArt) {
-        uiUtils.handleImageLoading(releaseArt, {
-          fallback: '/assets/images/fallback-cover.jpg'
-        });
-      }
-
-      // Make skip link visible on focus
-      const skipLink = document.querySelector('.skip-link');
-      if (skipLink) {
-        skipLink.addEventListener('focus', function () {
-          this.style.left = '10px';
-          this.style.top = '10px';
-          this.style.padding = '10px';
-          this.style.backgroundColor = '#000';
-          this.style.color = '#fff';
-          this.style.textDecoration = 'none';
-          this.style.border = '2px solid #fff';
-        });
-        skipLink.addEventListener('blur', function () {
-          this.style.left = '-9999px';
-        });
-      }
-
-      // Handle shortcuts from manifest
-      const urlParams = new URLSearchParams(window.location.search);
-      const action = urlParams.get('action');
-
-      if (action) {
-        // Track shortcut usage
-        if (typeof gtag !== 'undefined') {
-          gtag('event', 'pwa_shortcut', {
-            event_category: 'pwa',
-            event_label: action
-          });
-        }
-
-        // Auto-redirect based on action
-        const platformMap = {
-          spotify: 'https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f',
-          apple: 'https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538',
-          youtube: 'https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCbSvT9y'
-        };
-
-        if (platformMap[action]) {
-          setTimeout(() => {
-            window.open(platformMap[action], '_blank');
-          }, 500);
-        }
-      }
-
-      // Audio Player functionality
-      const audio = document.getElementById('audio-preview');
-      const playBtn = document.getElementById('play-btn');
-      const progressBar = document.getElementById('progress-bar');
-      const audioProgress = document.getElementById('audio-progress');
-      const currentTimeEl = document.getElementById('current-time');
-      const durationEl = document.getElementById('duration');
-
-      // Format time helper
-      const formatTime = (seconds) => {
-        if (isNaN(seconds)) return '0:00';
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-      };
-
-      // Update duration when metadata loads
-      audio.addEventListener('loadedmetadata', () => {
-        durationEl.textContent = formatTime(audio.duration);
-      });
-
-      // Play/Pause toggle
-      playBtn.addEventListener('click', () => {
-        if (audio.paused) {
-          audio.play();
-          playBtn.classList.add('is-playing');
-          playBtn.setAttribute('aria-label', 'Pausar preview de Al Vacío');
-          // Track play event
-          if (typeof gtag !== 'undefined') {
-            gtag('event', 'audio_play', {
-              event_category: 'audio',
-              event_label: 'Al Vacío Preview'
-            });
-          }
-        } else {
-          audio.pause();
-          playBtn.classList.remove('is-playing');
-          playBtn.setAttribute('aria-label', 'Reproducir preview de Al Vacío');
-        }
-      });
-
-      // Update progress bar
-      audio.addEventListener('timeupdate', () => {
-        const progress = (audio.currentTime / audio.duration) * 100;
-        audioProgress.style.width = `${progress}%`;
-        currentTimeEl.textContent = formatTime(audio.currentTime);
-      });
-
-      // Click on progress bar to seek
-      progressBar.addEventListener('click', (e) => {
-        const rect = progressBar.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        audio.currentTime = percent * audio.duration;
-      });
-
-      // Reset when audio ends
-      audio.addEventListener('ended', () => {
-        playBtn.classList.remove('is-playing');
-        playBtn.setAttribute('aria-label', 'Reproducir preview de Al Vacío');
-        audioProgress.style.width = '0%';
-        audio.currentTime = 0;
-        // Track completion event
-        if (typeof gtag !== 'undefined') {
-          gtag('event', 'audio_complete', {
-            event_category: 'audio',
-            event_label: 'Al Vacío Preview'
-          });
-        }
-      });
-
-      // Track store/Cuanto link clicks
-      const cuantoLink = document.getElementById('cuanto-link');
-      if (cuantoLink) {
-        cuantoLink.addEventListener('click', () => {
-          if (typeof gtag !== 'undefined') {
-            gtag('event', 'click_store', {
-              event_category: 'store',
-              event_label: 'cuanto',
-              store_platform: 'cuanto'
-            });
-          }
-        });
-      }
-
-      // Track social link clicks
-      document.querySelectorAll('.social-link').forEach((link) => {
-        link.addEventListener('click', () => {
-          const platform = link.classList.contains('social-link--instagram')
-            ? 'instagram'
-            : link.classList.contains('social-link--facebook')
-              ? 'facebook'
-              : 'youtube';
-          if (typeof gtag !== 'undefined') {
-            gtag('event', 'click_social', {
-              event_category: 'social',
-              event_label: platform,
-              social_platform: platform
-            });
-          }
-        });
-      });
-
-      // Log page load
-      console.log(
-        '%c Still Louder - Al Vacío ',
-        'background: #000; color: #ffb347; font-size: 18px; font-weight: bold; padding: 10px;'
-      );
-      console.log(
-        '%c Now playing on all platforms! ',
-        'background: #232526; color: #fff; font-size: 14px; padding: 5px;'
-      );
-    </script>
+    <!-- Main Application Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
   </body>
 </html>

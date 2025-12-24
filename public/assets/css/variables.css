@@ -1,6 +1,6 @@
 /**
  * Design System - CSS Variables
- * Centralized design tokens for consistency and maintainability
+ * Modern design tokens for Still Louder website
  */
 
 :root {
@@ -11,29 +11,35 @@
   /* Primary Colors */
   --color-primary: #000000;
   --color-secondary: #ffffff;
-  --color-accent: #ffb347;
-  --color-accent-hover: #ffa31a;
+  --color-accent: #ff6b35;
+  --color-accent-hover: #ff8c5a;
+  --color-accent-glow: rgba(255, 107, 53, 0.4);
 
   /* Background Colors */
-  --color-bg-primary: #181818;
-  --color-bg-secondary: #232526;
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #111111;
   --color-bg-tertiary: #1a1a1a;
-  --color-bg-card: rgba(30, 30, 30, 0.95);
-  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  --color-bg-card: rgba(20, 20, 20, 0.8);
+  --color-bg-overlay: rgba(0, 0, 0, 0.85);
+
+  /* Glass Effect */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
 
   /* Text Colors */
   --color-text-primary: #ffffff;
-  --color-text-secondary: #bbbbbb;
-  --color-text-muted: #aaaaaa;
-  --color-text-dark: #333333;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+  --color-text-dark: #1a1a1a;
 
   /* Interactive Colors */
-  --color-link-bg: #232526;
+  --color-link-bg: rgba(255, 255, 255, 0.08);
   --color-link-hover: var(--color-accent);
-  --color-success: #4caf50;
-  --color-error: #f44336;
-  --color-warning: #ff9800;
-  --color-info: #2196f3;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
 
   /* Social Media Brand Colors */
   --color-instagram: #e4405f;
@@ -42,7 +48,21 @@
   --color-spotify: #1db954;
   --color-apple-music: #fa243c;
   --color-deezer: #ff0092;
-  --color-amazon-music: #232f3e;
+  --color-amazon-music: #ff9900;
+
+  /* Gradient Colors */
+  --gradient-hero: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(10, 10, 10, 1) 100%
+  );
+  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, #ff8c5a 100%);
+  --gradient-dark: linear-gradient(
+    180deg,
+    var(--color-bg-primary) 0%,
+    var(--color-bg-secondary) 100%
+  );
 
   /* ============================================
      TYPOGRAPHY
@@ -50,17 +70,20 @@
 
   /* Font Families */
   --font-primary: 'Inter', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-display: 'Bebas Neue', Impact, 'Arial Black', sans-serif;
   --font-fallback: system-ui, -apple-system, sans-serif;
 
-  /* Font Sizes */
-  --font-size-xs: 0.75rem; /* 12px */
-  --font-size-sm: 0.875rem; /* 14px */
-  --font-size-base: 1rem; /* 16px */
-  --font-size-md: 1.125rem; /* 18px */
-  --font-size-lg: 1.25rem; /* 20px */
-  --font-size-xl: 1.5rem; /* 24px */
-  --font-size-2xl: 2rem; /* 32px */
-  --font-size-3xl: 2.5rem; /* 40px */
+  /* Font Sizes - Fluid Typography */
+  --font-size-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.75rem);
+  --font-size-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem);
+  --font-size-base: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);
+  --font-size-md: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --font-size-lg: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);
+  --font-size-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --font-size-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+  --font-size-3xl: clamp(2rem, 1.5rem + 2.5vw, 3rem);
+  --font-size-4xl: clamp(2.5rem, 2rem + 2.5vw, 4rem);
+  --font-size-hero: clamp(3rem, 2rem + 5vw, 6rem);
 
   /* Font Weights */
   --font-weight-normal: 400;
@@ -69,43 +92,48 @@
   --font-weight-bold: 700;
 
   /* Line Heights */
-  --line-height-tight: 1.2;
-  --line-height-normal: 1.4;
-  --line-height-relaxed: 1.6;
+  --line-height-tight: 1.1;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
 
   /* Letter Spacing */
-  --letter-spacing-tight: -0.01em;
+  --letter-spacing-tight: -0.02em;
   --letter-spacing-normal: 0;
-  --letter-spacing-wide: 0.01em;
+  --letter-spacing-wide: 0.02em;
   --letter-spacing-wider: 0.05em;
+  --letter-spacing-widest: 0.1em;
 
   /* ============================================
      SPACING
      ============================================ */
 
-  --spacing-xs: 0.25rem; /* 4px */
-  --spacing-sm: 0.5rem; /* 8px */
-  --spacing-md: 1rem; /* 16px */
-  --spacing-lg: 1.5rem; /* 24px */
-  --spacing-xl: 2rem; /* 32px */
-  --spacing-2xl: 2.5rem; /* 40px */
-  --spacing-3xl: 3rem; /* 48px */
-  --spacing-4xl: 4rem; /* 64px */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  --spacing-4xl: 6rem;
+  --spacing-5xl: 8rem;
+
+  /* Section Spacing */
+  --section-padding-y: clamp(4rem, 8vw, 8rem);
+  --section-padding-x: clamp(1rem, 5vw, 3rem);
 
   /* ============================================
      BORDERS & RADIUS
      ============================================ */
 
-  /* Border Radius */
-  --border-radius-xs: 0.25rem; /* 4px */
-  --border-radius-sm: 0.5rem; /* 8px */
-  --border-radius-md: 0.7rem; /* 11px */
-  --border-radius-lg: 1rem; /* 16px */
-  --border-radius-xl: 1.2rem; /* 19px */
-  --border-radius-2xl: 1.5rem; /* 24px */
+  --border-radius-xs: 0.25rem;
+  --border-radius-sm: 0.5rem;
+  --border-radius-md: 0.75rem;
+  --border-radius-lg: 1rem;
+  --border-radius-xl: 1.5rem;
+  --border-radius-2xl: 2rem;
   --border-radius-full: 9999px;
 
-  /* Border Widths */
   --border-width-thin: 1px;
   --border-width-normal: 2px;
   --border-width-thick: 3px;
@@ -114,97 +142,69 @@
      SHADOWS
      ============================================ */
 
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.16);
-  --shadow-xl: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-  --shadow-2xl: 0 16px 48px 0 rgba(0, 0, 0, 0.35);
-  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 40px var(--color-accent-glow);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 
   /* ============================================
-     TRANSITIONS
+     TRANSITIONS & ANIMATIONS
      ============================================ */
 
-  --transition-fast: 120ms ease;
-  --transition-normal: 180ms ease;
-  --transition-slow: 300ms ease;
-  --transition-slower: 500ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slower: 700ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Transition Timing Functions */
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  --animation-duration-fast: 200ms;
+  --animation-duration-normal: 400ms;
+  --animation-duration-slow: 600ms;
 
   /* ============================================
      Z-INDEX
      ============================================ */
 
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-popover: 1060;
-  --z-tooltip: 1070;
-
-  /* ============================================
-     BREAKPOINTS (for reference in JS)
-     ============================================ */
-
-  --breakpoint-mobile: 480px;
-  --breakpoint-tablet: 768px;
-  --breakpoint-desktop: 1024px;
-  --breakpoint-wide: 1280px;
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-header: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+  --z-tooltip: 700;
 
   /* ============================================
      LAYOUT
      ============================================ */
 
   --container-max-width: 1200px;
-  --card-max-width: 420px;
+  --container-narrow: 800px;
   --content-max-width: 720px;
+  --header-height: 72px;
+  --header-height-scrolled: 60px;
 
   /* ============================================
-     ANIMATIONS
+     BREAKPOINTS (for reference)
      ============================================ */
 
-  --animation-duration-fast: 200ms;
-  --animation-duration-normal: 300ms;
-  --animation-duration-slow: 500ms;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
 }
 
 /* ============================================
-   UTILITY CLASSES
+   KEYFRAME ANIMATIONS
    ============================================ */
-
-/* Loading Skeleton */
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-bg-secondary) 25%,
-    var(--color-bg-tertiary) 50%,
-    var(--color-bg-secondary) 75%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: var(--border-radius-md);
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Fade In Animation */
-.fade-in {
-  animation: fade-in var(--animation-duration-normal) ease-in forwards;
-}
 
 @keyframes fade-in {
   from {
@@ -215,15 +215,10 @@
   }
 }
 
-/* Slide Up Animation */
-.slide-up {
-  animation: slide-up var(--animation-duration-normal) ease-out forwards;
-}
-
-@keyframes slide-up {
+@keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -231,15 +226,21 @@
   }
 }
 
-/* Scale In Animation */
-.scale-in {
-  animation: scale-in var(--animation-duration-fast) var(--ease-out) forwards;
+@keyframes fade-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.9);
   }
   to {
     opacity: 1;
@@ -247,50 +248,69 @@
   }
 }
 
-/* Loading Spinner */
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid var(--color-bg-secondary);
-  border-top-color: var(--color-accent);
-  border-radius: var(--border-radius-full);
-  animation: spinner-rotate 0.8s linear infinite;
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-@keyframes spinner-rotate {
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px var(--color-accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--color-accent-glow);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes scroll-arrow {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* Loading State for Images */
-.image-loading {
-  position: relative;
-  overflow: hidden;
-  background: var(--color-bg-secondary);
-}
+/* ============================================
+   ACCESSIBILITY: Respect user preferences
+   ============================================ */
 
-.image-loading::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-/* Accessibility: Respect user motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -300,33 +320,25 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-
-  .skeleton,
-  .image-loading::before {
-    animation: none !important;
-  }
 }
 
-/* High Contrast Mode Support */
 @media (prefers-contrast: high) {
   :root {
-    --color-accent: #ffc470;
+    --color-accent: #ff8c5a;
+    --glass-border: rgba(255, 255, 255, 0.3);
     --border-width-normal: 3px;
   }
 }
 
-/* Print Styles */
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
 @media print {
   :root {
     --color-bg-primary: #ffffff;
     --color-bg-secondary: #ffffff;
     --color-text-primary: #000000;
     --color-text-secondary: #333333;
-  }
-
-  .skeleton,
-  .spinner,
-  .image-loading::before {
-    display: none !important;
   }
 }
