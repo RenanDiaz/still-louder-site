@@ -423,12 +423,32 @@ body {
 }
 
 .scroll-arrow {
-  width: 24px;
-  height: 24px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
+  position: relative;
+  width: 20px;
+  height: 12px;
   animation: scroll-arrow 2s ease-in-out infinite;
+}
+
+.scroll-arrow::before,
+.scroll-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 2px;
+  background-color: currentColor;
+}
+
+.scroll-arrow::before {
+  left: 0;
+  transform: rotate(45deg);
+  transform-origin: 0% 100%;
+}
+
+.scroll-arrow::after {
+  right: 0;
+  transform: rotate(-45deg);
+  transform-origin: 100% 100%;
 }
 
 /* ============================================
