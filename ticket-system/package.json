@@ -1,0 +1,33 @@
+{
+  "name": "wwwy3-ticket-system",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Still Louder — WWWY3 ticket sales, issuance and gate validation",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.api.json --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vercel/node": "^3.2.24",
+    "@vitejs/plugin-react": "^4.3.3",
+    "html5-qrcode": "^2.3.8",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
