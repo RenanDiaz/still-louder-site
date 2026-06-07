@@ -115,8 +115,18 @@ Crea un **segundo proyecto Vercel** apuntando al mismo repo con:
 
 El sitio estático actual (raíz del repo) sigue siendo su propio proyecto Vercel,
 intacto. `vercel.json` aquí define headers de seguridad (CSP, HSTS,
-`Permissions-Policy: camera=(self)` para el escáner) y el **cron horario** que
+`Permissions-Policy: camera=(self)` para el escáner) y el **cron diario** que
 ejecuta `/api/admin/orders/cleanup`.
+
+> **Frecuencia del cron de limpieza:** el plan **Hobby** (gratis) de Vercel solo
+> permite crons **una vez al día**; una expresión horaria falla el deploy con
+> _"Hobby accounts are limited to daily cron jobs"_. Por eso el `schedule` en
+> `vercel.json` es `"0 6 * * *"` (diario; en Hobby, Vercel lo dispara en algún
+> momento dentro de esa hora). Esto **no afecta la disponibilidad de cupos**: el
+> conteo libera las reservas vencidas por timestamp (`reservation_expires_at >
+> now()`), así que la limpieza es solo housekeeping (marcar como `cancelled`). Si
+> suben a **Vercel Pro**, pueden volver a una frecuencia horaria (`"0 * * * *"`).
+> El JSON no admite comentarios, por eso esta nota vive aquí y no en `vercel.json`.
 
 > Alternativa: integrarlo en el proyecto existente bajo `/entradas` y `/validar`.
 > Se eligió el proyecto aparte por la configuración inusual de `publicDir` del
@@ -153,9 +163,11 @@ El secreto vive solo en el servidor; es imposible fabricar entradas válidas sin
   vigentes.
 - **Etapa 2 inmediata:** la capacidad se recalcula en vivo desde `event_config`;
   el toggle abre 75 cupos al instante.
-- **Pending vencida libera cupo:** `cleanup_expired_orders` (cron horario + botón
-  admin) cancela pendientes vencidas; el conteo de cupo solo cuenta pendientes
-  con `reservation_expires_at > now()`.
+- **Pending vencida libera cupo:** el conteo de cupo (`presale_status` y
+  `create_order`) solo cuenta pendientes con `reservation_expires_at > now()`,
+  así que una reserva vencida libera su cupo **al instante por timestamp**, sin
+  esperar a la limpieza. `cleanup_expired_orders` (cron diario + botón admin) es
+  solo housekeeping: marca esas pendientes como `cancelled`.
 - **Correo desde `entradas@stilllouder.space`:** configurable vía `EMAIL_FROM`
   (requiere dominio verificado en Resend — DKIM/SPF/DMARC).
 
