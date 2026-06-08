@@ -8,13 +8,13 @@ export const CONFIG = {
   platforms: {
     spotify: {
       name: 'Spotify',
-      url: 'https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f',
+      url: 'https://open.spotify.com/track/7jc86BEyQt8sdJsEbqtllU?si=1c59b85003e84b02',
       icon: 'spotify',
       color: '#1db954'
     },
     appleMusic: {
       name: 'Apple Music',
-      url: 'https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538',
+      url: 'https://music.apple.com/pa/album/skirlaz/1871380684?i=1871380685&l=en-GB',
       icon: 'apple-music',
       color: '#fa243c'
     },
@@ -26,13 +26,13 @@ export const CONFIG = {
     },
     deezer: {
       name: 'Deezer',
-      url: 'https://link.deezer.com/s/30BAvwIohgJLbpIWKmFld',
+      url: 'https://link.deezer.com/s/33uBZiHm7eOvA8b5tzklb',
       icon: 'deezer',
       color: '#ff0092'
     },
     amazonMusic: {
       name: 'Amazon Music',
-      url: 'https://music.amazon.com/tracks/B0FK3D2CK6',
+      url: 'https://music.amazon.com/tracks/B0GJ7DHTMV?marketplaceId=ATVPDKIKX0DER&musicTerritory=US&ref=dm_sh_fJNxSrdaEGv6WxGuYZQFb117Y',
       icon: 'amazon-music',
       color: '#232f3e'
     }
