@@ -361,8 +361,8 @@ const initPWAShortcuts = () => {
     });
 
     const platformMap = {
-      spotify: 'https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f',
-      apple: 'https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538',
+      spotify: 'https://open.spotify.com/track/7jc86BEyQt8sdJsEbqtllU?si=1c59b85003e84b02',
+      apple: 'https://music.apple.com/pa/album/skirlaz/1871380684?i=1871380685&l=en-GB',
       youtube: 'https://youtu.be/ukpbbWdqh_A'
     };
 
