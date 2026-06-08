@@ -92,6 +92,52 @@ type GateState =
   | { kind: 'result'; response: ValidateResponse };
 
 function Scanner({ password, station }: { password: string; station: string }) {
+  // The camera is only live while `active`. When the tab is backgrounded we
+  // drop to stand-by so the phone stops draining battery; the staffer reopens
+  // the reader with a tap. Unmounting ScannerActive stops the camera cleanly.
+  const [active, setActive] = useState(true);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) setActive(false);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
+  if (!active) {
+    return <Standby station={station} onResume={() => setActive(true)} />;
+  }
+  return (
+    <ScannerActive password={password} station={station} onStandby={() => setActive(false)} />
+  );
+}
+
+function Standby({ station, onResume }: { station: string; onResume: () => void }) {
+  return (
+    <div className="container" style={{ maxWidth: 400, textAlign: 'center' }}>
+      <div className="card">
+        <h1 style={{ marginTop: 0 }}>En espera — {station}</h1>
+        <p className="muted">
+          La cámara está apagada para ahorrar batería. Abre el lector cuando llegue alguien.
+        </p>
+        <button type="button" onClick={onResume} style={{ width: '100%' }}>
+          Abrir lector de QR
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScannerActive({
+  password,
+  station,
+  onStandby
+}: {
+  password: string;
+  station: string;
+  onStandby: () => void;
+}) {
   const [state, setState] = useState<GateState>({ kind: 'scanning' });
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const lockRef = useRef(false); // prevents re-entrant scans while processing
@@ -170,6 +216,9 @@ function Scanner({ password, station }: { password: string; station: string }) {
       <p className="muted" style={{ fontSize: 13 }}>
         Apunta la cámara al código QR. El resultado se muestra automáticamente.
       </p>
+      <button type="button" className="secondary" onClick={onStandby} style={{ width: '100%' }}>
+        Pausar lector
+      </button>
     </div>
   );
 }
