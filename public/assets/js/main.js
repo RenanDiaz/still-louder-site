@@ -300,7 +300,9 @@ const initPlatformTracking = () => {
         ? 'instagram'
         : link.classList.contains('social-card--facebook')
           ? 'facebook'
-          : 'youtube';
+          : link.classList.contains('social-card--tiktok')
+            ? 'tiktok'
+            : 'youtube';
       trackEvent('click_social', {
         event_category: 'social',
         event_label: platform

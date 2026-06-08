@@ -865,6 +865,10 @@ body {
   color: var(--color-youtube);
 }
 
+.social-card--tiktok:hover svg {
+  color: var(--color-tiktok);
+}
+
 .social-name {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);

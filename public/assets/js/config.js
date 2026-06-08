@@ -54,6 +54,11 @@ export const CONFIG = {
       name: 'YouTube',
       url: 'https://www.youtube.com/@StillLouder',
       handle: '@StillLouder'
+    },
+    tiktok: {
+      name: 'TikTok',
+      url: 'https://www.tiktok.com/@stilllouder.pa',
+      handle: '@stilllouder.pa'
     }
   },
 
@@ -74,7 +79,7 @@ export const CONFIG = {
   release: {
     title: 'Skirlaz',
     artist: 'Still Louder',
-    releaseDate: '2026',
+    releaseDate: '2026-02-06',
     genre: 'Rock',
     coverImage: '/images/album_covers/skirlaz.jpeg',
     video: 'https://youtu.be/ukpbbWdqh_A'
