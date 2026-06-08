@@ -17,6 +17,15 @@
    (antes el título caía a `cursive` → caligrafía tipo invitación, fuera de tono).
    Subset latin; cubre acentos y signos del español (ñ á é í ó ú ¿ ¡). */
 @font-face {
+  /* Título del hero: marcador a mano, vibe show emo/pop-punk. Auto-hospedada por
+     la misma razón que las demás (Google Fonts bloqueado por la CSP). */
+  font-family: 'Permanent Marker';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/permanentmarker-latin.woff2') format('woff2');
+}
+@font-face {
   font-family: 'DM Serif Display';
   font-style: normal;
   font-weight: 400;
@@ -58,9 +67,10 @@
   --paper-edge: #d9cdb5;
   --paper-2: #efe7d4;
 
-  /* Serif dramática de alto contraste: emo/maduro, con filo, sin caer en lo
-     manuscrito ni en lo caligráfico. Fallbacks serif sanos (nunca `cursive`). */
-  --font-title: 'DM Serif Display', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  /* Título del hero: marcador a mano (Permanent Marker) para el grito emo/pop-punk.
+     Fallbacks display sanos (Anton/Impact), nunca `cursive` — eso era justo lo que
+     se veía mal en iOS/macOS cuando la fuente no cargaba. */
+  --font-title: 'Permanent Marker', 'Anton', Impact, sans-serif;
   --font-accent: 'DM Serif Display', Georgia, serif; /* kickers/bylines en itálica */
   --font-patch: 'Anton', 'Arial Narrow', Impact, sans-serif; /* parches y badges */
   --font-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif; /* texto legible / forms */
@@ -195,7 +205,9 @@ body::before {
   letter-spacing: 0.5px;
 }
 .tk-title .num {
-  /* numeral en itálica serif: contraste con el resto del titular en redonda */
+  /* numeral en itálica serif: contraste deliberado con el marcador del titular
+     (Permanent Marker no trae cursiva real, así que la tomamos del acento) */
+  font-family: var(--font-accent);
   font-style: italic;
   color: var(--pink);
   margin-left: 0.06em;
