@@ -36,7 +36,10 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
   );
 
   const tierLabel = TIER_LABEL[order.tier] ?? order.tier;
-  const markerFont = "'Permanent Marker','Arial Black',Arial,Helvetica,sans-serif";
+  // Tipografía email-safe que hace eco de la identidad del sitio: titulares en
+  // serif (Georgia ≈ la serif dramática del hero) y etiquetas en sans pesada
+  // (≈ Anton). Los clientes de correo no cargan webfonts de forma fiable.
+  const serifFont = "Georgia,'Times New Roman',Times,serif";
   const patchFont = "'Arial Black',Arial,Helvetica,sans-serif";
 
   // Un toque del tema: morado/rosa y un titular tipo marcador. SOLO estilos
@@ -52,7 +55,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
                style="margin:22px auto;background:#ffffff;border:2px solid #15121c;border-radius:10px;border-collapse:separate;overflow:hidden;">
           <tr>
             <td style="background:#3e2768;padding:12px 16px;text-align:center;">
-              <div style="font-family:${markerFont};font-size:18px;color:#ff2e93;line-height:1;">When We Were Young 3</div>
+              <div style="font-family:${serifFont};font-style:italic;font-size:20px;color:#ff2e93;line-height:1;">When We Were Young 3</div>
               <div style="font-family:${patchFont};font-size:12px;letter-spacing:2px;color:#ffffff;margin-top:4px;text-transform:uppercase;">
                 1 AGO · HOPS · ${escapeHtml(tierLabel)}
               </div>
@@ -85,46 +88,83 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
     })
     .join('');
 
+  const detailRow = (label: string, value: string) => `
+    <tr>
+      <td style="padding:7px 0;font-family:${patchFont};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6db0;width:96px;vertical-align:top;white-space:nowrap;">${label}</td>
+      <td style="padding:7px 0;font-size:15px;color:#15121c;font-weight:bold;">${value}</td>
+    </tr>`;
+
+  // Versión clara "enmarcada": franjas oscuras arriba y abajo encierran un cuerpo
+  // crema con acentos morado/rosa, para que no se vea plano junto al header fuerte.
   const html = `
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#15121c;background:#f4eee1;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#3e2768;">
+    <div style="background:#2c1c4a;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" align="center"
+             style="max-width:560px;margin:0 auto;background:#f4eee1;border-radius:14px;overflow:hidden;color:#15121c;">
+        <!-- Header oscuro + barra rosa de acento que puentea al cuerpo claro -->
         <tr>
-          <td style="padding:26px 24px;text-align:center;">
-            <div style="font-family:${markerFont};font-size:14px;color:#ff2e93;letter-spacing:1px;margin-bottom:6px;">
-              STILL LOUDER · WWWY3
+          <td style="background:#3e2768;padding:30px 24px 26px;text-align:center;">
+            <div style="font-family:${patchFont};font-size:12px;color:#ff6cb6;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">
+              Still Louder · WWWY3
             </div>
-            <div style="font-family:${markerFont};font-size:26px;color:#ffffff;line-height:1.15;">
+            <div style="font-family:${serifFont};font-size:30px;color:#ffffff;line-height:1.1;">
               ¡Tu entrada está lista! 🎸
             </div>
           </td>
         </tr>
+        <tr><td style="height:5px;background:#ff2e93;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+        <!-- Cuerpo claro -->
+        <tr>
+          <td style="padding:26px 24px 8px;">
+            <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">
+              Hola <strong>${escapeHtml(order.buyer_name)}</strong>, gracias por tu compra. ¡Nos vemos en el pit! 🤘
+            </p>
+
+            <!-- Tarjeta de detalles con acento lateral rosa y mini-título serif -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#ffffff;border:1px solid #e3d9c4;border-left:5px solid #ff2e93;border-radius:10px;">
+              <tr>
+                <td style="padding:18px 20px;">
+                  <div style="font-family:${serifFont};font-style:italic;font-size:19px;color:#3e2768;margin-bottom:10px;">
+                    Detalles de tu orden
+                  </div>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    ${detailRow('Evento', 'When We Were Young 3')}
+                    ${detailRow('Lugar', 'Hops')}
+                    ${detailRow('Fecha', '1 de agosto')}
+                    ${detailRow('Tipo', escapeHtml(tierLabel))}
+                    ${detailRow('Cantidad', `${order.quantity} ${order.quantity === 1 ? 'entrada' : 'entradas'}`)}
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Aviso de admisión en caja lila tintada -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
+              <tr>
+                <td style="background:#efe6ff;border-radius:10px;padding:14px 18px;font-size:14px;line-height:1.55;color:#3e2768;">
+                  Presenta ${tokens.length === 1 ? 'este código QR' : 'estos códigos QR'} en la puerta.
+                  Cada código es válido para <strong>una sola admisión</strong>.
+                </td>
+              </tr>
+            </table>
+            ${qrBlocks}
+          </td>
+        </tr>
+
+        <!-- Footer oscuro: bookend que enmarca el cuerpo claro -->
+        <tr>
+          <td style="background:#3e2768;padding:20px 24px;text-align:center;">
+            <div style="font-size:13px;color:#e7dcf7;line-height:1.6;">
+              ¿Dudas? Responde a este correo o escríbenos por nuestros canales oficiales:
+              <strong style="color:#ff6cb6;">@stilllouder</strong>.
+            </div>
+            <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:#9b86c4;text-transform:uppercase;margin-top:10px;">
+              Orden #${order.id}
+            </div>
+          </td>
+        </tr>
       </table>
-
-      <div style="padding:24px;">
-        <p style="margin:0 0 16px;">Hola ${escapeHtml(order.buyer_name)}, gracias por tu compra.</p>
-
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-               style="background:#ffffff;border:1px solid #d9cdb5;border-radius:8px;">
-          <tr>
-            <td style="padding:16px 18px;font-size:15px;line-height:1.8;color:#15121c;">
-              <strong>Evento:</strong> When We Were Young 3 (Still Louder)<br/>
-              <strong>Lugar:</strong> Hops<br/>
-              <strong>Fecha:</strong> 1 de agosto<br/>
-              <strong>Tipo:</strong> ${escapeHtml(tierLabel)}<br/>
-              <strong>Cantidad:</strong> ${order.quantity} ${order.quantity === 1 ? 'entrada' : 'entradas'}
-            </td>
-          </tr>
-        </table>
-
-        <p style="margin:18px 0 0;">Presenta ${tokens.length === 1 ? 'este código QR' : 'estos códigos QR'} en la puerta.
-           Cada código es válido para una sola admisión.</p>
-        ${qrBlocks}
-        <hr style="border:none;border-top:1px solid #d9cdb5;margin:24px 0;" />
-        <p style="font-size:12px;color:#5a5468;">
-          Orden #${order.id}. Si tienes dudas, responde a este correo.
-          Canales oficiales: <strong style="color:#c01a5b;">@stilllouder</strong>.
-        </p>
-      </div>
     </div>`;
 
   await getResend().emails.send({
