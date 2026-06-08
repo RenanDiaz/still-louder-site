@@ -10,6 +10,41 @@
   la legibilidad.
 */
 
+/* ===================== FUENTES (AUTO-HOSPEDADAS) ===================== */
+/* La CSP del ticket-system es estricta (style-src 'self'; font-src 'self'), así
+   que Google Fonts queda bloqueado. Servimos las fuentes desde /fonts (mismo
+   origen) para que carguen sin relajar la CSP y sin caer a fallbacks del sistema
+   (antes el título caía a `cursive` → caligrafía tipo invitación, fuera de tono).
+   Subset latin; cubre acentos y signos del español (ñ á é í ó ú ¿ ¡). */
+@font-face {
+  font-family: 'DM Serif Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/dmserifdisplay-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'DM Serif Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/dmserifdisplay-italic-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/anton-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/archivo-latin.woff2') format('woff2');
+}
+
 /* ===================== TOKENS ===================== */
 :root {
   --purple-deep: #3e2768;
@@ -23,10 +58,12 @@
   --paper-edge: #d9cdb5;
   --paper-2: #efe7d4;
 
-  --font-title: 'Permanent Marker', cursive; /* titular marcador */
-  --font-patch: 'Anton', sans-serif; /* parches y badges */
-  --font-scrawl: 'Rock Salt', cursive; /* garabatos chicos */
-  --font-body: 'Archivo', system-ui, sans-serif; /* texto legible / forms */
+  /* Serif dramática de alto contraste: emo/maduro, con filo, sin caer en lo
+     manuscrito ni en lo caligráfico. Fallbacks serif sanos (nunca `cursive`). */
+  --font-title: 'DM Serif Display', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-accent: 'DM Serif Display', Georgia, serif; /* kickers/bylines en itálica */
+  --font-patch: 'Anton', 'Arial Narrow', Impact, sans-serif; /* parches y badges */
+  --font-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif; /* texto legible / forms */
 }
 
 * {
@@ -121,13 +158,13 @@ body::before {
 
 /* ===================== HERO ===================== */
 .tk-kicker {
-  font-family: var(--font-scrawl);
+  font-family: var(--font-accent);
+  font-style: italic;
   color: var(--pink);
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: 16px;
+  letter-spacing: 0.5px;
   text-align: center;
   margin-bottom: 12px;
-  transform: rotate(-2deg);
 }
 
 .tk-title-block {
@@ -142,30 +179,33 @@ body::before {
 .tk-title {
   font-family: var(--font-title);
   color: var(--ink);
-  line-height: 0.9;
+  line-height: 0.92;
   font-weight: 400;
+  text-transform: uppercase;
 }
 .tk-title .l1 {
-  font-size: clamp(30px, 10vw, 52px);
+  font-size: clamp(30px, 9vw, 48px);
   display: block;
-  transform: rotate(-1.5deg);
+  letter-spacing: 1px;
 }
 .tk-title .l2 {
-  font-size: clamp(42px, 15vw, 86px);
+  font-size: clamp(46px, 16vw, 92px);
   display: block;
   color: var(--pink);
-  transform: rotate(1deg);
+  letter-spacing: 0.5px;
 }
 .tk-title .num {
-  font-family: var(--font-patch);
-  -webkit-text-stroke: 2px var(--ink);
+  /* numeral en itálica serif: contraste con el resto del titular en redonda */
+  font-style: italic;
   color: var(--pink);
+  margin-left: 0.06em;
 }
 .tk-byline {
-  font-family: var(--font-scrawl);
-  font-size: 14px;
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-size: 17px;
   color: var(--ink);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .tk-meta {
   text-align: center;
@@ -226,12 +266,12 @@ body::before {
   margin: 22px 0 6px;
 }
 .tk-countdown__label {
-  font-family: var(--font-scrawl);
+  font-family: var(--font-accent);
+  font-style: italic;
   color: var(--pink);
   text-align: center;
-  font-size: 13px;
+  font-size: 16px;
   margin-bottom: 12px;
-  transform: rotate(1deg);
 }
 .tk-countdown__cells {
   display: flex;
@@ -261,12 +301,12 @@ body::before {
 
 /* ===================== STOCK / PRUEBA SOCIAL ===================== */
 .tk-stock {
-  font-family: var(--font-scrawl);
+  font-family: var(--font-accent);
+  font-style: italic;
   color: var(--pink);
   text-align: center;
-  font-size: 14px;
+  font-size: 17px;
   margin: 14px 0 2px;
-  transform: rotate(-1deg);
 }
 .tk-stock b {
   color: var(--paper);
