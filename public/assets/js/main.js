@@ -13,8 +13,8 @@ const CONFIG = {
   headerScrollThreshold: 50,
   toastDuration: 3000,
   share: {
-    title: 'Still Louder - Al Vacío',
-    text: 'Escucha "Al Vacío" de Still Louder - Rock panameño disponible ahora en todas las plataformas.',
+    title: 'Still Louder - Skirlaz',
+    text: 'Escucha "Skirlaz" de Still Louder y mira el lyric video oficial - Rock panameño disponible ahora en todas las plataformas.',
     url: 'https://stilllouder.space/'
   },
   analytics: {
@@ -211,77 +211,6 @@ const initSmoothScroll = () => {
 };
 
 // ============================================
-// AUDIO PLAYER
-// ============================================
-
-const initAudioPlayer = () => {
-  const audio = document.getElementById('audio-preview');
-  const playBtn = document.getElementById('play-btn');
-  const progressBar = document.getElementById('progress-bar');
-  const audioProgress = document.getElementById('audio-progress');
-  const currentTimeEl = document.getElementById('current-time');
-  const durationEl = document.getElementById('duration');
-
-  if (!audio || !playBtn) return;
-
-  // Update duration when metadata loads
-  audio.addEventListener('loadedmetadata', () => {
-    durationEl.textContent = formatTime(audio.duration);
-  });
-
-  // Play/Pause toggle
-  playBtn.addEventListener('click', () => {
-    if (audio.paused) {
-      audio.play();
-      playBtn.classList.add('is-playing');
-      playBtn.setAttribute('aria-label', 'Pausar preview de Al Vacío');
-      trackEvent('audio_play', {
-        event_category: 'audio',
-        event_label: 'Al Vacío Preview'
-      });
-    } else {
-      audio.pause();
-      playBtn.classList.remove('is-playing');
-      playBtn.setAttribute('aria-label', 'Reproducir preview de Al Vacío');
-    }
-  });
-
-  // Update progress bar
-  audio.addEventListener('timeupdate', () => {
-    const progress = (audio.currentTime / audio.duration) * 100;
-    audioProgress.style.width = `${progress}%`;
-    currentTimeEl.textContent = formatTime(audio.currentTime);
-  });
-
-  // Click on progress bar to seek
-  progressBar.addEventListener('click', (e) => {
-    const rect = progressBar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = percent * audio.duration;
-  });
-
-  // Reset when audio ends
-  audio.addEventListener('ended', () => {
-    playBtn.classList.remove('is-playing');
-    playBtn.setAttribute('aria-label', 'Reproducir preview de Al Vacío');
-    audioProgress.style.width = '0%';
-    audio.currentTime = 0;
-    trackEvent('audio_complete', {
-      event_category: 'audio',
-      event_label: 'Al Vacío Preview'
-    });
-  });
-
-  // Keyboard support
-  playBtn.addEventListener('keydown', (e) => {
-    if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      playBtn.click();
-    }
-  });
-};
-
-// ============================================
 // SHARE FUNCTIONALITY
 // ============================================
 
@@ -432,7 +361,7 @@ const initPWAShortcuts = () => {
     const platformMap = {
       spotify: 'https://open.spotify.com/track/4zBlVazxK6AQBMPZl9Rcgj?si=a96b91e05196497f',
       apple: 'https://music.apple.com/pa/album/al-vac%C3%ADo/1829334537?i=1829334538',
-      youtube: 'https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCdSvT9y'
+      youtube: 'https://youtu.be/ukpbbWdqh_A'
     };
 
     if (platformMap[action]) {
@@ -456,7 +385,6 @@ const init = () => {
   initSmoothScroll();
 
   // Features
-  initAudioPlayer();
   initShare();
   initPlatformTracking();
   initParallax();
@@ -466,8 +394,8 @@ const init = () => {
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
     console.log(
-      '%c Still Louder - Al Vacío ',
-      'background: #ff6b35; color: #000; font-size: 18px; font-weight: bold; padding: 10px;'
+      '%c Still Louder - Skirlaz ',
+      'background: #c0282e; color: #fff; font-size: 18px; font-weight: bold; padding: 10px;'
     );
   }
 };
