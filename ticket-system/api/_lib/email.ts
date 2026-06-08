@@ -95,11 +95,12 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
     </tr>`;
 
   // Versión clara "enmarcada": franjas oscuras arriba y abajo encierran un cuerpo
-  // crema con acentos morado/rosa, para que no se vea plano junto al header fuerte.
+  // blanco neutro (como el papel del flyer original) con acentos morado/rosa, para
+  // que no se vea plano junto al header fuerte.
   const html = `
     <div style="background:#2c1c4a;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" align="center"
-             style="max-width:560px;margin:0 auto;background:#f4eee1;border-radius:14px;overflow:hidden;color:#15121c;">
+             style="max-width:560px;margin:0 auto;background:#f6f5f8;border-radius:14px;overflow:hidden;color:#15121c;">
         <!-- Header oscuro + barra rosa de acento que puentea al cuerpo claro -->
         <tr>
           <td style="background:#3e2768;padding:30px 24px 26px;text-align:center;">
@@ -122,7 +123,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
 
             <!-- Tarjeta de detalles con acento lateral rosa y mini-título serif -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                   style="background:#ffffff;border:1px solid #e3d9c4;border-left:5px solid #ff2e93;border-radius:10px;">
+                   style="background:#ffffff;border:1px solid #e1dfe9;border-left:5px solid #ff2e93;border-radius:10px;">
               <tr>
                 <td style="padding:18px 20px;">
                   <div style="font-family:${serifFont};font-style:italic;font-size:19px;color:#3e2768;margin-bottom:10px;">

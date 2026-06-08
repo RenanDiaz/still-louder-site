@@ -63,9 +63,9 @@
   --pink: #ff2e93; /* acento principal */
   --pink-soft: #ff6cb6;
   --ink: #15121c; /* "negro" de papel */
-  --paper: #f4eee1; /* crema de papel rasgado */
-  --paper-edge: #d9cdb5;
-  --paper-2: #efe7d4;
+  --paper: #f6f5f8; /* blanco de papel rasgado (neutro, como el flyer original) */
+  --paper-edge: #cfccd9;
+  --paper-2: #ecebf1;
 
   /* Título del hero: marcador a mano (Permanent Marker) para el grito emo/pop-punk.
      Fallbacks display sanos (Anton/Impact), nunca `cursive` — eso era justo lo que
@@ -488,7 +488,7 @@ body::before {
   text-align: center;
   font-family: var(--font-body);
   font-size: 12px;
-  color: rgba(244, 238, 225, 0.85);
+  color: rgba(246, 245, 248, 0.85);
   margin: 22px auto 0;
   max-width: 420px;
 }
