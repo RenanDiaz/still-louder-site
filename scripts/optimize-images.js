@@ -26,39 +26,62 @@ const qrCodes = [
   path.join(projectRoot, 'stilllouder-qr-transparent.png')
 ];
 
-async function optimizeImage(imagePath) {
-  const ext = path.extname(imagePath).toLowerCase();
+async function optimizeImage(imagePath, options = {}) {
+  // maxWidth: downscale to this width before encoding (responsive sources).
+  // jpgFallback: also emit a resized, version-controlled `<name>.jpg` fallback
+  //   (used by <picture>/<img> when avif/webp aren't supported).
+  // skipOptimizedJpg: don't emit the gitignored `<name>-optimized.jpg` extra.
+  const { maxWidth, jpgFallback = false, skipOptimizedJpg = false } = options;
+  const origExt = path.extname(imagePath);
+  const ext = origExt.toLowerCase();
   if (!['.jpg', '.jpeg', '.png'].includes(ext)) {
     return;
   }
 
   const dir = path.dirname(imagePath);
-  const basename = path.basename(imagePath, ext);
+  // Strip the extension in its original case so uppercase .JPG/.JPEG sources
+  // still produce clean output names (e.g. IMG_2434.webp, not IMG_2434.JPEG.webp).
+  const basename = path.basename(imagePath, origExt);
 
-  console.log(`Optimizing: ${path.basename(imagePath)}`);
+  // Skip our own generated fallbacks so re-runs don't process derivatives of derivatives.
+  if (basename.endsWith('-optimized')) {
+    return;
+  }
+
+  console.log(`Optimizing: ${path.basename(imagePath)}${maxWidth ? ` (resize → ${maxWidth}px)` : ''}`);
+
+  // Build a fresh sharp pipeline, applying an optional max-width downscale.
+  const pipeline = () => {
+    const p = sharp(imagePath);
+    return maxWidth ? p.resize({ width: maxWidth, withoutEnlargement: true }) : p;
+  };
 
   try {
-    const image = sharp(imagePath);
-    const metadata = await image.metadata();
-
-    // Original optimized
+    // Original optimized (same format as source)
     if (ext === '.jpg' || ext === '.jpeg') {
-      await image
-        .jpeg({ quality: QUALITY_JPEG, progressive: true, mozjpeg: true })
-        .toFile(path.join(dir, `${basename}-optimized.jpg`));
+      if (!skipOptimizedJpg) {
+        await pipeline()
+          .jpeg({ quality: QUALITY_JPEG, progressive: true, mozjpeg: true })
+          .toFile(path.join(dir, `${basename}-optimized.jpg`));
+      }
+      if (jpgFallback) {
+        await pipeline()
+          .jpeg({ quality: QUALITY_JPEG, progressive: true, mozjpeg: true })
+          .toFile(path.join(dir, `${basename}.jpg`));
+      }
     } else if (ext === '.png') {
-      await image
+      await pipeline()
         .png({ quality: 85, compressionLevel: 9 })
         .toFile(path.join(dir, `${basename}-optimized.png`));
     }
 
     // WebP version
-    await sharp(imagePath)
+    await pipeline()
       .webp({ quality: QUALITY_WEBP, effort: 6 })
       .toFile(path.join(dir, `${basename}.webp`));
 
     // AVIF version (best compression, modern browsers)
-    await sharp(imagePath)
+    await pipeline()
       .avif({ quality: QUALITY_AVIF, effort: 6 })
       .toFile(path.join(dir, `${basename}.avif`));
 
@@ -142,6 +165,41 @@ async function main() {
       }
     } catch (error) {
       console.error(`Error: ${error.message}`);
+    }
+  }
+
+  // Process Skirlaz album cover (square, used in hero + social/OG).
+  // The committed source skirlaz.jpeg (640px, ~170KB) doubles as the <img> fallback,
+  // so we only need to emit the modern webp/avif siblings.
+  console.log('\n=== Optimizing Album Covers ===\n');
+  const albumCovers = [
+    { path: path.join(publicDir, 'assets', 'images', 'album_covers', 'skirlaz.jpeg'), maxWidth: 1200 }
+  ];
+  for (const { path: imgPath, maxWidth } of albumCovers) {
+    const exists = await fs.access(imgPath).then(() => true).catch(() => false);
+    if (exists) {
+      await optimizeImage(imgPath, { maxWidth, skipOptimizedJpg: true });
+    }
+  }
+
+  // Process the Skirlaz photoshoot photos used on the site. The multi-MB studio RAWs
+  // are NOT committed; only these web-sized derivatives are. Run this against the RAWs
+  // (e.g. from the `skirlaz` archive branch) to regenerate.
+  console.log('\n=== Optimizing Skirlaz Photoshoot ===\n');
+  const photoshootDir = path.join(publicDir, 'assets', 'images', 'photoshoot', 'skirlaz');
+  const photoshoot = [
+    // Hero background (CSS image-set: avif + webp). No jpg fallback needed.
+    { file: 'IMG_2434.JPEG', maxWidth: 1920, jpgFallback: false },
+    // About/band section <picture>: needs a resized jpg fallback too.
+    { file: 'IMG_2433.JPEG', maxWidth: 1280, jpgFallback: true }
+  ];
+  for (const { file, maxWidth, jpgFallback } of photoshoot) {
+    const imgPath = path.join(photoshootDir, file);
+    const exists = await fs.access(imgPath).then(() => true).catch(() => false);
+    if (exists) {
+      await optimizeImage(imgPath, { maxWidth, jpgFallback, skipOptimizedJpg: true });
+    } else {
+      console.log(`Skipping ${file} (RAW not present — using committed derivatives)`);
     }
   }
 

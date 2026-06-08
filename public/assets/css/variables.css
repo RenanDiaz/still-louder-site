@@ -8,19 +8,23 @@
      COLORS
      ============================================ */
 
-  /* Primary Colors */
-  --color-primary: #000000;
+  /* Primary Colors - Skirlaz: clinical X-ray blue-gray + anatomical blood red */
+  --color-primary: #0d1216;
   --color-secondary: #ffffff;
-  --color-accent: #ff6b35;
-  --color-accent-hover: #ff8c5a;
-  --color-accent-glow: rgba(255, 107, 53, 0.4);
+  --color-accent: #c0282e;
+  --color-accent-hover: #e0454b;
+  --color-accent-glow: rgba(192, 40, 46, 0.4);
+
+  /* Secondary accents from the cover (chrome/teal logo, bandages) */
+  --color-teal: #5fb3bd;
+  --color-bandage: #d9c3a0;
 
   /* Background Colors */
-  --color-bg-primary: #0a0a0a;
-  --color-bg-secondary: #111111;
-  --color-bg-tertiary: #1a1a1a;
-  --color-bg-card: rgba(20, 20, 20, 0.8);
-  --color-bg-overlay: rgba(0, 0, 0, 0.85);
+  --color-bg-primary: #0d1216;
+  --color-bg-secondary: #131a20;
+  --color-bg-tertiary: #1b242b;
+  --color-bg-card: rgba(20, 28, 34, 0.8);
+  --color-bg-overlay: rgba(8, 12, 15, 0.85);
 
   /* Glass Effect */
   --glass-bg: rgba(255, 255, 255, 0.05);
@@ -45,6 +49,7 @@
   --color-instagram: #e4405f;
   --color-facebook: #1877f2;
   --color-youtube: #ff0000;
+  --color-tiktok: #25f4ee;
   --color-spotify: #1db954;
   --color-apple-music: #fa243c;
   --color-deezer: #ff0092;
@@ -53,11 +58,11 @@
   /* Gradient Colors */
   --gradient-hero: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    rgba(10, 10, 10, 1) 100%
+    rgba(13, 18, 22, 0) 0%,
+    rgba(13, 18, 22, 0.45) 50%,
+    rgba(13, 18, 22, 1) 100%
   );
-  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, #ff8c5a 100%);
+  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, #e0454b 100%);
   --gradient-dark: linear-gradient(
     180deg,
     var(--color-bg-primary) 0%,
@@ -324,7 +329,7 @@
 
 @media (prefers-contrast: high) {
   :root {
-    --color-accent: #ff8c5a;
+    --color-accent: #e0454b;
     --glass-border: rgba(255, 255, 255, 0.3);
     --border-width-normal: 3px;
   }

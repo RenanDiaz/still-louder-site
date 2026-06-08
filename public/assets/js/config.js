@@ -20,7 +20,7 @@ export const CONFIG = {
     },
     youtube: {
       name: 'YouTube',
-      url: 'https://youtu.be/L1JoCgyumzY?si=vdopuSJKVCdSvT9y',
+      url: 'https://youtu.be/ukpbbWdqh_A',
       icon: 'youtube',
       color: '#ff0000'
     },
@@ -54,6 +54,11 @@ export const CONFIG = {
       name: 'YouTube',
       url: 'https://www.youtube.com/@StillLouder',
       handle: '@StillLouder'
+    },
+    tiktok: {
+      name: 'TikTok',
+      url: 'https://www.tiktok.com/@stilllouder.pa',
+      handle: '@stilllouder.pa'
     }
   },
 
@@ -72,12 +77,12 @@ export const CONFIG = {
 
   // Release Information
   release: {
-    title: 'Al Vacío',
+    title: 'Skirlaz',
     artist: 'Still Louder',
-    releaseDate: '2025-07-28',
+    releaseDate: '2026-02-06',
     genre: 'Rock',
-    coverImage: 'https://i.imgur.com/CoA13WN.jpg',
-    audioFile: 'assets/Still Louder - Al Vacío.mp3'
+    coverImage: '/images/album_covers/skirlaz.jpeg',
+    video: 'https://youtu.be/ukpbbWdqh_A'
   },
 
   // Site Information
@@ -85,9 +90,9 @@ export const CONFIG = {
     name: 'Still Louder',
     url: 'https://stilllouder.space/',
     description:
-      '¡Ya disponible! Escucha "Al Vacío", el nuevo sencillo de Still Louder, en todas las plataformas digitales.',
+      '¡Ya disponible! Escucha "Skirlaz", el nuevo sencillo de Still Louder, y mira el lyric video oficial en todas las plataformas digitales.',
     locale: 'es_PA',
-    themeColor: '#000000'
+    themeColor: '#0d1216'
   },
 
   // Comments Form (Google Forms)

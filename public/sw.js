@@ -1,8 +1,8 @@
-// Still Louder - Al Vacío - Service Worker
-// Version 1.0.0 - PWA Implementation
+// Still Louder - Skirlaz - Service Worker
+// Version 1.1.0 - PWA Implementation
 
-const CACHE_VERSION = 'still-louder-v1.0.0';
-const OFFLINE_VERSION = 'still-louder-offline-v1.0.0';
+const CACHE_VERSION = 'still-louder-v1.1.0';
+const OFFLINE_VERSION = 'still-louder-offline-v1.1.0';
 
 // Cache names
 const PRECACHE_NAME = `${CACHE_VERSION}-precache`;
