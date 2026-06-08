@@ -28,20 +28,18 @@ export function Countdown() {
   const { days, hours, minutes, seconds } = diffParts(target, now);
 
   return (
-    <div style={{ marginBottom: 16 }}>
-      <p className="muted" style={{ margin: '0 0 8px' }}>
-        {label}
-      </p>
-      <div style={{ display: 'flex', gap: 12 }}>
+    <div className="tk-countdown">
+      <p className="tk-countdown__label">{label}</p>
+      <div className="tk-countdown__cells">
         {[
           { v: days, l: 'días' },
           { v: hours, l: 'horas' },
           { v: minutes, l: 'min' },
           { v: seconds, l: 'seg' }
         ].map((part) => (
-          <div key={part.l} className="stat" style={{ flex: 1 }}>
-            <div className="stat__value">{String(part.v).padStart(2, '0')}</div>
-            <div className="stat__label">{part.l}</div>
+          <div key={part.l} className="tk-patch tk-cell">
+            <span className="n">{String(part.v).padStart(2, '0')}</span>
+            <span className="lbl">{part.l}</span>
           </div>
         ))}
       </div>

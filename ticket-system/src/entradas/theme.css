@@ -1,0 +1,488 @@
+/*
+  WWWY3 — Tema emo / pop-punk 2000s para la cara pública de venta (/entradas).
+  Self-contained: esta superficie NO importa shared/styles.css para que la base
+  utilitaria oscura (admin/validador) nunca se filtre aquí.
+
+  PRINCIPIO: el grunge vive en lo decorativo y de identidad (fondo, hero, badges,
+  adornos). Nunca estorba lo interactivo ni los datos. El filtro de papel rasgado
+  (#tk-rough, definido en entradas.html) se aplica SOLO a capas de fondo (::before),
+  jamás sobre texto, inputs o el QR. Si una textura compromete legibilidad, gana
+  la legibilidad.
+*/
+
+/* ===================== TOKENS ===================== */
+:root {
+  --purple-deep: #3e2768;
+  --purple: #6233a6;
+  --purple-lt: #a884db;
+  --lilac-haze: #c9aef0;
+  --pink: #ff2e93; /* acento principal */
+  --pink-soft: #ff6cb6;
+  --ink: #15121c; /* "negro" de papel */
+  --paper: #f4eee1; /* crema de papel rasgado */
+  --paper-edge: #d9cdb5;
+  --paper-2: #efe7d4;
+
+  --font-title: 'Permanent Marker', cursive; /* titular marcador */
+  --font-patch: 'Anton', sans-serif; /* parches y badges */
+  --font-scrawl: 'Rock Salt', cursive; /* garabatos chicos */
+  --font-body: 'Archivo', system-ui, sans-serif; /* texto legible / forms */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--paper);
+  min-height: 100vh;
+  /* TÉCNICA 3: fondo morado neblinoso = blobs radiales + base lineal */
+  background:
+    radial-gradient(40% 30% at 78% 18%, rgba(201, 174, 240, 0.55), transparent 70%),
+    radial-gradient(45% 35% at 18% 30%, rgba(168, 132, 219, 0.45), transparent 70%),
+    radial-gradient(60% 40% at 50% 100%, rgba(255, 46, 147, 0.18), transparent 70%),
+    linear-gradient(160deg, var(--purple) 0%, var(--purple-deep) 100%);
+  background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* TÉCNICA 3: grano/ruido encima de todo para textura fotocopia */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.1;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===================== LAYOUT ===================== */
+.tk-page {
+  position: relative;
+  z-index: 2;
+  padding: 36px 18px 64px;
+}
+
+.tk-wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ===================== PAPEL RASGADO (parche) ===================== */
+/* TÉCNICA 1: el borde irregular va en una capa de fondo (::before), nunca sobre
+   el texto, para que las letras queden nítidas. */
+.tk-patch {
+  position: relative;
+  padding: 14px 20px;
+  isolation: isolate;
+  color: var(--ink);
+}
+.tk-patch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--paper);
+  box-shadow:
+    0 6px 0 var(--paper-edge),
+    0 14px 22px rgba(0, 0, 0, 0.35);
+  filter: url(#tk-rough); /* borde rasgado procedural */
+}
+.tk-patch--dark {
+  color: var(--paper);
+}
+.tk-patch--dark::before {
+  background: var(--ink);
+  box-shadow:
+    0 6px 0 #000,
+    0 14px 22px rgba(0, 0, 0, 0.45);
+}
+
+/* ===================== DECORACIONES ===================== */
+.tk-deco {
+  position: absolute;
+  z-index: 0;
+  opacity: 0.9;
+  filter: url(#tk-rough);
+  pointer-events: none;
+}
+.tk-deco svg {
+  display: block;
+}
+
+/* ===================== HERO ===================== */
+.tk-kicker {
+  font-family: var(--font-scrawl);
+  color: var(--pink);
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: 12px;
+  transform: rotate(-2deg);
+}
+
+.tk-title-block {
+  text-align: center;
+  margin: 6px auto 22px;
+  position: relative;
+}
+.tk-title-patch {
+  display: inline-block;
+  transform: rotate(-1.5deg);
+}
+.tk-title {
+  font-family: var(--font-title);
+  color: var(--ink);
+  line-height: 0.9;
+  font-weight: 400;
+}
+.tk-title .l1 {
+  font-size: clamp(30px, 10vw, 52px);
+  display: block;
+  transform: rotate(-1.5deg);
+}
+.tk-title .l2 {
+  font-size: clamp(42px, 15vw, 86px);
+  display: block;
+  color: var(--pink);
+  transform: rotate(1deg);
+}
+.tk-title .num {
+  font-family: var(--font-patch);
+  -webkit-text-stroke: 2px var(--ink);
+  color: var(--pink);
+}
+.tk-byline {
+  font-family: var(--font-scrawl);
+  font-size: 14px;
+  color: var(--ink);
+  margin-top: 8px;
+}
+.tk-meta {
+  text-align: center;
+  font-family: var(--font-patch);
+  letter-spacing: 1px;
+  color: var(--paper);
+  font-size: 15px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* ===================== BADGES DE PRECIO / FECHA ===================== */
+.tk-prices {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 26px 0 8px;
+  flex-wrap: wrap;
+}
+.tk-badge {
+  font-family: var(--font-patch);
+  text-align: center;
+  padding: 14px 16px;
+  min-width: 96px;
+  line-height: 1;
+}
+.tk-badge small {
+  font-size: 12px;
+  letter-spacing: 1px;
+  display: block;
+}
+.tk-badge .amt {
+  font-size: 38px;
+  color: var(--pink);
+  display: block;
+  margin: 2px 0;
+}
+.tk-date {
+  font-family: var(--font-patch);
+  text-align: center;
+  line-height: 1;
+}
+.tk-date .day {
+  font-size: 28px;
+  color: var(--ink);
+  display: block;
+}
+.tk-date .venue {
+  font-size: 24px;
+  color: var(--pink);
+  display: block;
+  margin-top: 4px;
+}
+
+/* ===================== COUNTDOWN ===================== */
+.tk-countdown {
+  margin: 22px 0 6px;
+}
+.tk-countdown__label {
+  font-family: var(--font-scrawl);
+  color: var(--pink);
+  text-align: center;
+  font-size: 13px;
+  margin-bottom: 12px;
+  transform: rotate(1deg);
+}
+.tk-countdown__cells {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.tk-cell {
+  font-family: var(--font-patch);
+  text-align: center;
+  padding: 10px 8px;
+  min-width: 60px;
+  flex: 1;
+  max-width: 84px;
+}
+.tk-cell .n {
+  font-size: 28px;
+  color: var(--pink);
+  display: block;
+  line-height: 1;
+}
+.tk-cell .lbl {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+/* ===================== STOCK / PRUEBA SOCIAL ===================== */
+.tk-stock {
+  font-family: var(--font-scrawl);
+  color: var(--pink);
+  text-align: center;
+  font-size: 14px;
+  margin: 14px 0 2px;
+  transform: rotate(-1deg);
+}
+.tk-stock b {
+  color: var(--paper);
+}
+.tk-stock--soldout {
+  color: var(--paper);
+}
+
+/* ===================== FORM (legible, tema sutil) ===================== */
+/* El form vive en un parche de papel SÓLIDO con borde recto y sombra dura:
+   look de sticker, pero sin el filtro rasgado para máxima legibilidad. */
+.tk-form {
+  max-width: 460px;
+  margin: 28px auto 0;
+  background: var(--paper);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  padding: 22px 20px 24px;
+  box-shadow:
+    0 8px 0 var(--ink),
+    0 18px 30px rgba(0, 0, 0, 0.4);
+}
+.tk-form__title {
+  font-family: var(--font-patch);
+  font-size: 26px;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.tk-form label {
+  display: block;
+  font-family: var(--font-patch);
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--ink);
+  text-transform: uppercase;
+  margin: 16px 0 6px;
+}
+.tk-form input,
+.tk-form select {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+}
+.tk-form input::placeholder {
+  color: #7a7488;
+}
+/* TÉCNICA: foco visible de alto contraste (anillo rosa). */
+.tk-form input:focus,
+.tk-form select:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px var(--pink);
+}
+.tk-form select:disabled,
+.tk-form option:disabled {
+  color: #9a93a6;
+}
+.tk-hint {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #5a5468;
+  margin-top: 6px;
+}
+
+/* ===================== CTA (botón sticker) ===================== */
+.tk-cta {
+  display: block;
+  width: 100%;
+  margin: 20px auto 0;
+  font-family: var(--font-patch);
+  font-size: 22px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink); /* texto oscuro sobre rosa = contraste accesible */
+  background: var(--pink);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  padding: 16px;
+  cursor: pointer;
+  transform: rotate(-1deg);
+  box-shadow:
+    0 6px 0 var(--ink),
+    0 12px 18px rgba(0, 0, 0, 0.4);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.tk-cta:hover:not(:disabled) {
+  transform: rotate(-1deg) translateY(-3px);
+  box-shadow:
+    0 9px 0 var(--ink),
+    0 16px 22px rgba(0, 0, 0, 0.45);
+}
+.tk-cta:active:not(:disabled) {
+  transform: rotate(-1deg) translateY(3px);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.tk-cta:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+.tk-cta:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+/* botón secundario (texto, sin sticker) */
+.tk-btn-secondary {
+  display: inline-block;
+  margin-top: 18px;
+  font-family: var(--font-patch);
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+.tk-btn-secondary:focus-visible {
+  outline: 3px solid var(--pink);
+  outline-offset: 2px;
+}
+
+/* ===================== ALERTAS ===================== */
+.tk-alert {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 12px 14px;
+  border-radius: 4px;
+  margin: 18px 0 0;
+}
+.tk-alert--error {
+  background: #fde2ec;
+  border: 2px solid #c01a5b;
+  color: #7a0f3a;
+}
+.tk-alert--success {
+  background: #fff;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+}
+.tk-alert--success a {
+  color: #c01a5b;
+  font-weight: 700;
+}
+.tk-alert--success strong {
+  display: block;
+  font-family: var(--font-patch);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+/* ===================== AVISO CANALES OFICIALES ===================== */
+.tk-trust {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(244, 238, 225, 0.85);
+  margin: 22px auto 0;
+  max-width: 420px;
+}
+.tk-trust b {
+  color: var(--pink);
+}
+
+/* ===================== ESTADO DE ÉXITO ===================== */
+.tk-success {
+  text-align: center;
+}
+.tk-success__order {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #5a5468;
+  margin-top: 16px;
+}
+.tk-success__order code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  background: var(--paper-2);
+  border: 1px solid var(--paper-edge);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--ink);
+}
+
+/* ===================== ANIMACIÓN DE ENTRADA ===================== */
+@keyframes tk-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+.tk-reveal {
+  animation: tk-pop 0.5s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+/* ACCESIBILIDAD: respeta prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .tk-reveal {
+    animation: none;
+  }
+  .tk-cta,
+  .tk-cta:hover:not(:disabled),
+  .tk-cta:active:not(:disabled) {
+    transition: none;
+    transform: rotate(-1deg);
+  }
+}

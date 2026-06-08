@@ -8,8 +8,27 @@
       name="description"
       content="Compra tus entradas para When We Were Young 3 de Still Louder en Hops, 1 de agosto."
     />
+    <meta name="theme-color" content="#3e2768" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Anton&family=Rock+Salt&family=Archivo:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
+    <!--
+      Filtro SVG reutilizable para bordes "papel rasgado". Vive aquí (no en React)
+      para evitar IDs duplicados por el doble render de StrictMode y para estar
+      disponible antes de montar la app. Se aplica SOLO a capas decorativas de
+      fondo (::before), nunca sobre texto, inputs ni el QR.
+    -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <filter id="tk-rough">
+        <feTurbulence type="fractalNoise" baseFrequency="0.014 0.018" numOctaves="3" seed="7" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="8" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
     <div id="root"></div>
     <script type="module" src="/src/entradas/main.tsx"></script>
   </body>
