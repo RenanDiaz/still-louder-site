@@ -4,8 +4,39 @@
 
 This is the official website for **Still Louder**, a Panamanian rock band, promoting their single "Al Vacío". The site is a static, performant landing page that links to various streaming platforms and provides information about the release.
 
-**Live URL**: https://stillouder.space/
+**Live URL**: https://stilllouder.space/
 **Repository**: https://github.com/RenanDiaz/still-louder-site
+
+---
+
+## Two Separate Applications (Important)
+
+This repository contains **two independent applications** that share a single
+git repo but deploy as **separate Vercel projects** to **different domains**.
+The rest of this document describes the **main site** unless stated otherwise.
+
+| | Main site | Ticket system |
+|---|---|---|
+| Location | repo root (`public/`, `scripts/`, etc.) | `ticket-system/` |
+| Purpose | Static landing page for the single "Al Vacío" | Ticketing flow (purchase, admin, gate validation) |
+| Stack | Vite + vanilla ES6 modules + CSS | Vite + React + TypeScript + serverless API |
+| Vercel project | Main project (root config) | **Separate** Vercel project (`ticket-system/vercel.json`) |
+| Production domain | https://stilllouder.space/ | **Subdomain** `https://entradas.stilllouder.space` |
+| Config files | root `vercel.json`, `vite.config.js`, `package.json` | `ticket-system/vercel.json`, `vite.config.ts`, `package.json` |
+
+**Key implications:**
+
+- The two apps have **independent** build configs, dependencies, security
+  headers (CSP), and `public/` static directories. A change in one does **not**
+  affect the other.
+- The ticket system is a multi-page React app (`entradas`, `admin`, `validar`,
+  plus a redirecting `index`) with its own serverless backend under
+  `ticket-system/api/`. See `ticket-system/README.md` for its architecture and
+  deployment.
+- **Shared assets are not actually shared at runtime** — they live in separate
+  Vercel deployments. To use the same asset in both (e.g. the favicon), the
+  file must be **copied** into each app's own `public/` directory and referenced
+  with that app's root-relative paths.
 
 ---
 

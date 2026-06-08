@@ -286,7 +286,7 @@ if ('serviceWorker' in navigator) {
       "name": "Still Louder"
     }
   },
-  "url": "https://stillouder.space/",
+  "url": "https://stilllouder.space/",
   "image": "https://i.imgur.com/CoA13WN.jpg"
 }
 </script>
@@ -304,13 +304,13 @@ if ('serviceWorker' in navigator) {
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://stillouder.space/</loc>
+    <loc>https://stilllouder.space/</loc>
     <lastmod>2025-01-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://stillouder.space/al-vacio-pre-release.html</loc>
+    <loc>https://stilllouder.space/al-vacio-pre-release.html</loc>
     <lastmod>2025-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -322,7 +322,7 @@ if ('serviceWorker' in navigator) {
 ```
 User-agent: *
 Allow: /
-Sitemap: https://stillouder.space/sitemap.xml
+Sitemap: https://stilllouder.space/sitemap.xml
 
 # Bloquear archivos innecesarios
 Disallow: /assets/js/
@@ -699,7 +699,7 @@ async function shareContent() {
       await navigator.share({
         title: 'Still Louder - Al Vacío',
         text: '¡Escucha el nuevo sencillo de Still Louder!',
-        url: 'https://stillouder.space/'
+        url: 'https://stilllouder.space/'
       });
       // Track en Analytics
       gtag('event', 'share', {

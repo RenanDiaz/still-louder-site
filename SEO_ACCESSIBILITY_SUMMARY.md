@@ -47,7 +47,7 @@ Implemented complete MusicRecording schema including:
   "name": "Al Vacío",
   "byArtist": {
     "@type": "MusicGroup",
-    "@id": "https://stillouder.space/#band",
+    "@id": "https://stilllouder.space/#band",
     "name": "Still Louder"
   }
 }
@@ -110,7 +110,7 @@ Comprehensive band information:
 - Blocks unnecessary files (CSS, JS, audio files)
 - Blocks system directories (.git, node_modules, dist)
 - Rate limiting for aggressive crawlers (AhrefsBot, SemrushBot)
-- Sitemap reference: https://stillouder.space/sitemap.xml
+- Sitemap reference: https://stilllouder.space/sitemap.xml
 
 **Next Steps**:
 1. Submit sitemap to Google Search Console: https://search.google.com/search-console
@@ -278,8 +278,8 @@ Escucha 'Al Vacío' de Still Louder en Spotify, Apple Music, YouTube, Deezer y A
 ### 4.4 Canonical URLs
 
 Both pages have proper canonical URLs:
-- Main: `https://stillouder.space/`
-- Pre-release: `https://stillouder.space/al-vacio-pre-release`
+- Main: `https://stilllouder.space/`
+- Pre-release: `https://stilllouder.space/al-vacio-pre-release`
 
 ---
 
@@ -290,9 +290,9 @@ Both pages have proper canonical URLs:
 **Added**:
 ```html
 <meta property="og:type" content="music.song" />
-<meta property="music:musician" content="https://stillouder.space/" />
+<meta property="music:musician" content="https://stilllouder.space/" />
 <meta property="music:release_date" content="2025-07-28" />
-<meta property="music:song" content="https://stillouder.space/" />
+<meta property="music:song" content="https://stilllouder.space/" />
 <meta property="music:duration" content="240" />
 ```
 
@@ -324,7 +324,7 @@ Both pages have proper canonical URLs:
 3. LinkedIn Post Inspector: https://www.linkedin.com/post-inspector/
 
 **Steps**:
-1. Enter URL: `https://stillouder.space/`
+1. Enter URL: `https://stilllouder.space/`
 2. Click "Scrape Again" to refresh cache
 3. Verify image, title, description appear correctly
 4. Test on mobile and desktop preview
@@ -377,14 +377,14 @@ All interactive elements now have:
 
 # CLI (if using Lighthouse CI)
 npm install -g lighthouse
-lighthouse https://stillouder.space/ --view
+lighthouse https://stilllouder.space/ --view
 ```
 
 ### 7.2 Accessibility Testing Tools
 
 **Recommended Tools**:
 1. **WAVE**: https://wave.webaim.org/
-   - Enter: `https://stillouder.space/`
+   - Enter: `https://stilllouder.space/`
    - Check for errors and warnings
 
 2. **axe DevTools**: https://www.deque.com/axe/devtools/
@@ -405,7 +405,7 @@ lighthouse https://stillouder.space/ --view
 
 **Google Rich Results Test**:
 - URL: https://search.google.com/test/rich-results
-- Enter: `https://stillouder.space/`
+- Enter: `https://stilllouder.space/`
 - Verify MusicRecording, MusicGroup appear
 
 **Mobile-Friendly Test**:
@@ -442,10 +442,10 @@ lighthouse https://stillouder.space/ --view
 
 **Steps**:
 1. Go to: https://search.google.com/search-console
-2. Add property: `https://stillouder.space`
+2. Add property: `https://stilllouder.space`
 3. Verify ownership (DNS, HTML file, or meta tag)
 4. Navigate to "Sitemaps" in left sidebar
-5. Enter: `https://stillouder.space/sitemap.xml`
+5. Enter: `https://stilllouder.space/sitemap.xml`
 6. Click "Submit"
 
 ### 8.2 Monitor Performance
@@ -461,9 +461,9 @@ lighthouse https://stillouder.space/ --view
 
 **For Immediate Indexing**:
 1. Go to "URL Inspection" tool
-2. Enter: `https://stillouder.space/`
+2. Enter: `https://stilllouder.space/`
 3. Click "Request Indexing"
-4. Repeat for: `https://stillouder.space/al-vacio-pre-release`
+4. Repeat for: `https://stilllouder.space/al-vacio-pre-release`
 
 ---
 
