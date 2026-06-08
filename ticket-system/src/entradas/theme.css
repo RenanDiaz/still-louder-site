@@ -205,12 +205,9 @@ body::before {
   letter-spacing: 0.5px;
 }
 .tk-title .num {
-  /* numeral en itálica serif: contraste deliberado con el marcador del titular
-     (Permanent Marker no trae cursiva real, así que la tomamos del acento) */
-  font-family: var(--font-accent);
-  font-style: italic;
-  color: var(--pink);
-  margin-left: 0.06em;
+  /* mismo marcador que el resto del titular (Permanent Marker incluye dígitos);
+     solo separamos un poco del texto que lo precede */
+  margin-left: 0.08em;
 }
 .tk-byline {
   font-family: var(--font-accent);
