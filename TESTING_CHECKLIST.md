@@ -270,7 +270,7 @@ After installing the app:
 
 ### Production Environment
 
-After deploying to https://stillouder.space:
+After deploying to https://stilllouder.space:
 
 - [ ] All local tests repeated on production
 - [ ] HTTPS working correctly

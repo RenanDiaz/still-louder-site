@@ -4,7 +4,7 @@
 
 This is the official website for **Still Louder**, a Panamanian rock band, promoting their single "Al Vacío". The site is a static, performant landing page that links to various streaming platforms and provides information about the release.
 
-**Live URL**: https://stillouder.space/
+**Live URL**: https://stilllouder.space/
 **Repository**: https://github.com/RenanDiaz/still-louder-site
 
 ---
@@ -21,7 +21,7 @@ The rest of this document describes the **main site** unless stated otherwise.
 | Purpose | Static landing page for the single "Al Vacío" | Ticketing flow (purchase, admin, gate validation) |
 | Stack | Vite + vanilla ES6 modules + CSS | Vite + React + TypeScript + serverless API |
 | Vercel project | Main project (root config) | **Separate** Vercel project (`ticket-system/vercel.json`) |
-| Production domain | https://stillouder.space/ | **Subdomain** `https://entradas.stilllouder.space` |
+| Production domain | https://stilllouder.space/ | **Subdomain** `https://entradas.stilllouder.space` |
 | Config files | root `vercel.json`, `vite.config.js`, `package.json` | `ticket-system/vercel.json`, `vite.config.ts`, `package.json` |
 
 **Key implications:**

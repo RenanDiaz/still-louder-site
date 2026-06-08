@@ -331,7 +331,7 @@ Or use Vercel dashboard to deploy from branch.
 1. Wait 2-3 minutes for deployment
 2. Run Mozilla Observatory scan
 3. Run SecurityHeaders.com scan
-4. Check browser console at https://stillouder.space
+4. Check browser console at https://stilllouder.space
 5. Test all platform links
 6. Verify images load (including Imgur)
 7. Complete SECURITY_TESTING_CHECKLIST.md
@@ -339,7 +339,7 @@ Or use Vercel dashboard to deploy from branch.
 ### 6. HSTS Preload Submission (Optional)
 After confirming everything works:
 1. Visit https://hstspreload.org/
-2. Enter `stillouder.space`
+2. Enter `stilllouder.space`
 3. Follow submission instructions
 
 ---
@@ -576,7 +576,7 @@ Add `https://example.com` to `img-src` in vercel.json.
    ```
 
 4. **Verify**:
-   - Visit https://stillouder.space
+   - Visit https://stilllouder.space
    - Check browser console (no CSP errors)
    - Test all links
    - Run security scans

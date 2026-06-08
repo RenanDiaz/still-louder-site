@@ -247,13 +247,13 @@ If moving to server-side form handling:
 
 #### Mozilla Observatory
 1. Visit https://observatory.mozilla.org/
-2. Enter `stillouder.space`
+2. Enter `stilllouder.space`
 3. Click "Scan Me"
 4. **Expected Score**: A or A+ (90-100 points)
 
 #### SecurityHeaders.com
 1. Visit https://securityheaders.com/
-2. Enter `https://stillouder.space`
+2. Enter `https://stilllouder.space`
 3. Click "Scan"
 4. **Expected Grade**: A or A+
 
@@ -274,7 +274,7 @@ If moving to server-side form handling:
 
 #### SSL Labs
 1. Visit https://www.ssllabs.com/ssltest/
-2. Enter `stillouder.space`
+2. Enter `stilllouder.space`
 3. **Expected Grade**: A or A+
 4. **Check**: HSTS enabled, strong cipher suites
 
@@ -479,7 +479,7 @@ Security headers do not negatively affect Lighthouse scores:
 
 2. **Submit to HSTS Preload List** (Optional)
    - Visit https://hstspreload.org/
-   - Enter `stillouder.space`
+   - Enter `stilllouder.space`
    - Follow submission instructions
 
 3. **Set Up Monitoring**
@@ -568,7 +568,7 @@ npm update
 grep -rn 'target="_blank"' public/
 
 # Verify headers (after deployment)
-curl -I https://stillouder.space
+curl -I https://stilllouder.space
 ```
 
 ---

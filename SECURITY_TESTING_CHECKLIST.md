@@ -33,7 +33,7 @@
 **URL**: https://observatory.mozilla.org/
 
 - [ ] Navigate to Mozilla Observatory
-- [ ] Enter `stillouder.space`
+- [ ] Enter `stilllouder.space`
 - [ ] Run scan
 - [ ] **Expected**: Grade A or A+ (90-100 points)
 - [ ] Document any warnings
@@ -43,7 +43,7 @@
 **URL**: https://securityheaders.com/
 
 - [ ] Navigate to SecurityHeaders.com
-- [ ] Enter `https://stillouder.space`
+- [ ] Enter `https://stilllouder.space`
 - [ ] Run scan
 - [ ] **Expected**: Grade A or A+
 - [ ] Verify all headers present:
@@ -59,7 +59,7 @@
 ### 2. Content Security Policy Testing
 
 #### Browser Console Test
-- [ ] Open https://stillouder.space in Chrome
+- [ ] Open https://stilllouder.space in Chrome
 - [ ] Open DevTools (F12) → Console
 - [ ] **Check**: No CSP violation errors
 - [ ] **Verify**: Google Fonts loads correctly
@@ -82,7 +82,7 @@
 **URL**: https://www.ssllabs.com/ssltest/
 
 - [ ] Navigate to SSL Labs
-- [ ] Enter `stillouder.space`
+- [ ] Enter `stilllouder.space`
 - [ ] Wait for scan completion (2-3 minutes)
 - [ ] **Expected**: Grade A or A+
 - [ ] Verify HSTS enabled
@@ -91,7 +91,7 @@
 
 #### Manual HTTPS Check
 ```bash
-curl -I https://stillouder.space | grep -i strict
+curl -I https://stilllouder.space | grep -i strict
 ```
 - [ ] Run command
 - [ ] **Expected**: `strict-transport-security: max-age=63072000; includeSubDomains; preload`
@@ -162,7 +162,7 @@ Test in multiple browsers:
 #### PageSpeed Insights
 **URL**: https://pagespeed.web.dev/
 
-- [ ] Enter `https://stillouder.space`
+- [ ] Enter `https://stilllouder.space`
 - [ ] Run test for Mobile
 - [ ] Run test for Desktop
 - [ ] **Verify**: Performance not degraded
@@ -171,13 +171,13 @@ Test in multiple browsers:
 ### 7. Security File Testing
 
 #### robots.txt
-- [ ] Navigate to https://stillouder.space/robots.txt
+- [ ] Navigate to https://stilllouder.space/robots.txt
 - [ ] Verify file loads
 - [ ] Check syntax
 - [ ] Verify sitemap URL
 
 #### security.txt
-- [ ] Navigate to https://stillouder.space/.well-known/security.txt
+- [ ] Navigate to https://stilllouder.space/.well-known/security.txt
 - [ ] Verify file loads
 - [ ] Check contact information
 - [ ] Verify expiration date
@@ -224,7 +224,7 @@ Test in multiple browsers:
 - **Name**: ________________
 - **Date**: ________________
 - **Branch**: fase-4-security-hardening
-- **Deployment URL**: https://stillouder.space
+- **Deployment URL**: https://stilllouder.space
 
 ### Results Summary
 - **Mozilla Observatory**: ______ (Grade)
@@ -275,7 +275,7 @@ npm audit
 npm outdated
 
 # Test security headers (requires deployment)
-curl -I https://stillouder.space
+curl -I https://stilllouder.space
 
 # Grep for insecure links
 grep -rn 'target="_blank"' public/ | grep -v 'rel="noopener noreferrer"'
