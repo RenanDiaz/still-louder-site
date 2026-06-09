@@ -196,17 +196,19 @@ body::before {
 .tk-title .l1 {
   font-size: clamp(30px, 9vw, 48px);
   display: block;
+  color: var(--pink);
   letter-spacing: 1px;
 }
 .tk-title .l2 {
   font-size: clamp(46px, 16vw, 92px);
   display: block;
-  color: var(--pink);
+  color: var(--ink);
   letter-spacing: 0.5px;
 }
 .tk-title .num {
   /* mismo marcador que el resto del titular (Permanent Marker incluye dígitos);
      solo separamos un poco del texto que lo precede */
+  color: var(--pink);
   margin-left: 0.08em;
 }
 .tk-byline {
@@ -215,6 +217,9 @@ body::before {
   font-size: 17px;
   color: var(--ink);
   margin-top: 10px;
+}
+.tk-byline .band {
+  color: var(--pink);
 }
 .tk-meta {
   text-align: center;
