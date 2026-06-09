@@ -72,7 +72,7 @@ export const CONFIG = {
   // Tickets (separate ticket-system app)
   tickets: {
     name: 'Comprar Entradas',
-    url: 'https://entradas.stilllouder.space/'
+    url: 'https://entradas.stilllouder.space/when-we-were-young-3'
   },
 
   // Analytics Configuration
