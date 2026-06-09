@@ -28,6 +28,12 @@ export const env = {
   get emailFrom() {
     return optional('EMAIL_FROM', 'Still Louder <entradas@stilllouder.space>');
   },
+  // Destinatario(s) interno(s) que reciben aviso cuando se registra una compra.
+  // Opcional: si no se configura, no se envía el aviso (feature opt-in).
+  // Acepta varias direcciones separadas por coma.
+  get orderNotificationEmail() {
+    return optional('ORDER_NOTIFICATION_EMAIL');
+  },
   get ticketHmacSecret() {
     return required('TICKET_HMAC_SECRET');
   },

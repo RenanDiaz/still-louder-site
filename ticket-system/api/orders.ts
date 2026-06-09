@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
 import { MAX_QUANTITY_PER_ORDER, priceFor, reservationMinutesFor } from './_lib/pricing.js';
+import { sendOrderNotificationEmail } from './_lib/email.js';
 import type { Order, PaymentMethod, Tier } from './_lib/types.js';
 
 const TIERS: Tier[] = ['preventa', 'general'];
@@ -93,6 +94,14 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
       return sendJson(res, 409, { error: 'presale_sold_out' });
     }
     throw new Error(`create_order failed: ${error.message}`);
+  }
+
+  // Aviso interno al operador de que se registró una compra. Best-effort: un
+  // fallo de correo no debe tumbar la creación de la orden ni afectar al comprador.
+  try {
+    await sendOrderNotificationEmail(order!);
+  } catch (notifyError) {
+    console.error('[orders] order notification email failed', notifyError);
   }
 
   return sendJson(res, 201, {

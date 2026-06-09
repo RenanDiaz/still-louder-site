@@ -81,6 +81,7 @@ Todas son **server-only**; ninguna se expone al navegador.
 ```
 SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 RESEND_API_KEY, EMAIL_FROM="Still Louder <entradas@stilllouder.space>"
+ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compra (lista separada por comas)
 TICKET_HMAC_SECRET            # openssl rand -hex 32
 ADMIN_PASSWORD, STAFF_PASSWORD
 CRON_SECRET                   # para el cron de limpieza (openssl rand -hex 16)

@@ -14,6 +14,28 @@ const TIER_LABEL: Record<string, string> = {
   general: 'General'
 };
 
+const METHOD_LABEL: Record<string, string> = {
+  yappy: 'Yappy',
+  cuantoapp: 'Tarjeta (CuantoApp)',
+  cash: 'Efectivo'
+};
+
+function formatMoney(totalCents: number): string {
+  return `$${(totalCents / 100).toFixed(2)}`;
+}
+
+function formatPanamaDate(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat('es-PA', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'America/Panama'
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -174,5 +196,108 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
     subject: 'Tu entrada para WWWY3 — Still Louder',
     html,
     attachments
+  });
+}
+
+/**
+ * Aviso interno al operador cuando se REGISTRA una compra (orden creada, aún
+ * pendiente de pago). Best-effort: el endpoint de compra nunca debe fallar por
+ * esto. Solo se envía si ORDER_NOTIFICATION_EMAIL está configurada.
+ */
+export async function sendOrderNotificationEmail(order: Order): Promise<void> {
+  const recipients = env.orderNotificationEmail
+    .split(',')
+    .map((addr) => addr.trim())
+    .filter(Boolean);
+  if (recipients.length === 0) return;
+
+  const tierLabel = TIER_LABEL[order.tier] ?? order.tier;
+  const methodLabel = METHOD_LABEL[order.payment_method] ?? order.payment_method;
+  const adminUrl = `${env.publicBaseUrl}/admin`;
+
+  const serifFont = "Georgia,'Times New Roman',Times,serif";
+  const patchFont = "'Arial Black',Arial,Helvetica,sans-serif";
+
+  const detailRow = (label: string, value: string) => `
+    <tr>
+      <td style="padding:7px 0;font-family:${patchFont};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6db0;width:110px;vertical-align:top;white-space:nowrap;">${label}</td>
+      <td style="padding:7px 0;font-size:15px;color:#15121c;font-weight:bold;">${value}</td>
+    </tr>`;
+
+  const phoneRow = order.buyer_phone ? detailRow('Teléfono', escapeHtml(order.buyer_phone)) : '';
+
+  const html = `
+    <div style="background:#2c1c4a;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" align="center"
+             style="max-width:560px;margin:0 auto;background:#f6f5f8;border-radius:14px;overflow:hidden;color:#15121c;">
+        <tr>
+          <td style="background:#3e2768;padding:28px 24px 24px;text-align:center;">
+            <div style="font-family:${patchFont};font-size:12px;color:#ff6cb6;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">
+              Still Louder · WWWY3
+            </div>
+            <div style="font-family:${serifFont};font-size:27px;color:#ffffff;line-height:1.15;">
+              Nueva compra registrada 🎟️
+            </div>
+          </td>
+        </tr>
+        <tr><td style="height:5px;background:#ff2e93;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr>
+          <td style="padding:26px 24px 8px;">
+            <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">
+              Se registró una orden <strong>pendiente de pago</strong>. Revisa los detalles y
+              márcala como pagada en el panel cuando confirmes el pago.
+            </p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                   style="background:#ffffff;border:1px solid #e1dfe9;border-left:5px solid #ff2e93;border-radius:10px;">
+              <tr>
+                <td style="padding:18px 20px;">
+                  <div style="font-family:${serifFont};font-style:italic;font-size:19px;color:#3e2768;margin-bottom:10px;">
+                    Detalles de la orden
+                  </div>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    ${detailRow('Comprador', escapeHtml(order.buyer_name))}
+                    ${detailRow('Correo', escapeHtml(order.buyer_email))}
+                    ${phoneRow}
+                    ${detailRow('Tipo', escapeHtml(tierLabel))}
+                    ${detailRow('Cantidad', `${order.quantity} ${order.quantity === 1 ? 'entrada' : 'entradas'}`)}
+                    ${detailRow('Total', formatMoney(order.total_cents))}
+                    ${detailRow('Pago', escapeHtml(methodLabel))}
+                    ${detailRow('Fecha', escapeHtml(formatPanamaDate(order.created_at)))}
+                    ${detailRow('Orden', `#${order.id}`)}
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;">
+              <tr>
+                <td align="center">
+                  <a href="${adminUrl}"
+                     style="display:inline-block;background:#ff2e93;color:#ffffff;text-decoration:none;
+                            font-family:${patchFont};font-size:14px;letter-spacing:2px;text-transform:uppercase;
+                            padding:14px 28px;border-radius:8px;">
+                    Abrir panel de administración
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#3e2768;padding:18px 24px;text-align:center;">
+            <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:#9b86c4;text-transform:uppercase;">
+              Aviso automático · Sistema de entradas
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>`;
+
+  await getResend().emails.send({
+    from: env.emailFrom,
+    to: recipients,
+    subject: `Nueva compra: ${order.buyer_name} · ${order.quantity}x ${tierLabel} · ${formatMoney(order.total_cents)}`,
+    html
   });
 }
