@@ -742,6 +742,105 @@ body {
 }
 
 /* ============================================
+   TICKETS SECTION
+   ============================================ */
+
+.section-tickets {
+  background: var(--color-bg-tertiary);
+}
+
+.ticket-card {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--spacing-3xl);
+  align-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-3xl);
+}
+
+.ticket-card:hover {
+  transform: none;
+}
+
+.ticket-card__kicker {
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-accent);
+  margin-bottom: var(--spacing-xs);
+}
+
+.ticket-card__event {
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-normal);
+  letter-spacing: var(--letter-spacing-wide);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--spacing-sm);
+}
+
+.ticket-card__tagline {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.ticket-meta {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.ticket-meta__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.ticket-meta__item svg {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.ticket-meta__text {
+  display: flex;
+  flex-direction: column;
+  line-height: var(--line-height-snug);
+}
+
+.ticket-meta__sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.ticket-card__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.ticket-card__cta .btn-tickets {
+  width: 100%;
+}
+
+.ticket-card__note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .ticket-card {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+    padding: var(--spacing-xl);
+  }
+}
+
+/* ============================================
    ABOUT SECTION
    ============================================ */
 

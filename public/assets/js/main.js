@@ -320,6 +320,17 @@ const initPlatformTracking = () => {
       });
     });
   }
+
+  // Tickets link tracking
+  const ticketsLink = document.getElementById('tickets-link');
+  if (ticketsLink) {
+    ticketsLink.addEventListener('click', () => {
+      trackEvent('click_tickets', {
+        event_category: 'tickets',
+        event_label: 'when-we-were-young-3'
+      });
+    });
+  }
 };
 
 // ============================================
