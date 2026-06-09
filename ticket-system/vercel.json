@@ -8,6 +8,9 @@
   "crons": [
     { "path": "/api/admin/orders/cleanup", "schedule": "0 6 * * *" }
   ],
+  "rewrites": [
+    { "source": "/when-we-were-young-3", "destination": "/entradas" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

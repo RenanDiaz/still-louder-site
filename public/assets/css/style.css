@@ -411,6 +411,20 @@ body {
   transform: translateY(-2px);
 }
 
+.btn-tickets {
+  background: var(--color-text-primary);
+  color: var(--color-text-dark);
+  border: 2px solid var(--color-text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-tickets:hover {
+  background: transparent;
+  color: var(--color-text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 .btn:focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 3px;
