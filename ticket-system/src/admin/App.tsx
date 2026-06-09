@@ -64,10 +64,21 @@ function Gate({
     <div className="container" style={{ maxWidth: 400 }}>
       <form className="card" onSubmit={submit}>
         <h1 style={{ marginTop: 0 }}>Panel de admin</h1>
+        <label htmlFor="username">Usuario</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          value="admin"
+          autoComplete="username"
+          readOnly
+        />
         <label htmlFor="pw">Contraseña</label>
         <input
           id="pw"
+          name="password"
           type="password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoFocus
