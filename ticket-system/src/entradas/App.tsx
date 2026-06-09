@@ -82,7 +82,9 @@ export default function App() {
                 WERE YOUNG <span className="num">3</span>
               </span>
             </h1>
-            <div className="tk-byline">by {EVENT.band}</div>
+            <div className="tk-byline">
+              by <span className="band">{EVENT.band}</span>
+            </div>
           </div>
         </div>
 
