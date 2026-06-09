@@ -71,7 +71,7 @@ export default function App() {
     <div className="tk-page">
       <Decorations />
       <div className="tk-wrap">
-        <p className="tk-kicker tk-reveal">★ {EVENT.band} presenta · tributo emo ♥ ★</p>
+        <p className="tk-kicker tk-reveal">★ {EVENT.band} presenta ★</p>
 
         {/* Hero: identidad del evento sobre parche de papel inclinado */}
         <div className="tk-title-block tk-reveal">
