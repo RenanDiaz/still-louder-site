@@ -120,20 +120,18 @@ export default function App() {
     <div className="tk-page">
       <Decorations />
       <div className="tk-wrap">
-        <p className="tk-kicker tk-reveal">★ {EVENT.band} presenta ★</p>
-
-        {/* Hero: identidad del evento sobre parche de papel inclinado */}
+        {/* Hero: arte del flyer oficial sobre parche de papel inclinado. Sigue
+            siendo el h1 de la página: el alt lleva el texto que antes era visible. */}
         <div className="tk-title-block tk-reveal">
-          <div className="tk-patch tk-title-patch">
-            <h1 className="tk-title">
-              <span className="l1">WHEN WE</span>
-              <span className="l2">
-                WERE YOUNG <span className="num">3</span>
-              </span>
+          <div className="tk-patch tk-title-patch tk-title-patch--art">
+            <h1 className="tk-title-art">
+              <img
+                src="/wwwy3-title.webp"
+                alt={`${EVENT.band} presenta: ${EVENT.name}`}
+                width={984}
+                height={543}
+              />
             </h1>
-            <div className="tk-byline">
-              by <span className="band">{EVENT.band}</span>
-            </div>
           </div>
         </div>
 

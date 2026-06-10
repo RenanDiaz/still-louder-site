@@ -211,6 +211,20 @@ body::before {
   color: var(--pink);
   margin-left: 0.08em;
 }
+/* Hero con el arte del flyer oficial: el parche pasa a blanco puro para
+   fundirse con el fondo blanco del arte (la var --paper es levemente gris). */
+.tk-title-patch--art::before {
+  background: #fff;
+}
+.tk-title-art {
+  margin: 0;
+  line-height: 0; /* sin línea fantasma bajo la imagen */
+}
+.tk-title-art img {
+  display: block;
+  width: clamp(260px, 76vw, 460px);
+  height: auto;
+}
 .tk-byline {
   font-family: var(--font-accent);
   font-style: italic;
