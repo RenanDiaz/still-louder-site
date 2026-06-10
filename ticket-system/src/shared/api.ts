@@ -67,6 +67,45 @@ export function createOrder(input: CreateOrderInput): Promise<CreateOrderRespons
   });
 }
 
+// --- Yappy (Botón de Pago) -----------------------------------------------------
+// All Yappy credentials/tokens live server-side. The client only learns whether
+// the button is enabled, which CDN serves the web component, and — per order —
+// the {transactionId, token, documentName} trio that feeds eventPayment().
+
+export interface YappyConfigResponse {
+  enabled: boolean;
+  cdnUrl: string | null;
+}
+
+export function getYappyConfig(): Promise<YappyConfigResponse> {
+  return request<YappyConfigResponse>('/api/yappy/config');
+}
+
+export interface YappyPaymentSession {
+  transactionId: string;
+  token: string;
+  documentName: string;
+}
+
+export function createYappyPayment(orderId: string): Promise<YappyPaymentSession> {
+  return request<YappyPaymentSession>('/api/yappy/create-order', {
+    method: 'POST',
+    body: JSON.stringify({ orderId })
+  });
+}
+
+export interface OrderStatusResponse {
+  orderId: string;
+  status: 'pending' | 'paid' | 'cancelled';
+  paidAt: string | null;
+  reservationExpiresAt: string | null;
+  emailed: boolean;
+}
+
+export function getOrderStatus(orderId: string): Promise<OrderStatusResponse> {
+  return request<OrderStatusResponse>(`/api/orders/${orderId}/status`);
+}
+
 // --- Admin -------------------------------------------------------------------
 
 export interface AdminOrder {

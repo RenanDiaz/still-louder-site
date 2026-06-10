@@ -48,5 +48,21 @@ export const env = {
   },
   get publicBaseUrl() {
     return optional('PUBLIC_BASE_URL', 'https://entradas.stilllouder.space');
+  },
+
+  // --- Yappy Botón de Pago V2 (server-only; never reaches the client) --------
+  get yappyBtnMerchantId() {
+    return required('YAPPY_BTN_MERCHANT_ID');
+  },
+  // Base64 string exactly as issued by the Yappy portal (shown only once).
+  get yappyBtnSecretKey() {
+    return required('YAPPY_BTN_SECRET_KEY');
+  },
+  // Must match the URL configured in the Yappy merchant portal.
+  get yappyBtnDomain() {
+    return optional('YAPPY_BTN_DOMAIN', this.publicBaseUrl);
+  },
+  get yappyBtnEnv() {
+    return optional('YAPPY_BTN_ENV', 'test');
   }
 };

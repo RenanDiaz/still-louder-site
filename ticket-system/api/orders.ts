@@ -39,7 +39,7 @@ function paymentInstructions(method: PaymentMethod, totalCents: number) {
       return {
         method,
         amount,
-        note: 'El pago con Yappy estará disponible próximamente.'
+        note: 'Confirma el pago con el botón de Yappy. Tu reserva dura 15 minutos; la entrada llega a tu correo al confirmarse el pago.'
       };
   }
 }

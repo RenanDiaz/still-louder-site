@@ -18,6 +18,11 @@ export interface Order {
   paid_at: string | null;
   reservation_expires_at: string | null;
   emailed_at: string | null;
+  // Short ref (<= 15 alphanumeric chars) sent to Yappy as its orderId — the
+  // UUID is too long for Yappy's 15-char limit. Unique; resolved in the IPN.
+  order_ref: string | null;
+  // transactionId returned by Yappy's payment-wc (audit/reconciliation).
+  yappy_transaction_id: string | null;
 }
 
 export interface Ticket {

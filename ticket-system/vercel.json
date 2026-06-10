@@ -17,7 +17,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; font-src 'self'; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://*.yappy.cloud https://*.yappycloud.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.yappy.cloud https://*.yappycloud.com; connect-src 'self' https://*.supabase.co https://*.yappy.cloud https://*.yappycloud.com https://apipagosbg.bgeneral.cloud; font-src 'self' data: https://*.yappy.cloud https://*.yappycloud.com; frame-src https://*.yappy.cloud https://*.yappycloud.com; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
         },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },

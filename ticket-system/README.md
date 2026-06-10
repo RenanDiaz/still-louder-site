@@ -3,7 +3,8 @@
 Venta, emisión y validación de entradas para **When We Were Young 3** (Hops, 1 de
 agosto). Construido como app autónoma (React + TypeScript + Vite) con backend en
 **Vercel Serverless Functions** y base de datos **Supabase (Postgres)**. Esta es
-la entrega **M1** (vendible sin Yappy).
+la entrega **M1** (vendible sin Yappy) más la integración del **Botón de Pago
+Yappy V2** (ver "Yappy — Botón de Pago V2").
 
 > Se construyó como un proyecto independiente dentro del repo (`/ticket-system`)
 > para no tocar el sitio estático existente. Se despliega como un **proyecto Vercel
@@ -37,8 +38,10 @@ ticket-system/
 │   │   ├── qr.ts             # render del QR (PNG / data URL)
 │   │   ├── email.ts          # envío con Resend
 │   │   ├── pricing.ts        # precios por tier + ventana de reserva (server-side)
-│   │   └── issue.ts          # rutina de emisión (idempotente, agnóstica al pago)
+│   │   ├── issue.ts          # rutina de emisión (idempotente, agnóstica al pago)
+│   │   └── yappy.ts          # adaptador Botón de Pago V2 (llamados server-side + hash IPN)
 │   ├── orders.ts             # POST  /api/orders                (público)
+│   ├── orders/[id]/status.ts # GET   /api/orders/:id/status      (público, polling)
 │   ├── presale/status.ts     # GET   /api/presale/status         (público)
 │   ├── tickets/validate.ts   # POST  /api/tickets/validate       (staff)
 │   ├── tickets/qr.ts         # GET   /api/tickets/qr?t=<token>   (imagen del QR)
@@ -46,13 +49,16 @@ ticket-system/
 │   ├── admin/orders/[id]/mark-paid.ts   # POST                   (admin)
 │   ├── admin/orders/cleanup.ts          # POST/GET (admin o cron)
 │   ├── admin/presale/stage2.ts          # POST                   (admin)
-│   └── yappy/webhook.ts      # POST  /api/yappy/webhook          (FASE 2, stub)
+│   ├── yappy/config.ts       # GET   /api/yappy/config           (público, sin secretos)
+│   ├── yappy/create-order.ts # POST  /api/yappy/create-order     (público, scoped a la orden)
+│   └── yappy/ipn.ts          # GET   /api/yappy/ipn              (confirmación firmada de Yappy)
 ├── src/                      # frontend React
 │   ├── shared/               # api.ts, config.ts, styles.css
-│   ├── entradas/             # flujo de compra
+│   ├── entradas/             # flujo de compra (+ YappyButton.tsx)
 │   ├── admin/                # panel
 │   └── validar/              # escáner de puerta
 ├── supabase/migrations/0001_init.sql   # schema + RPCs atómicas
+├── supabase/migrations/0002_yappy_order_ref.sql  # order_ref corto p/ Yappy
 ├── entradas.html · admin.html · validar.html · index.html
 ├── vite.config.ts · vercel.json · .env.example
 ```
@@ -87,6 +93,11 @@ ADMIN_PASSWORD, STAFF_PASSWORD
 CRON_SECRET                   # para el cron de limpieza (openssl rand -hex 16)
 CUANTOAPP_PAYMENT_URL         # opcional (link de pago con tarjeta)
 PUBLIC_BASE_URL=https://entradas.stilllouder.space
+# Yappy Botón de Pago V2 (vacías = la opción Yappy se oculta sola)
+YAPPY_BTN_MERCHANT_ID, YAPPY_BTN_SECRET_KEY (base64, se muestra UNA vez)
+YAPPY_BTN_DOMAIN=https://entradas.stilllouder.space   # igual al portal
+YAPPY_BTN_ENV=test|prod
+YAPPY_BTN_CDN_URL             # opcional: override del CDN del web component
 ```
 
 ### 3. Desarrollo local
@@ -181,9 +192,50 @@ El secreto vive solo en el servidor; es imposible fabricar entradas válidas sin
 - **Precios:** se calculan en el servidor a partir de (tier, cantidad); el cliente
   nunca envía montos.
 
-## Fase 2 — Yappy
+## Yappy — Botón de Pago V2
 
-`api/yappy/webhook.ts` es el único punto nuevo: tras verificar la firma del
-webhook con `YAPPY_SECRET_KEY` y mapear la referencia a nuestro `orderId`, llama
-`issueOrder()` — la misma rutina que todo lo demás. No agregar lógica de Yappy a
-la emisión. Doc oficial: `yappy.com.pa/comercial/desarrolladores/boton-de-pago-yappy-nueva-integracion/`.
+Checkout embebido con el web component `<btn-yappy>`. La emisión NO cambió: la
+IPN autenticada llama `issueOrder()` — la misma rutina idempotente que todo lo
+demás. Soporte/doc: botondepagoyappy@bgeneral.com.
+
+**Flujo:**
+
+1. El comprador elige Yappy (la opción solo aparece si `GET /api/yappy/config`
+   dice `enabled`, es decir, si las credenciales están configuradas) y crea su
+   orden normal (`POST /api/orders`, reserva de 15 min).
+2. La página de confirmación carga el web component desde el CDN (test o prod,
+   decidido por el servidor) y, al hacer clic, llama
+   `POST /api/yappy/create-order { orderId }`. **En el backend** se ejecutan los
+   dos llamados de Yappy (validar comercio → `payment-wc`) y se devuelven
+   `{transactionId, token, documentName}` para `eventPayment()`. Ningún secreto
+   toca el navegador.
+3. La confirmación real llega por **`GET /api/yappy/ipn`**: se valida el hash
+   HMAC (clave = primer segmento del secreto base64-decodificado; mensaje =
+   `orderId + status + domain`) y solo `status='E'` con hash válido transiciona
+   `pending → paid` vía `issueOrder()` (idempotente: IPNs repetidas no duplican
+   tickets ni correos). `R`/`C`/`X` no tocan la orden; el cupo se libera al
+   vencer la reserva.
+4. `eventSuccess` del botón es solo UX: la página hace **polling** a
+   `GET /api/orders/:id/status` hasta ver `paid` (sobrevive a un refresh — la
+   orden pendiente se guarda en `sessionStorage`). Si la reserva vence, la UI
+   ofrece crear una nueva orden.
+
+**`order_ref` (migración `0002`):** el `orderId` de Yappy admite máx. 15
+caracteres, así que cada orden recibe un ref corto único (`WW` + 10 chars
+A-Z/2-9) que es lo que Yappy ve; la IPN lo resuelve de vuelta a la orden. El
+`transactionId` de Yappy queda en `orders.yappy_transaction_id` y el
+`confirmationNumber` de la IPN en `orders.payment_ref`. Si Yappy responde
+`E007` (pedido ya registrado), `create-order` genera un ref nuevo y reintenta —
+nunca se reusa un ref quemado.
+
+**Pruebas (UAT):** `YAPPY_BTN_ENV=test` usa `api-comecom-uat.yappycloud.com` y
+el CDN UAT. Hay que inscribir usuarios de prueba (cuenta Gmail + celular
+panameño) escribiendo a botondepagoyappy@bgeneral.com; en UAT el `aliasYappy`
+es el teléfono del usuario de prueba (el comprador lo pone en el campo
+teléfono, requerido para Yappy).
+
+**Pendientes a confirmar en UAT** (ver comentarios en `api/_lib/yappy.ts`):
+si `paymentDate` va en segundos o milisegundos; cuál variante del CDN de prod
+resuelve (`bt-cdn.yappy.cloud` vs `bt-cdn.yappycloud.com` — override con
+`YAPPY_BTN_CDN_URL`); y si en prod `aliasYappy` es requerido o lo ingresa el
+cliente en el modal.
