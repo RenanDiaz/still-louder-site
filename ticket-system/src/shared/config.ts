@@ -19,7 +19,9 @@ export const TIERS = {
 export type TierKey = keyof typeof TIERS;
 
 export const PAYMENT_METHODS = [
+  // 'yappy' is only offered when GET /api/yappy/config says it's enabled
+  // (i.e. the server has the Botón de Pago credentials configured).
+  { value: 'yappy', label: 'Yappy' },
   { value: 'cuantoapp', label: 'Tarjeta (CuantoApp)' },
   { value: 'cash', label: 'Efectivo' }
-  // 'yappy' is enabled in Phase 2.
 ] as const;
