@@ -267,7 +267,13 @@ export async function sendOrderNotificationEmail(order: Order): Promise<void> {
                     ${phoneRow}
                     ${detailRow('Tipo', escapeHtml(tierLabel))}
                     ${detailRow('Cantidad', `${order.quantity} ${order.quantity === 1 ? 'entrada' : 'entradas'}`)}
-                    ${detailRow('Total', formatMoney(order.total_cents))}
+                    ${
+                      order.fee_cents > 0
+                        ? detailRow('Neto (banda)', formatMoney(order.net_cents)) +
+                          detailRow('Cargo por servicio', formatMoney(order.fee_cents))
+                        : ''
+                    }
+                    ${detailRow('Total cobrado', formatMoney(order.total_cents))}
                     ${detailRow('Pago', escapeHtml(methodLabel))}
                     ${detailRow('Fecha', escapeHtml(formatPanamaDate(order.created_at)))}
                     ${detailRow('Orden', `#${order.id}`)}

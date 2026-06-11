@@ -435,17 +435,30 @@ body::before {
 /* Resumen de precio: el comprador siempre ve QUÉ tarifa y CUÁNTO paga antes
    de enviar (sobre todo cuando cae a precio general por preventa agotada). */
 .tk-price-summary {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px 12px;
   margin: 20px 0 0;
   padding: 12px 14px;
   border: 2px dashed var(--ink);
   border-radius: 4px;
   font-family: var(--font-body);
   color: var(--ink);
+}
+.tk-price-summary__row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0;
+}
+.tk-price-summary__row + .tk-price-summary__row {
+  margin-top: 6px;
+}
+.tk-price-summary__row--total {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(21, 18, 28, 0.2);
+}
+.tk-price-summary__row--fee {
+  color: #5a5468;
 }
 .tk-price-summary__tier {
   font-family: var(--font-patch);
@@ -456,6 +469,10 @@ body::before {
 .tk-price-summary__calc {
   font-size: 14px;
   color: #5a5468;
+}
+.tk-price-summary__amount {
+  margin-left: auto;
+  font-size: 14px;
 }
 .tk-price-summary__total {
   font-family: var(--font-patch);

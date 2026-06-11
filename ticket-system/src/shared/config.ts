@@ -37,3 +37,38 @@ export const PAYMENT_METHODS = [
   { value: 'cuantoapp', label: 'Tarjeta (CuantoApp)' },
   { value: 'cash', label: 'Efectivo' }
 ] as const;
+
+export type PaymentMethodKey = (typeof PAYMENT_METHODS)[number]['value'];
+
+// Recargo por método de pago — espejo de api/_lib/pricing.ts (PAYMENT_FEES).
+// SOLO para mostrar el total estimado al comprador; el servidor recalcula y es
+// la fuente de verdad. Mantener en sync con el backend al cambiar comisiones.
+const PAYMENT_FEES: Record<PaymentMethodKey, { pct: number; fixedCents: number; minFeeCents: number }> = {
+  yappy: { pct: 0.0107, fixedCents: 0, minFeeCents: 2 },
+  cuantoapp: { pct: 0.049, fixedCents: 35, minFeeCents: 0 },
+  cash: { pct: 0, fixedCents: 0, minFeeCents: 0 }
+};
+
+export interface PriceBreakdown {
+  netCents: number;
+  feeCents: number;
+  totalCents: number;
+}
+
+// El recargo es POR TRANSACCIÓN: el fijo se aplica una sola vez sobre el neto
+// total, no por entrada. precioFinal = (neto + fijo) / (1 − pct), redondeado
+// hacia arriba al centavo (igual que el servidor) para que el neto ≥ base.
+export function priceBreakdown(tier: TierKey, quantity: number, method: PaymentMethodKey): PriceBreakdown {
+  const netCents = TIERS[tier].priceCents * quantity;
+  if (netCents <= 0) return { netCents: 0, feeCents: 0, totalCents: 0 };
+  const fee = PAYMENT_FEES[method];
+  let totalCents = Math.ceil((netCents + fee.fixedCents) / (1 - fee.pct));
+  if (totalCents - netCents < fee.minFeeCents) {
+    totalCents = netCents + fee.minFeeCents;
+  }
+  return { netCents, feeCents: totalCents - netCents, totalCents };
+}
+
+export function formatMoney(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}

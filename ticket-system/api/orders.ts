@@ -4,7 +4,7 @@ import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib
 import {
   MAX_QUANTITY_PER_ORDER,
   isPresaleOpenByDate,
-  priceFor,
+  priceBreakdown,
   reservationMinutesFor
 } from './_lib/pricing.js';
 import { sendOrderNotificationEmail } from './_lib/email.js';
@@ -23,16 +23,27 @@ interface CreateOrderBody {
   payment_method?: string;
 }
 
-function paymentInstructions(method: PaymentMethod, totalCents: number) {
+// CuantoApp es manual: cada cantidad (1–10) tiene su propio producto OCULTO en
+// el catálogo, con el precio ya "grossed-up" (porque el fijo de $0.35 es por
+// transacción, no por entrada). El operador crea esos productos una vez y pega
+// sus links en CUANTOAPP_PAYMENT_URL_<n>; aquí elegimos el que corresponde a la
+// cantidad. CUANTOAPP_PAYMENT_URL (sin sufijo) queda como fallback. El producto
+// puede llevar dos precios (preventa/general): el comprador paga el monto exacto
+// que le mostramos, y el admin marca el precio de preventa como agotado al
+// cerrarse esa etapa.
+function cuantoappLinkFor(quantity: number): string {
+  return process.env[`CUANTOAPP_PAYMENT_URL_${quantity}`] ?? process.env.CUANTOAPP_PAYMENT_URL ?? '';
+}
+
+function paymentInstructions(method: PaymentMethod, totalCents: number, quantity: number) {
   const amount = `$${(totalCents / 100).toFixed(2)}`;
   switch (method) {
     case 'cuantoapp':
       return {
         method,
         amount,
-        // Operator pastes the CuantoApp checkout link here via env.
-        link: process.env.CUANTOAPP_PAYMENT_URL ?? '',
-        note: 'Paga con tarjeta a través del enlace de CuantoApp. Tu entrada se envía al confirmar el pago.'
+        link: cuantoappLinkFor(quantity),
+        note: `Paga el monto exacto (${amount}) con tarjeta a través del enlace de CuantoApp. Tu entrada se envía al confirmar el pago.`
       };
     case 'cash':
       return {
@@ -95,8 +106,10 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     }
   }
 
-  // Total is computed server-side; the client cannot influence the price.
-  const totalCents = priceFor(tier, quantity);
+  // El precio se calcula en el servidor; el cliente no puede influir en él. El
+  // total incluye el recargo por servicio que absorbe la comisión del método de
+  // pago, de modo que el neto (precio base × cantidad) lo recibe la banda.
+  const { netCents, feeCents, totalCents } = priceBreakdown(tier, quantity, method);
   const reservationMinutes = reservationMinutesFor(method);
 
   const { data: order, error } = await getSupabase()
@@ -107,6 +120,8 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
       p_tier: tier,
       p_quantity: quantity,
       p_total_cents: totalCents,
+      p_net_cents: netCents,
+      p_fee_cents: feeCents,
       p_payment_method: method,
       p_reservation_minutes: reservationMinutes
     })
@@ -132,7 +147,13 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     tier: order!.tier,
     quantity: order!.quantity,
     totalCents: order!.total_cents,
+    // Desglose para mostrar al comprador: neto + "Cargo por servicio" = total.
+    breakdown: {
+      netCents: order!.net_cents,
+      feeCents: order!.fee_cents,
+      totalCents: order!.total_cents
+    },
     reservationExpiresAt: order!.reservation_expires_at,
-    payment: paymentInstructions(method, totalCents)
+    payment: paymentInstructions(method, totalCents, quantity)
   });
 });

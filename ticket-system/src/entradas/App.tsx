@@ -8,7 +8,14 @@ import {
   type PresaleStatusResponse,
   type YappyConfigResponse
 } from '../shared/api';
-import { EVENT, PAYMENT_METHODS, TIERS, type TierKey } from '../shared/config';
+import {
+  EVENT,
+  PAYMENT_METHODS,
+  TIERS,
+  formatMoney,
+  priceBreakdown,
+  type TierKey
+} from '../shared/config';
 import { Countdown } from './Countdown';
 import { YappyButton } from './YappyButton';
 
@@ -76,7 +83,9 @@ export default function App() {
   // The tier is never the buyer's choice: while presale is available everyone
   // pays the cheaper presale price; once it ends or sells out, general applies.
   const tier: TierKey = presaleAvailable ? 'preventa' : 'general';
-  const total = TIERS[tier].priceCents * quantity;
+  // El total que paga el comprador incluye el "Cargo por servicio" que absorbe
+  // la comisión del método elegido. Estimación en cliente; el servidor manda.
+  const { netCents, feeCents, totalCents } = priceBreakdown(tier, quantity, method);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -260,16 +269,28 @@ export default function App() {
             </div>
           )}
 
-          <p className="tk-price-summary" aria-live="polite">
-            <span className="tk-price-summary__tier">{TIERS[tier].label}</span>
-            <span className="tk-price-summary__calc">
-              {TIERS[tier].priceLabel} × {quantity}
-            </span>
-            <strong className="tk-price-summary__total">${(total / 100).toFixed(2)}</strong>
-          </p>
+          <div className="tk-price-summary" aria-live="polite">
+            <p className="tk-price-summary__row">
+              <span className="tk-price-summary__tier">{TIERS[tier].label}</span>
+              <span className="tk-price-summary__calc">
+                {TIERS[tier].priceLabel} × {quantity}
+              </span>
+              <span className="tk-price-summary__amount">{formatMoney(netCents)}</span>
+            </p>
+            {feeCents > 0 && (
+              <p className="tk-price-summary__row tk-price-summary__row--fee">
+                <span className="tk-price-summary__tier">Cargo por servicio</span>
+                <span className="tk-price-summary__amount">{formatMoney(feeCents)}</span>
+              </p>
+            )}
+            <p className="tk-price-summary__row tk-price-summary__row--total">
+              <span className="tk-price-summary__tier">Total</span>
+              <strong className="tk-price-summary__total">{formatMoney(totalCents)}</strong>
+            </p>
+          </div>
 
           <button type="submit" className="tk-cta" disabled={submitting}>
-            {submitting ? 'Procesando…' : `Comprar — $${(total / 100).toFixed(2)} ⚡`}
+            {submitting ? 'Procesando…' : `Comprar — ${formatMoney(totalCents)} ⚡`}
           </button>
         </form>
 
@@ -363,6 +384,12 @@ function Confirmation({
             Reservamos {data.quantity} {data.quantity === 1 ? 'entrada' : 'entradas'} por un total de{' '}
             <strong>{data.payment.amount}</strong>.
           </p>
+          {data.breakdown.feeCents > 0 && (
+            <p className="tk-success__breakdown" style={{ fontSize: 14, margin: '0 0 8px' }}>
+              Entradas {formatMoney(data.breakdown.netCents)} + Cargo por servicio{' '}
+              {formatMoney(data.breakdown.feeCents)}
+            </p>
+          )}
 
           {isYappy ? (
             <YappyCheckout data={data} cdnUrl={yappyCdnUrl} onReset={onReset} />
