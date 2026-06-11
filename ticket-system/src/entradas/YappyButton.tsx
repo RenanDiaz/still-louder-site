@@ -139,6 +139,8 @@ export function YappyButton({ orderId, cdnUrl, onPaymentSent, onError }: YappyBu
     );
   }
 
-  // Brand button (no recoloring allowed); dark theme matches the page.
-  return <btn-yappy ref={ref} theme="dark" rounded="true" />;
+  // Brand button: Yappy only allows its official themes (blue, darkBlue,
+  // orange, dark, sky, light), no custom recoloring. "blue" is the
+  // characteristic Yappy look and stands out on the white card.
+  return <btn-yappy ref={ref} theme="blue" rounded="true" />;
 }
