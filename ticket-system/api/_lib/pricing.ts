@@ -5,7 +5,8 @@ import type { PaymentMethod, Tier } from './types.js';
 // change what's owed.
 const TIER_PRICE_CENTS: Record<Tier, number> = {
   preventa: 600, // $6 presale
-  general: 800 // $8 day-of / general
+  general: 800, // $8 day-of / general
+  cortesia: 0 // admin-issued comps; never purchasable via /api/orders
 };
 
 export function priceFor(tier: Tier, quantity: number): number {
@@ -28,7 +29,8 @@ export function isPresaleOpenByDate(now: Date = new Date()): boolean {
 const RESERVATION_MINUTES: Record<PaymentMethod, number> = {
   cash: 48 * 60,
   cuantoapp: 48 * 60,
-  yappy: 15
+  yappy: 15,
+  courtesy: 0 // courtesy orders are issued paid on the spot; never reserved
 };
 
 export function reservationMinutesFor(method: PaymentMethod): number {

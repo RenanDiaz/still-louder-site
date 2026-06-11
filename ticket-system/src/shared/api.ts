@@ -135,8 +135,10 @@ export interface AdminStats {
     soldOut: boolean;
   };
   generalPaid: number;
+  courtesyTickets: number;
   totalTicketsPaid: number;
   revenueCents: number;
+  revenueByMethod: Record<string, number>;
 }
 
 export interface AdminOrdersResponse {
@@ -182,6 +184,103 @@ export function toggleStage2(
 
 export function cleanupExpired(password: string): Promise<{ cancelled: number }> {
   return request('/api/admin/orders/cleanup', {
+    method: 'POST',
+    headers: authHeader(password)
+  });
+}
+
+export function cancelOrder(
+  password: string,
+  orderId: string
+): Promise<{ orderId: string; status: string }> {
+  return request(`/api/admin/orders/${orderId}/cancel`, {
+    method: 'POST',
+    headers: authHeader(password)
+  });
+}
+
+export function resendTicketEmail(
+  password: string,
+  orderId: string
+): Promise<{ orderId: string; ticketCount: number }> {
+  return request(`/api/admin/orders/${orderId}/resend-email`, {
+    method: 'POST',
+    headers: authHeader(password)
+  });
+}
+
+export interface CreateCourtesyInput {
+  buyer_name: string;
+  buyer_email: string;
+  quantity: number;
+  note?: string;
+  send_email?: boolean;
+}
+
+export function createCourtesyOrder(
+  password: string,
+  input: CreateCourtesyInput
+): Promise<{ orderId: string; ticketCount: number; emailed: boolean }> {
+  return request('/api/admin/courtesy', {
+    method: 'POST',
+    headers: authHeader(password),
+    body: JSON.stringify(input)
+  });
+}
+
+export interface AdminTicket {
+  id: string;
+  order_id: string;
+  tier: string;
+  status: 'valid' | 'used' | 'void';
+  used_at: string | null;
+  used_by: string | null;
+  created_at: string;
+  buyer_name: string;
+  buyer_email: string;
+}
+
+export interface TicketCounts {
+  total: number;
+  valid: number;
+  used: number;
+  void: number;
+}
+
+export interface AdminTicketsResponse {
+  tickets: AdminTicket[];
+  stats: TicketCounts & { byTier: Record<string, TicketCounts> };
+}
+
+export function fetchAdminTickets(
+  password: string,
+  params: { q?: string; status?: string; tier?: string } = {}
+): Promise<AdminTicketsResponse> {
+  const qs = new URLSearchParams();
+  if (params.q) qs.set('q', params.q);
+  if (params.status) qs.set('status', params.status);
+  if (params.tier) qs.set('tier', params.tier);
+  const suffix = qs.toString() ? `?${qs}` : '';
+  return request<AdminTicketsResponse>(`/api/admin/tickets${suffix}`, {
+    headers: authHeader(password)
+  });
+}
+
+export function revokeTicket(
+  password: string,
+  ticketId: string
+): Promise<{ ticketId: string; status: string }> {
+  return request(`/api/admin/tickets/${ticketId}/revoke`, {
+    method: 'POST',
+    headers: authHeader(password)
+  });
+}
+
+export function unrevokeTicket(
+  password: string,
+  ticketId: string
+): Promise<{ ticketId: string; status: string }> {
+  return request(`/api/admin/tickets/${ticketId}/unrevoke`, {
     method: 'POST',
     headers: authHeader(password)
   });

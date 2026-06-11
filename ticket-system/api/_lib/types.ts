@@ -1,5 +1,5 @@
-export type Tier = 'preventa' | 'general';
-export type PaymentMethod = 'yappy' | 'cuantoapp' | 'cash';
+export type Tier = 'preventa' | 'general' | 'cortesia';
+export type PaymentMethod = 'yappy' | 'cuantoapp' | 'cash' | 'courtesy';
 export type OrderStatus = 'pending' | 'paid' | 'cancelled';
 export type TicketStatus = 'valid' | 'used' | 'void';
 

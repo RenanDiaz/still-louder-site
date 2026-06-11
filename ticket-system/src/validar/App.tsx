@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { validateTicket, type ValidateResponse } from '../shared/api';
+import { TIER_LABELS } from '../shared/config';
 import { playAccept, playReject } from './sound';
 
 const PW_KEY = 'wwwy3_staff_pw';
@@ -225,7 +226,7 @@ function ScannerActive({
 
 function ResultOverlay({ response }: { response: ValidateResponse }) {
   const isValid = response.result === 'valid';
-  const tierLabel = response.tier === 'preventa' ? 'Preventa' : response.tier === 'general' ? 'General' : '';
+  const tierLabel = response.tier ? (TIER_LABELS[response.tier] ?? response.tier) : '';
 
   let title: string;
   let detail = '';

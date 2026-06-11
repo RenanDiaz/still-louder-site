@@ -11,13 +11,15 @@ function getResend(): Resend {
 
 const TIER_LABEL: Record<string, string> = {
   preventa: 'Preventa',
-  general: 'General'
+  general: 'General',
+  cortesia: 'Cortesía'
 };
 
 const METHOD_LABEL: Record<string, string> = {
   yappy: 'Yappy',
   cuantoapp: 'Tarjeta (CuantoApp)',
-  cash: 'Efectivo'
+  cash: 'Efectivo',
+  courtesy: 'Cortesía'
 };
 
 function formatMoney(totalCents: number): string {
@@ -140,7 +142,11 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
         <tr>
           <td style="padding:26px 24px 8px;">
             <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">
-              Hola <strong>${escapeHtml(order.buyer_name)}</strong>, gracias por tu compra. ¡Nos vemos en el pit! 🤘
+              Hola <strong>${escapeHtml(order.buyer_name)}</strong>, ${
+                order.payment_method === 'courtesy'
+                  ? `te ${order.quantity === 1 ? 'regalamos esta entrada' : 'regalamos estas entradas'} de cortesía. ¡Nos vemos en el pit! 🤘`
+                  : 'gracias por tu compra. ¡Nos vemos en el pit! 🤘'
+              }
             </p>
 
             <!-- Tarjeta de detalles con acento lateral rosa y mini-título serif -->
