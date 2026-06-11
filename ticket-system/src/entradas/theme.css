@@ -366,7 +366,8 @@ body::before {
   text-transform: uppercase;
   margin-bottom: 6px;
 }
-.tk-form label {
+.tk-form label,
+.tk-form .tk-label {
   display: block;
   font-family: var(--font-patch);
   font-size: 13px;
@@ -374,6 +375,29 @@ body::before {
   color: var(--ink);
   text-transform: uppercase;
   margin: 16px 0 6px;
+}
+
+/* Tarifa aplicada (solo lectura): la mejor tarifa disponible se asigna sola,
+   el comprador nunca elige pagar de más. */
+.tk-tier {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: #fff;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.tk-tier__price {
+  font-family: var(--font-patch);
+  font-size: 18px;
+  letter-spacing: 0.5px;
 }
 .tk-form input,
 .tk-form select {
