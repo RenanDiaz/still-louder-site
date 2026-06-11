@@ -8,7 +8,7 @@ import {
   reservationMinutesFor
 } from './_lib/pricing.js';
 import { sendOrderNotificationEmail } from './_lib/email.js';
-import type { Order, PaymentMethod, Tier } from './_lib/types.js';
+import type { Order, PaymentMethod, PresaleStatus, Tier } from './_lib/types.js';
 
 const TIERS: Tier[] = ['preventa', 'general'];
 const METHODS: PaymentMethod[] = ['yappy', 'cuantoapp', 'cash'];
@@ -80,6 +80,19 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   // if cupo remains. The client falls back to general on this error.
   if (tier === 'preventa' && !isPresaleOpenByDate()) {
     return sendJson(res, 409, { error: 'presale_ended' });
+  }
+  // The tier is not the buyer's choice: while presale is open and has cupo,
+  // nobody should pay the (higher) general price. This guards against stale
+  // or tampered clients; the current client only sends 'general' when presale
+  // is unavailable. The extra RPC only runs during the presale window.
+  if (tier === 'general' && isPresaleOpenByDate()) {
+    const { data: presaleStatus, error: presaleError } = await getSupabase()
+      .rpc('presale_status')
+      .single<PresaleStatus>();
+    if (presaleError) throw new Error(`presale_status failed: ${presaleError.message}`);
+    if (!presaleStatus!.sold_out) {
+      return sendJson(res, 409, { error: 'presale_available' });
+    }
   }
 
   // Total is computed server-side; the client cannot influence the price.

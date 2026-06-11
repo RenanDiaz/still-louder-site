@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   createOrder,
   getOrderStatus,
@@ -35,10 +35,11 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   // Presale is over once its date passes (independent of the async cupo check).
-  // Default the buyer to general from the first render in that case so they
-  // never see preventa preselected when it can't be bought.
-  const presaleEnded = useMemo(() => Date.now() >= new Date(EVENT.presaleEnd).getTime(), []);
-  const [tier, setTier] = useState<TierKey>(presaleEnded ? 'general' : 'preventa');
+  // State (not a constant) so a server-side `presale_ended` rejection — e.g.
+  // a buyer with a skewed clock — can flip it too.
+  const [presaleEnded, setPresaleEnded] = useState(
+    () => Date.now() >= new Date(EVENT.presaleEnd).getTime()
+  );
   const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<Method>('cuantoapp');
   const [submitting, setSubmitting] = useState(false);
@@ -72,13 +73,10 @@ export default function App() {
   const presaleSoldOut = presale?.soldOut ?? false;
   // Preventa can only be bought while its date is open AND cupo remains.
   const presaleAvailable = !presaleEnded && !presaleSoldOut;
-  const total = useMemo(() => TIERS[tier].priceCents * quantity, [tier, quantity]);
-
-  // Keep the buyer on a tier they can actually purchase: if presale becomes
-  // unavailable (sold out or its date passed), fall back to general pricing.
-  useEffect(() => {
-    if (!presaleAvailable && tier === 'preventa') setTier('general');
-  }, [presaleAvailable, tier]);
+  // The tier is never the buyer's choice: while presale is available everyone
+  // pays the cheaper presale price; once it ends or sells out, general applies.
+  const tier: TierKey = presaleAvailable ? 'preventa' : 'general';
+  const total = TIERS[tier].priceCents * quantity;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -97,12 +95,26 @@ export default function App() {
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
       if (code === 'presale_sold_out') {
-        setError('La preventa se agotó. Te cambiamos a entrada general — revisa el precio antes de continuar.');
-        setTier('general');
+        setError('La preventa se agotó. Ahora aplica el precio general — revisa el total antes de continuar.');
+        // Flip availability locally right away (works even if the status fetch
+        // failed earlier); the refetch then refines the real count.
+        setPresale((p) => ({
+          available: 0,
+          capacity: p?.capacity ?? 0,
+          stage2Active: p?.stage2Active ?? false,
+          soldOut: true
+        }));
         getPresaleStatus().then(setPresale).catch(() => {});
       } else if (code === 'presale_ended') {
-        setError('La preventa terminó. Te cambiamos a entrada general — revisa el precio antes de continuar.');
-        setTier('general');
+        setError('La preventa terminó. Ahora aplica el precio general — revisa el total antes de continuar.');
+        setPresaleEnded(true);
+      } else if (code === 'presale_available') {
+        // The server knows better: presale is open again (freed cupo or our
+        // clock was ahead). Flip back so the buyer pays the cheaper price.
+        setError('¡La preventa está disponible! Aplica su precio — revisa el total antes de continuar.');
+        setPresaleEnded(false);
+        setPresale((p) => (p ? { ...p, available: Math.max(p.available, 1), soldOut: false } : p));
+        getPresaleStatus().then(setPresale).catch(() => {});
       } else if (code === 'invalid_email') {
         setError('Revisa el correo: parece inválido.');
       } else {
@@ -178,23 +190,21 @@ export default function App() {
         <form className="tk-form tk-reveal" onSubmit={handleSubmit}>
           <h2 className="tk-form__title">Compra tus entradas</h2>
 
-          <label htmlFor="tier">Tipo de entrada</label>
-          <select id="tier" value={tier} onChange={(e) => setTier(e.target.value as TierKey)}>
-            <option value="preventa" disabled={!presaleAvailable}>
-              {TIERS.preventa.label} — {TIERS.preventa.priceLabel}
-              {presaleSoldOut ? ' (agotada)' : presaleEnded ? ' (finalizada)' : ''}
-            </option>
-            <option value="general">
-              {TIERS.general.label} — {TIERS.general.priceLabel}
-            </option>
-          </select>
-          {!presaleAvailable && (
-            <p className="tk-hint">
-              {presaleSoldOut
-                ? 'La preventa se agotó: las entradas se venden al precio general.'
-                : 'La preventa terminó: las entradas se venden al precio general.'}
-            </p>
-          )}
+          {/* La tarifa no se elige: se aplica sola la mejor disponible. */}
+          <span className="tk-label" id="tier-label">
+            Tipo de entrada
+          </span>
+          <p className="tk-tier" aria-labelledby="tier-label" aria-live="polite">
+            <span className="tk-tier__name">{TIERS[tier].label}</span>
+            <strong className="tk-tier__price">{TIERS[tier].priceLabel}</strong>
+          </p>
+          <p className="tk-hint">
+            {presaleAvailable
+              ? 'Te aplicamos automáticamente el precio de preventa mientras esté disponible.'
+              : presaleEnded
+                ? 'La preventa terminó: las entradas se venden al precio general.'
+                : 'La preventa se agotó: las entradas se venden al precio general.'}
+          </p>
 
           <label htmlFor="quantity">Cantidad</label>
           <select
