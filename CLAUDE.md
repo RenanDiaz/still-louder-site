@@ -1,4 +1,6 @@
-# CLAUDE.md - AI Assistant Guide for Still Louder Website
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -40,6 +42,82 @@ The rest of this document describes the **main site** unless stated otherwise.
 
 ---
 
+## Ticket System (`ticket-system/`)
+
+Ticket sales, issuance and gate validation for the **When We Were Young 3**
+show. React 18 + TypeScript + Vite frontend, **Vercel Serverless Functions**
+(TypeScript) backend, **Supabase (Postgres)** database, **Resend** for email,
+**Yappy Botón de Pago V2** for in-app payment. Full details (env vars, Supabase
+setup, Yappy flow, deployment) live in `ticket-system/README.md` — read it
+before touching this app.
+
+### Commands
+
+```bash
+cd ticket-system
+npm install
+npm run dev        # frontend only, http://localhost:3100
+npm run typecheck  # tsc for BOTH src and api (tsconfig.json + tsconfig.api.json)
+npm run build      # production build to ticket-system/dist/
+```
+
+The `/api` functions don't run under `npm run dev` — use `vercel dev` (Vercel
+CLI) to serve frontend + serverless functions together with project env vars.
+There is no test suite; `npm run typecheck` is the validation gate. The root
+`npm run lint`/`format` scripts do **not** cover this app.
+
+### Structure
+
+- **Three surfaces**, built as a Vite multi-page app (entries in
+  `vite.config.ts`): `/entradas` (public purchase flow), `/admin` (mark paid,
+  stats, stage-2 toggle, cleanup), `/validar` (gate QR scanner with
+  camera + sound). Root `index.html` redirects to `/entradas`;
+  `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
+- **Frontend**: `src/entradas/`, `src/admin/`, `src/validar/`, plus
+  `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
+- **Backend**: `api/` serverless functions; shared server-only logic in
+  `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
+  QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in
+  `api/_lib/` may ever be imported by client code.**
+- **Database**: `supabase/migrations/` — schema with RLS enabled and no
+  policies (only the service-role key can access) plus atomic RPCs
+  (`create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,
+  `cleanup_expired_orders`, `mark_order_emailed`).
+
+### Architecture invariants (do not break)
+
+- **Payment-agnostic issuance**: the only thing that issues tickets (creates
+  ticket rows + sends the email) is an order transitioning to `paid`, via the
+  idempotent routine in `api/_lib/issue.ts`. Cash/CuantoApp trigger it from the
+  admin "mark paid" button; Yappy triggers it from the authenticated IPN
+  (`api/yappy/ipn.ts`). Never couple issuance to a specific payment provider,
+  and never make it non-idempotent.
+- **Server-authoritative pricing**: prices and reservation windows are derived
+  server-side in `api/_lib/pricing.ts` from (tier, quantity). The client never
+  sends amounts. Presale cutoff date is duplicated client/server on purpose —
+  the server copy wins.
+- **Signed QR**: ticket QR payload is `WWWY3.<ticket_id>.<sig>` (truncated
+  HMAC-SHA256 with server-only `TICKET_HMAC_SECRET`). Validation recalculates
+  the HMAC (timing-safe) **before** any DB query; claiming a ticket is a single
+  atomic conditional `UPDATE`, so a QR is accepted exactly once.
+- **Race-safe capacity**: presale quota checks serialize via
+  `SELECT ... FOR UPDATE` on the single `event_config` row; expired pending
+  reservations free their quota by timestamp instantly. The daily cleanup cron
+  (`vercel.json` → `/api/admin/orders/cleanup`, daily because Vercel Hobby
+  forbids hourly crons) is housekeeping only.
+- **Secrets are server-only**: all env vars (Supabase service role, Resend,
+  HMAC secret, admin/staff passwords, Yappy credentials) live exclusively in
+  the serverless functions — none are exposed via `VITE_*`. Yappy's secret API
+  calls happen in the backend; the browser only receives the
+  transaction token for the `<btn-yappy>` web component.
+- **Admin/staff auth**: every protected endpoint checks `ADMIN_PASSWORD` /
+  `STAFF_PASSWORD` with timing-safe comparison (`api/_lib/auth.ts`).
+- The ticket-system CSP (`ticket-system/vercel.json`) intentionally allows
+  Supabase, Yappy and Firebase endpoints — keep it in sync when adding
+  external calls.
+
+---
+
 ## Technology Stack
 
 | Technology | Version | Purpose |
@@ -69,6 +147,7 @@ still-louder-site/
 │   │   │   ├── style.css        # Main styles
 │   │   │   └── al-vacio-pre-release/  # Pre-release page styles
 │   │   ├── js/
+│   │   │   ├── main.js          # Entry point (wires up the modules below)
 │   │   │   ├── config.js        # Centralized configuration (URLs, settings)
 │   │   │   ├── analytics.js     # GA4 tracking module
 │   │   │   ├── share.js         # Web Share API module
@@ -89,13 +168,20 @@ still-louder-site/
 │   └── robots.txt               # Search engine directives
 ├── scripts/
 │   └── optimize-images.js       # Image optimization script
+├── ticket-system/               # SEPARATE app — see "Ticket System" section
 ├── dist/                        # Build output (generated, gitignored)
 ├── vite.config.js               # Vite configuration
 ├── vercel.json                  # Vercel deployment config (headers, caching)
-├── .eslintrc.json               # ESLint rules
+├── eslint.config.js             # ESLint flat config (rules live here)
+├── .eslintrc.json               # Legacy ESLint config (kept for tooling compat)
 ├── .prettierrc                  # Prettier configuration
 └── package.json                 # Dependencies and scripts
 ```
+
+**Vite quirk worth knowing**: in `vite.config.js`, `root` is `public/` and
+`publicDir` is `assets` — i.e. the *source* directory doubles as the Vite root,
+and `public/assets/` is treated as the static dir. Paths in HTML are
+root-relative to `public/`. Keep this in mind before restructuring directories.
 
 ---
 
@@ -436,10 +522,13 @@ perf: optimize cover image loading
 
 ## Related Documentation
 
-- `README.md` - User-facing documentation
+- `README.md` - User-facing documentation (repo overview, both apps)
+- `ticket-system/README.md` - Ticket system architecture, env vars, Supabase setup, Yappy integration, deployment
 - `SECURITY_SUMMARY.md` - Detailed security implementation
 - `PWA_IMPLEMENTATION.md` - Service Worker and PWA details
+- `SEO_ACCESSIBILITY_SUMMARY.md` - SEO and accessibility work
 - `PHASE_5_6_IMPLEMENTATION.md` - UX improvements documentation
+- `PLAN_DE_MEJORAS.md` - Overall improvement plan (Spanish)
 
 ---
 
