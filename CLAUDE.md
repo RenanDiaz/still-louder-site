@@ -69,8 +69,10 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 ### Structure
 
 - **Three surfaces**, built as a Vite multi-page app (entries in
-  `vite.config.ts`): `/entradas` (public purchase flow), `/admin` (mark paid,
-  stats, stage-2 toggle, cleanup), `/validar` (gate QR scanner with
+  `vite.config.ts`): `/entradas` (public purchase flow), `/admin` (tabbed
+  panel: reports, orders — mark paid / cancel pending / resend QR email —,
+  ticket tracking with revoke/unrevoke, courtesy issuance, live check-in,
+  stage-2 toggle, CSV export), `/validar` (gate QR scanner with
   camera + sound). Root `index.html` redirects to `/entradas`;
   `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
 - **Frontend**: `src/entradas/`, `src/admin/`, `src/validar/`, plus
@@ -78,7 +80,10 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 - **Backend**: `api/` serverless functions; shared server-only logic in
   `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
   QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in
-  `api/_lib/` may ever be imported by client code.**
+  `api/_lib/` may ever be imported by client code.** Vercel Hobby caps a
+  deployment at **12 serverless functions**, so ALL `/api/admin/*` routes share
+  one catch-all (`api/admin/[...path].ts`); count functions before adding a
+  file under `api/`.
 - **Database**: `supabase/migrations/` — schema with RLS enabled and no
   policies (only the service-role key can access) plus atomic RPCs
   (`create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,

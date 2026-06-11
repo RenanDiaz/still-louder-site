@@ -101,6 +101,46 @@ button.secondary {
   border: 1px solid var(--border);
 }
 
+button.small {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+/* --- Admin panel tabs --- */
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0 20px;
+}
+
+.tab {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.tab--active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --- Check-in progress bar --- */
+.progress {
+  background: var(--surface-2);
+  border-radius: 999px;
+  height: 14px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress__fill {
+  background: var(--green);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -126,6 +166,21 @@ button.secondary {
 }
 
 .badge--cancelled {
+  background: rgba(220, 38, 38, 0.2);
+  color: var(--red);
+}
+
+.badge--valid {
+  background: rgba(22, 163, 74, 0.2);
+  color: var(--green);
+}
+
+.badge--used {
+  background: rgba(161, 161, 170, 0.2);
+  color: var(--muted);
+}
+
+.badge--void {
   background: rgba(220, 38, 38, 0.2);
   color: var(--red);
 }

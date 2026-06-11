@@ -22,6 +22,14 @@ export const TIERS = {
 
 export type TierKey = keyof typeof TIERS;
 
+// Display labels for EVERY tier that can appear on a ticket, including the
+// admin-only 'cortesia' (which must never show up in the purchase flow's TIERS).
+export const TIER_LABELS: Record<string, string> = {
+  preventa: 'Preventa',
+  general: 'General',
+  cortesia: 'Cortesía'
+};
+
 export const PAYMENT_METHODS = [
   // 'yappy' is only offered when GET /api/yappy/config says it's enabled
   // (i.e. the server has the Botón de Pago credentials configured).

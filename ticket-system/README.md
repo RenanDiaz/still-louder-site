@@ -15,7 +15,7 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 | Ruta        | Quién        | Qué hace                                                        |
 | ----------- | ------------ | --------------------------------------------------------------- |
 | `/entradas` | Público      | Compra: formulario → crea orden → instrucciones de pago.        |
-| `/admin`    | Admin        | Marcar pagado, stats, contadores de preventa, toggle Etapa 2.   |
+| `/admin`    | Admin        | Reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV. |
 | `/validar`  | Staff/puerta | Escáner de QR con resultado verde/rojo + sonido.                |
 
 ## Arquitectura
@@ -45,10 +45,7 @@ ticket-system/
 │   ├── presale/status.ts     # GET   /api/presale/status         (público)
 │   ├── tickets/validate.ts   # POST  /api/tickets/validate       (staff)
 │   ├── tickets/qr.ts         # GET   /api/tickets/qr?t=<token>   (imagen del QR)
-│   ├── admin/orders/index.ts # GET   /api/admin/orders           (admin)
-│   ├── admin/orders/[id]/mark-paid.ts   # POST                   (admin)
-│   ├── admin/orders/cleanup.ts          # POST/GET (admin o cron)
-│   ├── admin/presale/stage2.ts          # POST                   (admin)
+│   ├── admin/[...path].ts    # TODAS las rutas /api/admin/* en una sola función
 │   ├── yappy/config.ts       # GET   /api/yappy/config           (público, sin secretos)
 │   ├── yappy/create-order.ts # POST  /api/yappy/create-order     (público, scoped a la orden)
 │   └── yappy/ipn.ts          # GET   /api/yappy/ipn              (confirmación firmada de Yappy)
@@ -59,6 +56,7 @@ ticket-system/
 │   └── validar/              # escáner de puerta
 ├── supabase/migrations/0001_init.sql   # schema + RPCs atómicas
 ├── supabase/migrations/0002_yappy_order_ref.sql  # order_ref corto p/ Yappy
+├── supabase/migrations/0003_admin_panel.sql      # tier 'cortesia' + índice de uso
 ├── entradas.html · admin.html · validar.html · index.html
 ├── vite.config.ts · vercel.json · .env.example
 ```
@@ -77,7 +75,37 @@ supabase db push   # o pega supabase/migrations/0001_init.sql en el SQL Editor
 La migración crea `orders`, `event_config`, `tickets`, los índices, activa RLS
 (sin policies → solo el service-role accede) y define las **RPCs atómicas**:
 `create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,
-`cleanup_expired_orders`, `mark_order_emailed`.
+`cleanup_expired_orders`, `mark_order_emailed`. La migración `0003` añade el
+tier `cortesia` y el método de pago `courtesy` (entradas de regalo, $0, fuera
+del cupo de preventa) más un índice parcial sobre `tickets.used_at` para el
+check-in en vivo.
+
+## Panel de admin
+
+Cuatro pestañas, todas contra rutas `/api/admin/*` (una sola función serverless,
+ver nota abajo):
+
+- **Resumen:** stats de preventa (+ toggle Etapa 2 y limpieza de vencidas),
+  ventas (incl. ingresos por método de pago) y entradas emitidas/usadas/anuladas
+  por tipo.
+- **Órdenes:** búsqueda/filtros, marcar pagada (emite tickets + correo),
+  **cancelar una pendiente puntual** (libera su cupo al instante), **reenviar el
+  correo con los QR** de una pagada (excluye entradas anuladas), generar
+  **cortesías** (orden $0 que pasa por el mismo `issueOrder()` idempotente, con
+  o sin correo) y exportar CSV.
+- **Entradas:** lista por comprador/tipo/estado con fecha y estación de uso;
+  **anular** (`valid → void`, la puerta la rechaza) y **restaurar**
+  (`void → valid`) con UPDATEs condicionales atómicos — una entrada usada no se
+  puede anular ni restaurar. Export CSV.
+- **Check-in:** asistencia en vivo (auto-refresh cada 10 s): adentro/por llegar
+  por tipo, barra de progreso y últimas validaciones con estación.
+
+> **Límite de funciones (Vercel Hobby):** el plan Hobby permite **máx. 12
+> funciones serverless** por deploy y el proyecto está cerca del tope. Por eso
+> TODAS las rutas `/api/admin/*` viven en **un solo catch-all**
+> (`api/admin/[...path].ts`) que enruta internamente (orders, cleanup,
+> mark-paid, cancel, resend-email, stage2, tickets, revoke/unrevoke, courtesy).
+> Antes de añadir un archivo nuevo bajo `api/`, contar las funciones.
 
 ### 2. Variables de entorno
 
