@@ -39,6 +39,7 @@ export interface PresaleStatus {
   capacity: number;
   paid_count: number;
   pending_count: number;
+  courtesy_count: number;
   committed: number;
   available: number;
   stage2_active: boolean;

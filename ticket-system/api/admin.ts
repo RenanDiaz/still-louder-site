@@ -134,6 +134,7 @@ async function listOrders(req: VercelRequest, res: VercelResponse): Promise<void
       capacity: presale!.capacity,
       paid: presale!.paid_count,
       pending: presale!.pending_count,
+      courtesy: presale!.courtesy_count,
       available: presale!.available,
       stage2Active: presale!.stage2_active,
       soldOut: presale!.sold_out
@@ -355,8 +356,9 @@ interface CourtesyBody {
 
 // Creates a $0 courtesy order and funnels it through the SAME issuance routine
 // as every payment method (pending -> paid via issueOrder), so tickets and the
-// email behave identically to a purchase. Courtesy orders never touch the
-// presale cupo: capacity logic only counts tier='preventa'.
+// email behave identically to a purchase. Paid courtesy orders consume presale
+// cupo (counted by presale_status/create_order since migration 0004), but the
+// admin is never blocked by the cap: overshooting just shows presale sold out.
 async function createCourtesy(req: VercelRequest, res: VercelResponse): Promise<void> {
   const body = parseBody<CourtesyBody>(req);
   const buyerName = (body.buyer_name ?? '').trim();
