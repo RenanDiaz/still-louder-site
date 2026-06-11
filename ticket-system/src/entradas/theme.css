@@ -408,6 +408,37 @@ body::before {
   margin-top: 6px;
 }
 
+/* Resumen de precio: el comprador siempre ve QUÉ tarifa y CUÁNTO paga antes
+   de enviar (sobre todo cuando cae a precio general por preventa agotada). */
+.tk-price-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  border: 2px dashed var(--ink);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+.tk-price-summary__tier {
+  font-family: var(--font-patch);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+.tk-price-summary__calc {
+  font-size: 14px;
+  color: #5a5468;
+}
+.tk-price-summary__total {
+  font-family: var(--font-patch);
+  font-size: 20px;
+  margin-left: auto;
+}
+
 /* ===================== CTA (botón sticker) ===================== */
 .tk-cta {
   display: block;

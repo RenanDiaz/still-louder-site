@@ -1,7 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
-import { MAX_QUANTITY_PER_ORDER, priceFor, reservationMinutesFor } from './_lib/pricing.js';
+import {
+  MAX_QUANTITY_PER_ORDER,
+  isPresaleOpenByDate,
+  priceFor,
+  reservationMinutesFor
+} from './_lib/pricing.js';
 import { sendOrderNotificationEmail } from './_lib/email.js';
 import type { Order, PaymentMethod, Tier } from './_lib/types.js';
 
@@ -70,6 +75,11 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   }
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY_PER_ORDER) {
     return sendJson(res, 400, { error: 'invalid_quantity' });
+  }
+  // Once the presale window has closed, preventa can no longer be sold — even
+  // if cupo remains. The client falls back to general on this error.
+  if (tier === 'preventa' && !isPresaleOpenByDate()) {
+    return sendJson(res, 409, { error: 'presale_ended' });
   }
 
   // Total is computed server-side; the client cannot influence the price.

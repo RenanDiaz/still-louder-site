@@ -34,7 +34,11 @@ export default function App() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [tier, setTier] = useState<TierKey>('preventa');
+  // Presale is over once its date passes (independent of the async cupo check).
+  // Default the buyer to general from the first render in that case so they
+  // never see preventa preselected when it can't be bought.
+  const presaleEnded = useMemo(() => Date.now() >= new Date(EVENT.presaleEnd).getTime(), []);
+  const [tier, setTier] = useState<TierKey>(presaleEnded ? 'general' : 'preventa');
   const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<Method>('cuantoapp');
   const [submitting, setSubmitting] = useState(false);
@@ -66,12 +70,15 @@ export default function App() {
   }, [confirmation]);
 
   const presaleSoldOut = presale?.soldOut ?? false;
+  // Preventa can only be bought while its date is open AND cupo remains.
+  const presaleAvailable = !presaleEnded && !presaleSoldOut;
   const total = useMemo(() => TIERS[tier].priceCents * quantity, [tier, quantity]);
 
-  // If presale is sold out, default the buyer to general.
+  // Keep the buyer on a tier they can actually purchase: if presale becomes
+  // unavailable (sold out or its date passed), fall back to general pricing.
   useEffect(() => {
-    if (presaleSoldOut && tier === 'preventa') setTier('general');
-  }, [presaleSoldOut, tier]);
+    if (!presaleAvailable && tier === 'preventa') setTier('general');
+  }, [presaleAvailable, tier]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,8 +97,12 @@ export default function App() {
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
       if (code === 'presale_sold_out') {
-        setError('La preventa se agotó. Refresca la página para comprar entrada general.');
+        setError('La preventa se agotó. Te cambiamos a entrada general — revisa el precio antes de continuar.');
+        setTier('general');
         getPresaleStatus().then(setPresale).catch(() => {});
+      } else if (code === 'presale_ended') {
+        setError('La preventa terminó. Te cambiamos a entrada general — revisa el precio antes de continuar.');
+        setTier('general');
       } else if (code === 'invalid_email') {
         setError('Revisa el correo: parece inválido.');
       } else {
@@ -161,7 +172,7 @@ export default function App() {
         <div className="tk-reveal">
           <Countdown />
         </div>
-        <PresaleIndicator presale={presale} />
+        <PresaleIndicator presale={presale} presaleEnded={presaleEnded} />
 
         {/* Formulario: temático pero LEGIBLE (sin filtro rasgado en inputs) */}
         <form className="tk-form tk-reveal" onSubmit={handleSubmit}>
@@ -169,14 +180,21 @@ export default function App() {
 
           <label htmlFor="tier">Tipo de entrada</label>
           <select id="tier" value={tier} onChange={(e) => setTier(e.target.value as TierKey)}>
-            <option value="preventa" disabled={presaleSoldOut}>
+            <option value="preventa" disabled={!presaleAvailable}>
               {TIERS.preventa.label} — {TIERS.preventa.priceLabel}
-              {presaleSoldOut ? ' (agotada)' : ''}
+              {presaleSoldOut ? ' (agotada)' : presaleEnded ? ' (finalizada)' : ''}
             </option>
             <option value="general">
               {TIERS.general.label} — {TIERS.general.priceLabel}
             </option>
           </select>
+          {!presaleAvailable && (
+            <p className="tk-hint">
+              {presaleSoldOut
+                ? 'La preventa se agotó: las entradas se venden al precio general.'
+                : 'La preventa terminó: las entradas se venden al precio general.'}
+            </p>
+          )}
 
           <label htmlFor="quantity">Cantidad</label>
           <select
@@ -232,6 +250,14 @@ export default function App() {
             </div>
           )}
 
+          <p className="tk-price-summary" aria-live="polite">
+            <span className="tk-price-summary__tier">{TIERS[tier].label}</span>
+            <span className="tk-price-summary__calc">
+              {TIERS[tier].priceLabel} × {quantity}
+            </span>
+            <strong className="tk-price-summary__total">${(total / 100).toFixed(2)}</strong>
+          </p>
+
           <button type="submit" className="tk-cta" disabled={submitting}>
             {submitting ? 'Procesando…' : `Comprar — $${(total / 100).toFixed(2)} ⚡`}
           </button>
@@ -265,7 +291,22 @@ function Decorations() {
   );
 }
 
-function PresaleIndicator({ presale }: { presale: PresaleStatusResponse | null }) {
+function PresaleIndicator({
+  presale,
+  presaleEnded
+}: {
+  presale: PresaleStatusResponse | null;
+  presaleEnded: boolean;
+}) {
+  // Date-based end takes priority: once the window closes there's no presale to
+  // count, regardless of the cupo the status endpoint reports.
+  if (presaleEnded) {
+    return (
+      <p className="tk-stock tk-stock--soldout">
+        preventa finalizada — entrada general al precio del día ★
+      </p>
+    );
+  }
   if (!presale) return null;
   if (presale.soldOut) {
     return (
