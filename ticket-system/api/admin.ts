@@ -1,14 +1,18 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabase } from '../_lib/supabase.js';
-import { isAdmin, isCron } from '../_lib/auth.js';
-import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from '../_lib/http.js';
-import { issueOrder, resendOrderEmail, IssueError } from '../_lib/issue.js';
-import { MAX_QUANTITY_PER_ORDER } from '../_lib/pricing.js';
-import type { Order, PresaleStatus, Ticket } from '../_lib/types.js';
+import { getSupabase } from './_lib/supabase.js';
+import { isAdmin, isCron } from './_lib/auth.js';
+import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
+import { issueOrder, resendOrderEmail, IssueError } from './_lib/issue.js';
+import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
+import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 
-// Single catch-all for EVERY /api/admin/* route. Vercel Hobby caps a deployment
-// at 12 serverless functions and the project sits exactly at that limit, so all
-// admin endpoints share one function instead of one file each:
+// Single function for EVERY /api/admin/* route. Vercel Hobby caps a deployment
+// at 12 serverless functions, so all admin endpoints share one function instead
+// of one file each. Catch-all filenames ([...path].ts) only work in Next.js —
+// in a plain api/ directory they deploy but never match, so requests 404. This
+// file therefore lives at the fixed path /api/admin and a rewrite in
+// vercel.json maps /api/admin/:path* onto it, passing the sub-path in the
+// `path` query param:
 //
 //   GET  /api/admin/orders?q=&status=          order list + sales stats
 //   POST /api/admin/orders/cleanup             cancel expired pendings (also GET, cron)
@@ -30,8 +34,11 @@ const TICKET_TIERS = ['preventa', 'general', 'cortesia'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+  // The rewrite delivers the sub-path slash-joined in `path`
+  // (e.g. "orders/<id>/mark-paid"); split it back into segments.
   const raw = req.query.path;
-  const segments = Array.isArray(raw) ? raw : typeof raw === 'string' ? [raw] : [];
+  const joined = Array.isArray(raw) ? raw.join('/') : typeof raw === 'string' ? raw : '';
+  const segments = joined.split('/').filter(Boolean);
   const route = segments.join('/');
 
   // cleanup is the only route the cron may call; everything else is admin-only.

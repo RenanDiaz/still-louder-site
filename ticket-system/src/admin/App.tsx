@@ -110,8 +110,10 @@ function Gate({
       // A successful listing call doubles as a password check.
       await fetchAdminOrders(password);
       onSuccess();
-    } catch {
-      setError('Contraseña incorrecta.');
+    } catch (err) {
+      const status = (err as Error & { status?: number }).status;
+      if (status === 401) setError('Contraseña incorrecta.');
+      else setError('Error de conexión.');
     } finally {
       setChecking(false);
     }

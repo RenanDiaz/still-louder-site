@@ -9,6 +9,7 @@
     { "path": "/api/admin/orders/cleanup", "schedule": "0 6 * * *" }
   ],
   "rewrites": [
+    { "source": "/api/admin/:path*", "destination": "/api/admin?path=:path*" },
     { "source": "/when-we-were-young-3", "destination": "/entradas" }
   ],
   "headers": [
