@@ -57,6 +57,7 @@ ticket-system/
 ├── supabase/migrations/0001_init.sql   # schema + RPCs atómicas
 ├── supabase/migrations/0002_yappy_order_ref.sql  # order_ref corto p/ Yappy
 ├── supabase/migrations/0003_admin_panel.sql      # tier 'cortesia' + índice de uso
+├── supabase/migrations/0004_courtesy_presale_quota.sql  # cortesías restan cupo de preventa
 ├── entradas.html · admin.html · validar.html · index.html
 ├── vite.config.ts · vercel.json · .env.example
 ```
@@ -76,9 +77,11 @@ La migración crea `orders`, `event_config`, `tickets`, los índices, activa RLS
 (sin policies → solo el service-role accede) y define las **RPCs atómicas**:
 `create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,
 `cleanup_expired_orders`, `mark_order_emailed`. La migración `0003` añade el
-tier `cortesia` y el método de pago `courtesy` (entradas de regalo, $0, fuera
-del cupo de preventa) más un índice parcial sobre `tickets.used_at` para el
-check-in en vivo.
+tier `cortesia` y el método de pago `courtesy` (entradas de regalo, $0) más un
+índice parcial sobre `tickets.used_at` para el check-in en vivo. La migración
+`0004` hace que las cortesías pagadas **resten cupo de preventa** (e.g. quedan
+70 y se emiten 5 cortesías → quedan 65); emitirlas nunca se bloquea por cupo,
+pero si lo exceden la preventa aparece agotada.
 
 ## Panel de admin
 
@@ -203,7 +206,7 @@ El secreto vive solo en el servidor; es imposible fabricar entradas válidas sin
 - **Tope de preventa race-safe:** `create_order` toma `... for update` sobre la
   fila única de `event_config`, serializando los chequeos de cupo. No se vende de
   más con Etapa 2 inactiva (75) ni activa (150), contando pagadas + pendientes
-  vigentes.
+  vigentes + cortesías pagadas.
 - **Etapa 2 inmediata:** la capacidad se recalcula en vivo desde `event_config`;
   el toggle abre 75 cupos al instante.
 - **Pending vencida libera cupo:** el conteo de cupo (`presale_status` y

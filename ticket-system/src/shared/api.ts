@@ -130,6 +130,7 @@ export interface AdminStats {
     capacity: number;
     paid: number;
     pending: number;
+    courtesy: number;
     available: number;
     stage2Active: boolean;
     soldOut: boolean;

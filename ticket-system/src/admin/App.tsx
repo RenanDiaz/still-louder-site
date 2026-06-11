@@ -263,6 +263,10 @@ function ResumenTab({ password }: { password: string }) {
             <div className="stat__label">Pendientes</div>
           </div>
           <div className="stat">
+            <div className="stat__value">{stats.presale.courtesy}</div>
+            <div className="stat__label">Cortesías</div>
+          </div>
+          <div className="stat">
             <div className="stat__value">{stats.presale.available}</div>
             <div className="stat__label">Disponibles</div>
           </div>
