@@ -82,8 +82,10 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in
   `api/_lib/` may ever be imported by client code.** Vercel Hobby caps a
   deployment at **12 serverless functions**, so ALL `/api/admin/*` routes share
-  one catch-all (`api/admin/[...path].ts`); count functions before adding a
-  file under `api/`.
+  one function (`api/admin.ts`) reached via a `vercel.json` rewrite
+  (`/api/admin/:path*` → `/api/admin?path=...`) — catch-all `[...path].ts`
+  files do NOT work outside Next.js; count functions before adding a file
+  under `api/`.
 - **Database**: `supabase/migrations/` — schema with RLS enabled and no
   policies (only the service-role key can access) plus atomic RPCs
   (`create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,

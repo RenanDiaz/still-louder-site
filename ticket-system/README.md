@@ -45,7 +45,7 @@ ticket-system/
 │   ├── presale/status.ts     # GET   /api/presale/status         (público)
 │   ├── tickets/validate.ts   # POST  /api/tickets/validate       (staff)
 │   ├── tickets/qr.ts         # GET   /api/tickets/qr?t=<token>   (imagen del QR)
-│   ├── admin/[...path].ts    # TODAS las rutas /api/admin/* en una sola función
+│   ├── admin.ts              # TODAS las rutas /api/admin/* en una sola función (rewrite en vercel.json)
 │   ├── yappy/config.ts       # GET   /api/yappy/config           (público, sin secretos)
 │   ├── yappy/create-order.ts # POST  /api/yappy/create-order     (público, scoped a la orden)
 │   └── yappy/ipn.ts          # GET   /api/yappy/ipn              (confirmación firmada de Yappy)
@@ -102,10 +102,13 @@ ver nota abajo):
 
 > **Límite de funciones (Vercel Hobby):** el plan Hobby permite **máx. 12
 > funciones serverless** por deploy y el proyecto está cerca del tope. Por eso
-> TODAS las rutas `/api/admin/*` viven en **un solo catch-all**
-> (`api/admin/[...path].ts`) que enruta internamente (orders, cleanup,
-> mark-paid, cancel, resend-email, stage2, tickets, revoke/unrevoke, courtesy).
-> Antes de añadir un archivo nuevo bajo `api/`, contar las funciones.
+> TODAS las rutas `/api/admin/*` viven en **una sola función** (`api/admin.ts`)
+> que enruta internamente (orders, cleanup, mark-paid, cancel, resend-email,
+> stage2, tickets, revoke/unrevoke, courtesy). Un rewrite en `vercel.json` mapea
+> `/api/admin/:path*` a `/api/admin?path=...` porque Vercel **no soporta
+> archivos catch-all `[...path].ts`** fuera de Next.js (despliegan pero
+> devuelven 404). Antes de añadir un archivo nuevo bajo `api/`, contar las
+> funciones.
 
 ### 2. Variables de entorno
 
