@@ -169,6 +169,14 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
             </table>`
     : '';
 
+  // "Responde a este correo" solo es honesto si hay Reply-To configurado: el
+  // dominio en Resend solo envía, así que sin EMAIL_REPLY_TO una respuesta a
+  // entradas@ se pierde y el footer debe apuntar únicamente a las redes.
+  const replyTo = env.emailReplyTo;
+  const contactLine = replyTo
+    ? '¿Dudas? Responde a este correo o escríbenos por nuestros canales oficiales:'
+    : '¿Dudas? Escríbenos por nuestros canales oficiales:';
+
   // Versión clara "enmarcada": franjas oscuras arriba y abajo encierran un cuerpo
   // blanco neutro (como el papel del flyer original) con acentos morado/rosa, para
   // que no se vea plano junto al header fuerte.
@@ -237,7 +245,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
         <tr>
           <td style="background:#3e2768;padding:20px 24px;text-align:center;">
             <div style="font-size:13px;color:#e7dcf7;line-height:1.6;">
-              ¿Dudas? Responde a este correo o escríbenos por nuestros canales oficiales:
+              ${contactLine}
               <strong style="color:#ff6cb6;">@stilllouder</strong>.
             </div>
             <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:#9b86c4;text-transform:uppercase;margin-top:10px;">
@@ -251,6 +259,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
   await getResend().emails.send({
     from: env.emailFrom,
     to: order.buyer_email,
+    ...(replyTo ? { replyTo } : {}),
     subject: 'Tu entrada para WWWY3 — Still Louder',
     html,
     attachments
