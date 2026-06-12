@@ -51,11 +51,18 @@ export interface CreateOrderInput {
   payment_method: 'cuantoapp' | 'cash' | 'yappy';
 }
 
+export interface PriceBreakdown {
+  netCents: number;
+  feeCents: number;
+  totalCents: number;
+}
+
 export interface CreateOrderResponse {
   orderId: string;
   tier: string;
   quantity: number;
   totalCents: number;
+  breakdown: PriceBreakdown;
   reservationExpiresAt: string | null;
   payment: { method: string; amount: string; link?: string; note: string };
 }
@@ -116,6 +123,8 @@ export interface AdminOrder {
   tier: string;
   quantity: number;
   total_cents: number;
+  net_cents: number;
+  fee_cents: number;
   payment_method: string;
   payment_ref: string | null;
   status: string;
@@ -138,7 +147,11 @@ export interface AdminStats {
   generalPaid: number;
   courtesyTickets: number;
   totalTicketsPaid: number;
+  // revenueCents = neto que recibe la banda; feesCents = recargos por servicio
+  // (comisiones); grossCents = total cobrado al comprador.
   revenueCents: number;
+  feesCents: number;
+  grossCents: number;
   revenueByMethod: Record<string, number>;
 }
 

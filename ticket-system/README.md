@@ -125,7 +125,10 @@ ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compr
 TICKET_HMAC_SECRET            # openssl rand -hex 32
 ADMIN_PASSWORD, STAFF_PASSWORD
 CRON_SECRET                   # para el cron de limpieza (openssl rand -hex 16)
-CUANTOAPP_PAYMENT_URL         # opcional (link de pago con tarjeta)
+CUANTOAPP_PAYMENT_URL         # fallback genérico (link de pago con tarjeta)
+CUANTOAPP_PAYMENT_URL_1..10   # un link por cantidad: producto oculto en el catálogo
+                              # de CuantoApp con el precio ya recargado (la comisión
+                              # 4.9%+$0.35 es por transacción, no por entrada). Ver .env.example
 PUBLIC_BASE_URL=https://entradas.stilllouder.space
 # Yappy Botón de Pago V2 (vacías = la opción Yappy se oculta sola)
 YAPPY_BTN_MERCHANT_ID, YAPPY_BTN_SECRET_KEY (base64, se muestra UNA vez)
@@ -225,6 +228,13 @@ El secreto vive solo en el servidor; es imposible fabricar entradas válidas sin
   (`api/_lib/pricing.ts`).
 - **Precios:** se calculan en el servidor a partir de (tier, cantidad); el cliente
   nunca envía montos.
+- **Recargo por método de pago ("Cargo por servicio"):** el comprador paga un
+  precio _grossed-up_ que absorbe la comisión, de modo que el **neto** que recibe
+  la banda = precio base. Fórmula (por transacción, el fijo se aplica una sola
+  vez): `precioFinal = (neto + feeFijo) / (1 − feePorcentual)`, redondeado hacia
+  arriba al centavo. CuantoApp 4.9% + $0.35 · Yappy 1.07% (mín. $0.02) · efectivo
+  sin recargo. Cada orden guarda el desglose `net_cents` / `fee_cents` /
+  `total_cents` (`api/_lib/pricing.ts`, migración `0005`).
 
 ## Yappy — Botón de Pago V2
 

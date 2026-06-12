@@ -10,7 +10,12 @@ export interface Order {
   buyer_phone: string | null;
   tier: Tier;
   quantity: number;
+  // total_cents = lo que paga el comprador (incluye el recargo por servicio).
+  // net_cents   = lo que recibe la banda (precio base × cantidad).
+  // fee_cents   = recargo por servicio = total_cents − net_cents.
   total_cents: number;
+  net_cents: number;
+  fee_cents: number;
   payment_method: PaymentMethod;
   payment_ref: string | null;
   status: OrderStatus;

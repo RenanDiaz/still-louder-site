@@ -113,19 +113,21 @@ async function listOrders(req: VercelRequest, res: VercelResponse): Promise<void
 
   const { data: paidOrders, error: paidErr } = await supabase
     .from('orders')
-    .select('tier, quantity, total_cents, payment_method')
+    .select('tier, quantity, total_cents, net_cents, fee_cents, payment_method')
     .eq('status', 'paid');
   if (paidErr) throw new Error(`stats query failed: ${paidErr.message}`);
 
   const paid = (paidOrders ?? []) as Pick<
     Order,
-    'tier' | 'quantity' | 'total_cents' | 'payment_method'
+    'tier' | 'quantity' | 'total_cents' | 'net_cents' | 'fee_cents' | 'payment_method'
   >[];
   const sumQty = (rows: typeof paid) => rows.reduce((sum, o) => sum + o.quantity, 0);
+  // revenueByMethod reporta el NETO por método (lo que realmente recibe la
+  // banda), no el bruto cobrado: el recargo por servicio solo cubre la comisión.
   const revenueByMethod: Record<string, number> = { yappy: 0, cuantoapp: 0, cash: 0 };
   for (const o of paid) {
     if (o.payment_method in revenueByMethod) {
-      revenueByMethod[o.payment_method] += o.total_cents;
+      revenueByMethod[o.payment_method] += o.net_cents;
     }
   }
 
@@ -142,7 +144,11 @@ async function listOrders(req: VercelRequest, res: VercelResponse): Promise<void
     generalPaid: sumQty(paid.filter((o) => o.tier === 'general')),
     courtesyTickets: sumQty(paid.filter((o) => o.tier === 'cortesia')),
     totalTicketsPaid: sumQty(paid),
-    revenueCents: paid.reduce((sum, o) => sum + o.total_cents, 0),
+    // revenueCents = neto que recibe la banda. feesCents = recargos por servicio
+    // que se fueron en comisiones. grossCents = total cobrado al comprador.
+    revenueCents: paid.reduce((sum, o) => sum + o.net_cents, 0),
+    feesCents: paid.reduce((sum, o) => sum + o.fee_cents, 0),
+    grossCents: paid.reduce((sum, o) => sum + o.total_cents, 0),
     revenueByMethod
   };
 
@@ -382,6 +388,8 @@ async function createCourtesy(req: VercelRequest, res: VercelResponse): Promise<
       tier: 'cortesia',
       quantity,
       total_cents: 0,
+      net_cents: 0,
+      fee_cents: 0,
       payment_method: 'courtesy',
       status: 'pending',
       // Pre-stamping emailed_at makes issueOrder skip the email when the

@@ -310,10 +310,15 @@ function ResumenTab({ password }: { password: string }) {
           </div>
           <div className="stat">
             <div className="stat__value">${(stats.revenueCents / 100).toFixed(0)}</div>
-            <div className="stat__label">Ingresos</div>
+            <div className="stat__label">Ingresos netos</div>
           </div>
         </div>
-        <h3 style={{ marginBottom: 8 }}>Ingresos por método de pago</h3>
+        <p className="muted" style={{ marginTop: 4 }}>
+          Cobrado al comprador: <strong>{money(stats.grossCents)}</strong> · de eso,{' '}
+          <strong>{money(stats.feesCents)}</strong> son recargos por servicio que cubren las
+          comisiones de pago. El neto ({money(stats.revenueCents)}) es lo que recibe la banda.
+        </p>
+        <h3 style={{ marginBottom: 8 }}>Ingresos netos por método de pago</h3>
         <table style={{ maxWidth: 360 }}>
           <tbody>
             {Object.entries(stats.revenueByMethod).map(([method, cents]) => (
@@ -491,13 +496,15 @@ function OrdenesTab({ password }: { password: string }) {
 
   function exportCsv() {
     const rows: (string | number | null)[][] = [
-      ['Comprador', 'Correo', 'Teléfono', 'Tipo', 'Cantidad', 'Total', 'Pago', 'Referencia', 'Estado', 'Creada', 'Pagada'],
+      ['Comprador', 'Correo', 'Teléfono', 'Tipo', 'Cantidad', 'Neto', 'Cargo por servicio', 'Total cobrado', 'Pago', 'Referencia', 'Estado', 'Creada', 'Pagada'],
       ...orders.map((o) => [
         o.buyer_name,
         o.buyer_email,
         o.buyer_phone,
         TIER_LABELS[o.tier] ?? o.tier,
         o.quantity,
+        (o.net_cents / 100).toFixed(2),
+        (o.fee_cents / 100).toFixed(2),
         (o.total_cents / 100).toFixed(2),
         METHOD_LABELS[o.payment_method] ?? o.payment_method,
         o.payment_ref,
