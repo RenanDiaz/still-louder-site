@@ -3,6 +3,7 @@ import {
   cancelOrder,
   cleanupExpired,
   createCourtesyOrder,
+  ensureWalletClass,
   fetchAdminOrders,
   fetchAdminTickets,
   markOrderPaid,
@@ -240,6 +241,23 @@ function ResumenTab({ password }: { password: string }) {
     }
   }
 
+  async function handleWalletClass() {
+    if (!window.confirm('¿Crear/verificar la clase de Google Wallet del evento? Es seguro repetirlo.')) return;
+    setError('');
+    try {
+      const { classId, created } = await ensureWalletClass(password);
+      setMessage(created ? `✓ Clase de Google Wallet creada (${classId}).` : `✓ La clase de Google Wallet ya existía (${classId}).`);
+    } catch (err) {
+      const code = (err as Error & { code?: string }).code;
+      setMessage('');
+      setError(
+        code === 'google_wallet_not_configured'
+          ? 'Google Wallet no está configurado (faltan las variables GOOGLE_WALLET_*).'
+          : 'Error al crear la clase de Google Wallet.'
+      );
+    }
+  }
+
   if (!stats || !ticketStats) {
     return error ? <div className="alert alert--error">{error}</div> : <p className="muted">Cargando…</p>;
   }
@@ -289,6 +307,9 @@ function ResumenTab({ password }: { password: string }) {
           )}
           <button className="secondary" onClick={handleCleanup}>
             Limpiar pendientes vencidas
+          </button>
+          <button className="secondary" onClick={handleWalletClass}>
+            Clase de Google Wallet
           </button>
         </div>
       </div>

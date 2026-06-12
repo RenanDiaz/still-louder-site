@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { env } from './env.js';
 import { tokenToPngBuffer } from './qr.js';
+import { buildWalletSaveUrl } from './google-wallet.js';
 import type { Order } from './types.js';
 
 let resend: Resend | null = null;
@@ -74,6 +75,33 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
   const qrBlocks = tokens
     .map((token, i) => {
       const src = `${env.publicBaseUrl}/api/tickets/qr?t=${encodeURIComponent(token)}`;
+      // Optional "Add to Google Wallet" link (fase 3): only present when the
+      // Wallet credentials are configured; otherwise the row is omitted.
+      const walletUrl = buildWalletSaveUrl({
+        token,
+        buyerName: order.buyer_name,
+        tier: order.tier,
+        ticketNumber: `${order.id.slice(0, 8).toUpperCase()}-${i + 1}`
+      });
+      // Bulletproof (table + inline CSS) dark pill so it renders in every mail
+      // client — no SVG/webfont reliance. Links to the pay.google.com save URL.
+      const walletRow = walletUrl
+        ? `
+          <tr>
+            <td style="padding:0 16px 14px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;">
+                <tr>
+                  <td style="border-radius:24px;background:#202124;">
+                    <a href="${walletUrl}" target="_blank" rel="noopener noreferrer"
+                       style="display:inline-block;padding:11px 22px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:24px;">
+                      Agregar a Google Wallet
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`
+        : '';
       return `
         <table role="presentation" width="320" cellpadding="0" cellspacing="0" align="center"
                style="margin:22px auto;background:#ffffff;border:2px solid #15121c;border-radius:10px;border-collapse:separate;overflow:hidden;">
@@ -108,6 +136,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
               </div>
             </td>
           </tr>
+          ${walletRow}
         </table>`;
     })
     .join('');
