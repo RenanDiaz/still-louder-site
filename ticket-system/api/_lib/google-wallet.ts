@@ -53,9 +53,18 @@ function getObjectId(ticketId: string): string {
   return `${env.googleWalletIssuerId}.${ticketId}`;
 }
 
-// PEM as stored in env keeps newlines escaped as the literal characters "\n".
+// Normalizes the key as stored in the secret into a valid PEM. OpenSSL 3
+// rejects any byte that doesn't decode with ERR_OSSL_UNSUPPORTED, so tolerate
+// the two common ways a service-account key gets mangled when pasted into
+// `wrangler secret put`:
+//   1. newlines escaped as the literal characters "\n" (or "\r\n"),
+//   2. surrounding quotes copied along with the JSON `private_key` value.
 function privateKeyPem(): string {
-  return env.googleWalletSaPrivateKey.replace(/\\n/g, '\n');
+  let key = env.googleWalletSaPrivateKey.trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1).trim();
+  }
+  return key.replace(/\\r/g, '').replace(/\\n/g, '\n');
 }
 
 function base64url(input: Buffer | string): string {
