@@ -194,6 +194,7 @@ export default function App() {
           <Countdown />
         </div>
         <PresaleIndicator presale={presale} presaleEnded={presaleEnded} />
+        <TestPhaseNotice />
 
         {/* Formulario: temático pero LEGIBLE (sin filtro rasgado en inputs) */}
         <form className="tk-form tk-reveal" onSubmit={handleSubmit}>
@@ -322,6 +323,25 @@ function Decorations() {
   );
 }
 
+/**
+ * Mientras la BD aún tiene datos de pruebas (antes de que abra la preventa),
+ * cualquier QR emitido será purgado y no servirá en puerta. El aviso se apaga
+ * solo el 15 de junio sin necesidad de redeploy. Espejo del aviso del correo
+ * en api/_lib/email.ts.
+ */
+function TestPhaseNotice() {
+  if (Date.now() >= new Date(EVENT.presaleStart).getTime()) return null;
+  return (
+    <div className="tk-test-notice tk-reveal" role="alert">
+      <strong>⚠️ Fase de pruebas</strong>
+      <p>
+        Los códigos QR generados antes del inicio de la preventa (15 de junio) <b>no serán
+        válidos</b> para el evento.
+      </p>
+    </div>
+  );
+}
+
 function PresaleIndicator({
   presale,
   presaleEnded
@@ -378,6 +398,8 @@ function Confirmation({
             <div className="tk-byline">{EVENT.shortName} · by {EVENT.band}</div>
           </div>
         </div>
+
+        <TestPhaseNotice />
 
         <div className="tk-form tk-success tk-reveal">
           <p style={{ fontSize: 16 }}>
