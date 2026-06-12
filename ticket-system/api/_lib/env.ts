@@ -80,7 +80,8 @@ export const env = {
   },
   // private_key from the service-account JSON. Vercel env values keep the
   // newlines escaped as the two characters "\n"; google-wallet.ts un-escapes
-  // them back into a real PEM before signing.
+  // them (and strips any surrounding quotes copied from the JSON) back into a
+  // real PEM before signing.
   get googleWalletSaPrivateKey() {
     return optional('GOOGLE_WALLET_SA_PRIVATE_KEY');
   },

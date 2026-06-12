@@ -54,9 +54,22 @@ function getObjectId(ticketId: string): string {
   return `${env.googleWalletIssuerId}.${ticketId}`;
 }
 
-// PEM as stored in env keeps newlines escaped as the literal characters "\n".
+// Normaliza la clave privada tal cual quedó guardada en el entorno hacia un PEM
+// válido. OpenSSL 3 (Node 18+) rechaza con ERR_OSSL_UNSUPPORTED cualquier byte
+// que no decodifique, así que toleramos las dos formas más comunes en que la
+// clave de una service account se corrompe al pegarla en Vercel:
+//   1. saltos de línea escapados como los caracteres literales "\n" (o "\r\n"),
+//   2. comillas envolventes copiadas junto con el valor de `private_key` del
+//      JSON de la service account.
 function privateKeyPem(): string {
-  return env.googleWalletSaPrivateKey.replace(/\\n/g, '\n');
+  let key = env.googleWalletSaPrivateKey.trim();
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).trim();
+  }
+  return key.replace(/\\r/g, '').replace(/\\n/g, '\n');
 }
 
 function base64url(input: Buffer | string): string {
