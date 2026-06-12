@@ -4,6 +4,7 @@ import { isAdmin, isCron } from './_lib/auth.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
 import { issueOrder, resendOrderEmail, IssueError } from './_lib/issue.js';
 import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
+import { ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
 import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 
 // Single function for EVERY /api/admin/* route. Vercel Hobby caps a deployment
@@ -24,6 +25,7 @@ import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 //   POST /api/admin/tickets/:id/revoke         valid -> void (gate will reject it)
 //   POST /api/admin/tickets/:id/unrevoke       void -> valid
 //   POST /api/admin/courtesy                   create + issue a courtesy order ($0)
+//   POST /api/admin/wallet/google/ensure-class create the Google Wallet event class (idempotent)
 //
 // Everything is admin-gated except orders/cleanup, which also accepts the cron
 // secret (the daily Vercel Cron hits it with GET).
@@ -76,6 +78,10 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   if (route === 'courtesy') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
     return createCourtesy(req, res);
+  }
+  if (route === 'wallet/google/ensure-class') {
+    if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
+    return ensureWalletClass(res);
   }
 
   return sendJson(res, 404, { error: 'not_found' });
@@ -406,4 +412,17 @@ async function createCourtesy(req: VercelRequest, res: VercelResponse): Promise<
     ticketCount: result.ticketCount,
     emailed: result.emailed
   });
+}
+
+// --- Google Wallet -------------------------------------------------------------
+
+// Creates the event's Passes Class once (idempotent — see ensureEventTicketClass).
+// Run it after setting the GOOGLE_WALLET_* env vars and before passes can be
+// saved; re-running it when the class already exists is a no-op.
+async function ensureWalletClass(res: VercelResponse): Promise<void> {
+  if (!isGoogleWalletConfigured()) {
+    return sendJson(res, 400, { error: 'google_wallet_not_configured' });
+  }
+  const result = await ensureEventTicketClass();
+  return sendJson(res, 200, result);
 }

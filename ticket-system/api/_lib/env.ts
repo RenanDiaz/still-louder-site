@@ -64,5 +64,28 @@ export const env = {
   },
   get yappyBtnEnv() {
     return optional('YAPPY_BTN_ENV', 'test');
+  },
+
+  // --- Google Wallet (server-only; signs the save-to-wallet JWT) -------------
+  // All four are optional: the feature is opt-in (fase 3). When the issuer id,
+  // service-account email or private key is missing, the "Add to Google Wallet"
+  // button simply never renders and no Wallet API calls are made — the presale
+  // is never blocked by this.
+  get googleWalletIssuerId() {
+    return optional('GOOGLE_WALLET_ISSUER_ID');
+  },
+  // client_email from the service-account JSON.
+  get googleWalletSaEmail() {
+    return optional('GOOGLE_WALLET_SA_EMAIL');
+  },
+  // private_key from the service-account JSON. Vercel env values keep the
+  // newlines escaped as the two characters "\n"; google-wallet.ts un-escapes
+  // them back into a real PEM before signing.
+  get googleWalletSaPrivateKey() {
+    return optional('GOOGLE_WALLET_SA_PRIVATE_KEY');
+  },
+  // Suffix of the event's Passes Class id; classId = `${issuerId}.${suffix}`.
+  get googleWalletClassSuffix() {
+    return optional('GOOGLE_WALLET_CLASS_SUFFIX', 'wwwy3');
   }
 };

@@ -135,6 +135,11 @@ YAPPY_BTN_MERCHANT_ID, YAPPY_BTN_SECRET_KEY (base64, se muestra UNA vez)
 YAPPY_BTN_DOMAIN=https://entradas.stilllouder.space   # igual al portal
 YAPPY_BTN_ENV=test|prod
 YAPPY_BTN_CDN_URL             # opcional: override del CDN del web component
+# Google Wallet (vacías = el botón "Agregar a Google Wallet" se oculta solo)
+GOOGLE_WALLET_ISSUER_ID
+GOOGLE_WALLET_SA_EMAIL        # client_email del JSON de la cuenta de servicio
+GOOGLE_WALLET_SA_PRIVATE_KEY  # private_key del JSON (conservar los \n escapados)
+GOOGLE_WALLET_CLASS_SUFFIX=wwwy3
 ```
 
 ### 3. Desarrollo local
@@ -192,6 +197,52 @@ truncado a 16 bytes (32 hex). En la puerta:
 2. Solo si la firma es válida se ejecuta el `UPDATE` atómico que reclama el ticket.
 
 El secreto vive solo en el servidor; es imposible fabricar entradas válidas sin él.
+
+## Google Wallet (opcional — "Agregar a Google Wallet")
+
+Mejora opcional (fase 3): cada entrada puede guardarse en Google Wallet. El
+pase reutiliza **el mismo QR firmado HMAC** como código de barras
+(`QR_CODE`), así que el validador de puerta lo escanea idéntico al del correo —
+**no cambia la validación ni el cupo**. La legitimidad la respalda la firma
+HMAC, no Google Wallet.
+
+**Cómo está implementado:**
+
+- `api/_lib/google-wallet.ts` — todo server-only. Firma un JWT **RS256** con la
+  `private_key` de la cuenta de servicio usando `node:crypto` (sin dependencias
+  nuevas; la llave nunca llega al cliente). Expone:
+  - `buildWalletSaveUrl()` — cripto puro, sin red; arma el `eventTicketObject`
+    inline y devuelve el `https://pay.google.com/gp/v/save/<jwt>`. Si Wallet no
+    está configurado o algo falla, devuelve `null` y **nunca lanza** (el correo
+    y la emisión nunca se rompen por esto).
+  - `ensureEventTicketClass()` — crea la Passes Class del evento una sola vez
+    (idempotente: hace GET por id y solo crea con POST si da 404).
+- **Correo:** `api/_lib/email.ts` agrega un botón "Agregar a Google Wallet"
+  bajo cada QR, solo cuando las credenciales están configuradas.
+- **Endpoint on-demand:** `GET /api/wallet/google/:ticketId` redirige (302) al
+  `saveUrl`, o con `?format=json` lo devuelve. Acotado al ticket (su UUID es la
+  capacidad, igual que `/api/orders/:id/status`); no expone nada secreto.
+- **Clase del evento:** botón **"Clase de Google Wallet"** en el panel admin
+  (pestaña Resumen) → `POST /api/admin/wallet/google/ensure-class`. Córrelo una
+  vez tras configurar las variables `GOOGLE_WALLET_*`. Re-ejecutarlo es no-op.
+
+**Puesta en marcha:**
+
+1. En Google Cloud: habilitar la **Google Wallet API**, crear una cuenta de
+   servicio y descargar su llave **JSON**.
+2. En la **Pay & Wallet Console**: crear el Issuer y agregar el `client_email`
+   de la cuenta de servicio como usuario (Developer/Admin).
+3. Configurar `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL`,
+   `GOOGLE_WALLET_SA_PRIVATE_KEY` y `GOOGLE_WALLET_CLASS_SUFFIX` (ver
+   `.env.example`).
+4. Pulsar **"Clase de Google Wallet"** en el panel admin (o `POST` al endpoint).
+
+**Demo mode:** mientras el Issuer esté en demo, el pase solo se guarda con
+cuentas de prueba (Admin/Developer o test accounts de la consola) y sale con
+**"[TEST ONLY]"** en el título. Tras obtener acceso de publicación, cambiar
+`reviewStatus` a `APPROVED` en `google-wallet.ts` y los pases salen a cualquier
+usuario sin el rótulo. **Apple Wallet queda fuera de alcance** (requiere cuenta
+Apple Developer de pago).
 
 ## Cómo se cumplen los criterios de aceptación
 

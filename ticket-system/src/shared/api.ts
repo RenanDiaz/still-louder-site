@@ -203,6 +203,15 @@ export function cleanupExpired(password: string): Promise<{ cancelled: number }>
   });
 }
 
+export function ensureWalletClass(
+  password: string
+): Promise<{ classId: string; created: boolean }> {
+  return request('/api/admin/wallet/google/ensure-class', {
+    method: 'POST',
+    headers: authHeader(password)
+  });
+}
+
 export function cancelOrder(
   password: string,
   orderId: string
