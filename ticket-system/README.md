@@ -121,6 +121,8 @@ Todas son **server-only**; ninguna se expone al navegador.
 ```
 SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 RESEND_API_KEY, EMAIL_FROM="Still Louder <entradas@stilllouder.space>"
+EMAIL_REPLY_TO                # opcional: buzón real (p. ej. Gmail) que recibe las respuestas
+                              # del comprador; sin esto el correo no invita a responder
 ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compra (lista separada por comas)
 TICKET_HMAC_SECRET            # openssl rand -hex 32
 ADMIN_PASSWORD, STAFF_PASSWORD
@@ -269,7 +271,12 @@ Apple Developer de pago).
   esperar a la limpieza. `cleanup_expired_orders` (cron diario + botón admin) es
   solo housekeeping: marca esas pendientes como `cancelled`.
 - **Correo desde `entradas@stilllouder.space`:** configurable vía `EMAIL_FROM`
-  (requiere dominio verificado en Resend — DKIM/SPF/DMARC).
+  (requiere dominio verificado en Resend — DKIM/SPF/DMARC). El dominio solo
+  **envía**: no hay recepción configurada, así que responder a `entradas@` no
+  llega a nadie. `EMAIL_REPLY_TO` (opcional) pone un buzón real (p. ej. el
+  Gmail de la banda) en el header Reply-To y habilita la frase "responde a
+  este correo" en el footer; sin configurarla, el footer solo menciona los
+  canales oficiales (@stilllouder).
 
 ## Notas operativas
 

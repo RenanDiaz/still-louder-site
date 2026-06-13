@@ -28,6 +28,13 @@ export const env = {
   get emailFrom() {
     return optional('EMAIL_FROM', 'Still Louder <entradas@stilllouder.space>');
   },
+  // Dirección que recibe las respuestas del comprador (header Reply-To).
+  // El dominio en Resend solo está verificado para ENVIAR: sin esto, responder
+  // al correo de entradas no llega a nadie. Opcional: si no se configura, el
+  // correo no invita a responder y solo menciona los canales oficiales.
+  get emailReplyTo() {
+    return optional('EMAIL_REPLY_TO');
+  },
   // Destinatario(s) interno(s) que reciben aviso cuando se registra una compra.
   // Opcional: si no se configura, no se envía el aviso (feature opt-in).
   // Acepta varias direcciones separadas por coma.
