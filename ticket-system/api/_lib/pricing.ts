@@ -88,6 +88,16 @@ export function isPresaleOpenByDate(now: Date = new Date()): boolean {
   return now.getTime() < new Date(PRESALE_END_ISO).getTime();
 }
 
+// Sales don't open until the presale start time (Panama time, UTC-5). The buy
+// form is hidden client-side until then, but the server is authoritative: no
+// order can be created before this instant, even via a direct POST. Mirrors
+// EVENT.presaleStart in the client config.
+const PRESALE_START_ISO = '2026-06-15T00:00:00-05:00';
+
+export function areSalesOpenByDate(now: Date = new Date()): boolean {
+  return now.getTime() >= new Date(PRESALE_START_ISO).getTime();
+}
+
 // How long a pending order holds its presale cupo before cleanup frees it.
 // Manual methods (cash / CuantoApp) need a generous window because
 // reconciliation is human; Yappy confirms instantly so it can be short.

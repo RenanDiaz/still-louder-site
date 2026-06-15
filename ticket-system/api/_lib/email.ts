@@ -39,16 +39,6 @@ function formatPanamaDate(iso: string): string {
   }
 }
 
-// Mientras la BD aún tiene datos de pruebas, todo QR emitido antes de que abra
-// la preventa será purgado: el correo lo advierte para que nadie guarde una
-// entrada de prueba creyéndola válida. Espejo de EVENT.presaleStart en el
-// cliente (src/shared/config.ts); el aviso se apaga solo al llegar la fecha.
-const PRESALE_START_ISO = '2026-06-15T00:00:00-05:00';
-
-function isTestPhase(now: Date = new Date()): boolean {
-  return now.getTime() < new Date(PRESALE_START_ISO).getTime();
-}
-
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -157,18 +147,6 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
       <td style="padding:7px 0;font-size:15px;color:#15121c;font-weight:bold;">${value}</td>
     </tr>`;
 
-  const testPhaseNotice = isTestPhase()
-    ? `
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;">
-              <tr>
-                <td style="background:#fff3cd;border:2px solid #b3791a;border-radius:10px;padding:14px 18px;font-size:14px;line-height:1.55;color:#6b4a00;">
-                  <strong>⚠️ Fase de pruebas:</strong> esta entrada fue generada antes del inicio de
-                  la preventa (15 de junio) y <strong>no será válida</strong> para el evento.
-                </td>
-              </tr>
-            </table>`
-    : '';
-
   // "Responde a este correo" solo es honesto si hay Reply-To configurado: el
   // dominio en Resend solo envía, así que sin EMAIL_REPLY_TO una respuesta a
   // entradas@ se pierde y el footer debe apuntar únicamente a las redes.
@@ -236,7 +214,6 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
                 </td>
               </tr>
             </table>
-            ${testPhaseNotice}
             ${qrBlocks}
           </td>
         </tr>

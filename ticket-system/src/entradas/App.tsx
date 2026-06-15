@@ -47,11 +47,24 @@ export default function App() {
   const [presaleEnded, setPresaleEnded] = useState(
     () => Date.now() >= new Date(EVENT.presaleEnd).getTime()
   );
+  // Sales open at EVENT.presaleStart: until then the buy form stays hidden and
+  // only the countdown + an "aún no disponible" notice show. State (not a
+  // constant) so it flips on its own at the opening time without a redeploy.
+  const presaleStartMs = new Date(EVENT.presaleStart).getTime();
+  const [salesOpen, setSalesOpen] = useState(() => Date.now() >= presaleStartMs);
   const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<Method>('cuantoapp');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [confirmation, setConfirmation] = useState<CreateOrderResponse | null>(restorePendingOrder);
+
+  // Flip salesOpen on its own when the opening time arrives (no redeploy
+  // needed). The opening is today, so the delay is well within setTimeout's range.
+  useEffect(() => {
+    if (salesOpen) return;
+    const id = setTimeout(() => setSalesOpen(true), Math.max(presaleStartMs - Date.now(), 0));
+    return () => clearTimeout(id);
+  }, [salesOpen, presaleStartMs]);
 
   useEffect(() => {
     getPresaleStatus().then(setPresale).catch(() => setPresale(null));
@@ -193,107 +206,114 @@ export default function App() {
         <div className="tk-reveal">
           <Countdown />
         </div>
-        <PresaleIndicator presale={presale} presaleEnded={presaleEnded} />
-        <TestPhaseNotice />
+        {/* Antes de que abra la preventa el formulario se oculta: el comprador
+            solo ve el countdown y un aviso de que aún no puede comprar. */}
+        {!salesOpen ? (
+          <PresaleNotOpenNotice />
+        ) : (
+          <>
+            <PresaleIndicator presale={presale} presaleEnded={presaleEnded} />
 
-        {/* Formulario: temático pero LEGIBLE (sin filtro rasgado en inputs) */}
-        <form className="tk-form tk-reveal" onSubmit={handleSubmit}>
-          <h2 className="tk-form__title">Compra tus entradas</h2>
+            {/* Formulario: temático pero LEGIBLE (sin filtro rasgado en inputs) */}
+            <form className="tk-form tk-reveal" onSubmit={handleSubmit}>
+              <h2 className="tk-form__title">Compra tus entradas</h2>
 
-          {/* La tarifa no se elige: se aplica sola la mejor disponible. */}
-          <span className="tk-label" id="tier-label">
-            Tipo de entrada
-          </span>
-          <p className="tk-tier" aria-labelledby="tier-label" aria-live="polite">
-            <span className="tk-tier__name">{TIERS[tier].label}</span>
-            <strong className="tk-tier__price">{TIERS[tier].priceLabel}</strong>
-          </p>
-          <p className="tk-hint">
-            {presaleAvailable
-              ? 'Te aplicamos automáticamente el precio de preventa mientras esté disponible.'
-              : presaleEnded
-                ? 'La preventa terminó: las entradas se venden al precio general.'
-                : 'La preventa se agotó: las entradas se venden al precio general.'}
-          </p>
-
-          <label htmlFor="quantity">Cantidad</label>
-          <select
-            id="quantity"
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
-          >
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-
-          <label htmlFor="name">Nombre completo</label>
-          <input id="name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
-
-          <label htmlFor="email">Correo electrónico</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-          />
-          <p className="tk-hint">Aquí enviaremos tu entrada con el código QR.</p>
-
-          <label htmlFor="phone">{method === 'yappy' ? 'Teléfono (Yappy)' : 'Teléfono (opcional)'}</label>
-          <input
-            id="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required={method === 'yappy'}
-          />
-          {method === 'yappy' && (
-            <p className="tk-hint">El número panameño asociado a tu cuenta de Yappy.</p>
-          )}
-
-          <label htmlFor="method">Método de pago</label>
-          <select id="method" value={method} onChange={(e) => setMethod(e.target.value as Method)}>
-            {availableMethods.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-
-          {error && (
-            <div className="tk-alert tk-alert--error" role="alert">
-              {error}
-            </div>
-          )}
-
-          <div className="tk-price-summary" aria-live="polite">
-            <p className="tk-price-summary__row">
-              <span className="tk-price-summary__tier">{TIERS[tier].label}</span>
-              <span className="tk-price-summary__calc">
-                {TIERS[tier].priceLabel} × {quantity}
+              {/* La tarifa no se elige: se aplica sola la mejor disponible. */}
+              <span className="tk-label" id="tier-label">
+                Tipo de entrada
               </span>
-              <span className="tk-price-summary__amount">{formatMoney(netCents)}</span>
-            </p>
-            {feeCents > 0 && (
-              <p className="tk-price-summary__row tk-price-summary__row--fee">
-                <span className="tk-price-summary__tier">Cargo por servicio</span>
-                <span className="tk-price-summary__amount">{formatMoney(feeCents)}</span>
+              <p className="tk-tier" aria-labelledby="tier-label" aria-live="polite">
+                <span className="tk-tier__name">{TIERS[tier].label}</span>
+                <strong className="tk-tier__price">{TIERS[tier].priceLabel}</strong>
               </p>
-            )}
-            <p className="tk-price-summary__row tk-price-summary__row--total">
-              <span className="tk-price-summary__tier">Total</span>
-              <strong className="tk-price-summary__total">{formatMoney(totalCents)}</strong>
-            </p>
-          </div>
+              <p className="tk-hint">
+                {presaleAvailable
+                  ? 'Te aplicamos automáticamente el precio de preventa mientras esté disponible.'
+                  : presaleEnded
+                    ? 'La preventa terminó: las entradas se venden al precio general.'
+                    : 'La preventa se agotó: las entradas se venden al precio general.'}
+              </p>
 
-          <button type="submit" className="tk-cta" disabled={submitting}>
-            {submitting ? 'Procesando…' : `Comprar — ${formatMoney(totalCents)} ⚡`}
-          </button>
-        </form>
+              <label htmlFor="quantity">Cantidad</label>
+              <select
+                id="quantity"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+              >
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor="name">Nombre completo</label>
+              <input id="name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
+
+              <label htmlFor="email">Correo electrónico</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+              <p className="tk-hint">Aquí enviaremos tu entrada con el código QR.</p>
+
+              <label htmlFor="phone">{method === 'yappy' ? 'Teléfono (Yappy)' : 'Teléfono (opcional)'}</label>
+              <input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required={method === 'yappy'}
+              />
+              {method === 'yappy' && (
+                <p className="tk-hint">El número panameño asociado a tu cuenta de Yappy.</p>
+              )}
+
+              <label htmlFor="method">Método de pago</label>
+              <select id="method" value={method} onChange={(e) => setMethod(e.target.value as Method)}>
+                {availableMethods.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+
+              {error && (
+                <div className="tk-alert tk-alert--error" role="alert">
+                  {error}
+                </div>
+              )}
+
+              <div className="tk-price-summary" aria-live="polite">
+                <p className="tk-price-summary__row">
+                  <span className="tk-price-summary__tier">{TIERS[tier].label}</span>
+                  <span className="tk-price-summary__calc">
+                    {TIERS[tier].priceLabel} × {quantity}
+                  </span>
+                  <span className="tk-price-summary__amount">{formatMoney(netCents)}</span>
+                </p>
+                {feeCents > 0 && (
+                  <p className="tk-price-summary__row tk-price-summary__row--fee">
+                    <span className="tk-price-summary__tier">Cargo por servicio</span>
+                    <span className="tk-price-summary__amount">{formatMoney(feeCents)}</span>
+                  </p>
+                )}
+                <p className="tk-price-summary__row tk-price-summary__row--total">
+                  <span className="tk-price-summary__tier">Total</span>
+                  <strong className="tk-price-summary__total">{formatMoney(totalCents)}</strong>
+                </p>
+              </div>
+
+              <button type="submit" className="tk-cta" disabled={submitting}>
+                {submitting ? 'Procesando…' : `Comprar — ${formatMoney(totalCents)} ⚡`}
+              </button>
+            </form>
+          </>
+        )}
 
         {/* Confianza: canales oficiales */}
         <p className="tk-trust">
@@ -324,19 +344,17 @@ function Decorations() {
 }
 
 /**
- * Mientras la BD aún tiene datos de pruebas (antes de que abra la preventa),
- * cualquier QR emitido será purgado y no servirá en puerta. El aviso se apaga
- * solo el 15 de junio sin necesidad de redeploy. Espejo del aviso del correo
- * en api/_lib/email.ts.
+ * Antes de que abra la preventa el formulario de compra permanece oculto; este
+ * aviso le dice al comprador que aún no puede comprar y lo remite al countdown.
+ * Se reemplaza solo por el formulario cuando llega la hora de apertura.
  */
-function TestPhaseNotice() {
-  if (Date.now() >= new Date(EVENT.presaleStart).getTime()) return null;
+function PresaleNotOpenNotice() {
   return (
-    <div className="tk-test-notice tk-reveal" role="alert">
-      <strong>⚠️ Fase de pruebas</strong>
+    <div className="tk-closed-notice tk-reveal" role="status">
+      <strong>⚡ La preventa aún no abre</strong>
       <p>
-        Los códigos QR generados antes del inicio de la preventa (15 de junio) <b>no serán
-        válidos</b> para el evento.
+        Las entradas estarán disponibles a la <b>medianoche del 15 de junio</b>. El contador de
+        arriba marca cuánto falta — vuelve cuando llegue a cero para comprar la tuya.
       </p>
     </div>
   );
@@ -398,8 +416,6 @@ function Confirmation({
             <div className="tk-byline">{EVENT.shortName} · by {EVENT.band}</div>
           </div>
         </div>
-
-        <TestPhaseNotice />
 
         <div className="tk-form tk-success tk-reveal">
           <p style={{ fontSize: 16 }}>
