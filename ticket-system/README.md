@@ -356,13 +356,15 @@ solo para pendientes): pasa a un estado nuevo `refunded`.
 **Flujo (`api/_lib/refund.ts` → `refundOrder()`):**
 
 1. **Reversa del dinero (solo Yappy, automática):** llama
-   `reverseYappyPayment()` → `PUT /v1/transaction/{transactionId}` de la **API
-   transaccional** de Yappy (distinta del Botón de Pago V2: se autentica con los
-   headers estáticos `api-key` / `secret-key` / `authorization` + `client-ip` +
-   `channel`, no con el session token). `transactionId` es el
-   `orders.yappy_transaction_id` guardado al crear el pago. Solo `YP-0000` es
-   éxito; cualquier otro código (p. ej. `YP-0002`) se trata como fallo y **no se
-   toca la base de datos**.
+   `reverseYappyPayment()` contra la **API de Yappy Comercial** (distinta del
+   Botón de Pago V2). Son **dos pasos**: (a) `POST /v1/session/login` con un
+   `code` derivado server-side — `HMAC-SHA256(apiKey + fecha YYYY-MM-DD)`
+   firmado con el secret key, en hora de Panamá — para obtener un **token de
+   sesión**; (b) `PUT /v1/transaction/{transactionId}` con
+   `Authorization: Bearer <token>` + `api-key` + `secret-key` (+ `client-ip` /
+   `channel`). `transactionId` es el `orders.yappy_transaction_id` guardado al
+   crear el pago. Solo `YP-0000` es éxito; cualquier otro código (p. ej.
+   `YP-0002`) se trata como fallo y **no se toca la base de datos**.
 2. **Registro atómico:** al confirmar la reversa (o de una vez para
    efectivo/CuantoApp/manual), la RPC `refund_order` marca la orden `refunded`,
    sella `refunded_at`/`refund_ref` y **anula (`void`) todas las entradas
@@ -380,7 +382,16 @@ devuelve por fuera (portal de Yappy). Para efectivo/CuantoApp el reembolso es
 siempre manual (no hay API).
 
 **Configuración** (`api/_lib/env.ts`, todas opcionales — sin ellas solo queda el
-modo manual): `YAPPY_API_KEY`, `YAPPY_API_SECRET_KEY`, `YAPPY_API_AUTHORIZATION`,
-`YAPPY_API_CHANNEL` (confirmar valor con Yappy) y `YAPPY_API_BASE` (opcional;
-por defecto el host del Botón según `YAPPY_BTN_ENV`). Migración:
-`supabase/migrations/0006_refunds.sql` (estado `refunded` + columnas + RPC).
+modo manual): `YAPPY_API_KEY` y `YAPPY_API_SECRET_KEY` (credenciales del portal
+Yappy Comercial → Integraciones → Generar Credenciales; bastan para generar el
+`code` de login), `YAPPY_API_SEED` (el "código semilla" del portal, se envía
+como client id), `YAPPY_API_CHANNEL` (confirmar valor con Yappy) y
+`YAPPY_API_BASE` (opcional; por defecto el host del Botón según `YAPPY_BTN_ENV`).
+Migración: `supabase/migrations/0006_refunds.sql` (estado `refunded` + columnas
++ RPC).
+
+> **A confirmar en UAT:** el manual genera el `code` concatenando el **API Key**
+> + fecha; si el login devuelve error, probar con el `seed` como sujeto del HMAC
+> (ver `sessionCode()` en `api/_lib/yappy.ts`). Igualmente confirmar si Yappy
+> exige los headers `client-ip` / `channel` (el catálogo de errores incluye
+> `YP-0008` "cabeceras obligatorias faltantes").
