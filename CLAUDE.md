@@ -392,6 +392,19 @@ platforms: {
 
 3. Add brand color to `variables.css` if needed.
 
+### Contact form (no backend)
+
+The `#contacto` section posts to a **Google Form** with no backend of its own
+(same trick as the `al-vacio-pre-release` comments form). `initContactForm()` in
+`main.js` validates the fields, folds name + email + message into the Form's
+single text field (`CONFIG.contact.messageField`), and submits via
+`fetch(url, { mode: 'no-cors' })`. A hidden honeypot (`#contact-website`) drops
+bot submissions. **The Form URL is config-driven (`CONFIG.contact`), and
+`docs.google.com` must stay in the `connect-src` CSP directive in `vercel.json`
+or the submit fails silently.** To capture separate columns instead of one
+composed field, point `CONFIG.contact.formUrl`/`messageField` at a dedicated
+Form (and extend the handler with per-field `entry.*` IDs).
+
 ### Tracking Analytics Events
 
 Use the analytics module:

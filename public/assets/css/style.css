@@ -1107,6 +1107,173 @@ body {
 }
 
 /* ============================================
+   FAQ SECTION
+   ============================================ */
+
+.section-faq {
+  background: var(--gradient-dark);
+}
+
+/* Narrower column for readable, text-heavy sections (FAQ, contact). */
+.section-container--narrow {
+  max-width: var(--container-narrow);
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Built on the native <details> element: accessible and keyboard-friendly
+   without any JavaScript. The glass-card class supplies the surface. */
+.faq-item {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* The accordion toggles open/closed — don't also lift on hover like other cards. */
+.faq-item:hover {
+  transform: none;
+}
+
+.faq-item__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  list-style: none;
+  cursor: pointer;
+  padding: var(--spacing-lg);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* Hide the default disclosure triangle; we use a +/− indicator instead. */
+.faq-item__q::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item__q::after {
+  content: '+';
+  flex: 0 0 auto;
+  font-size: var(--font-size-2xl);
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.faq-item[open] .faq-item__q::after {
+  content: '\2212'; /* minus sign */
+}
+
+.faq-item__q:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: -3px;
+}
+
+.faq-item__a {
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+  color: var(--color-text-secondary);
+}
+
+.faq-item__a p {
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+}
+
+.faq-item__a a {
+  color: var(--color-accent);
+}
+
+/* ============================================
+   CONTACT SECTION
+   ============================================ */
+
+.contact-form {
+  max-width: var(--container-narrow);
+  margin: 0 auto;
+  padding: var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.contact-form:hover {
+  transform: none;
+}
+
+.contact-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.contact-form__field label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: var(--spacing-md);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-md);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-glow);
+}
+
+.contact-form textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.contact-form__submit {
+  align-self: flex-start;
+}
+
+.contact-form__alt {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.contact-form__alt a {
+  color: var(--color-accent);
+}
+
+/* Honeypot: kept in the DOM for bots but removed from view and tab order. */
+.contact-form__hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .contact-form__submit {
+    align-self: stretch;
+  }
+}
+
+/* ============================================
    REVEAL ANIMATIONS
    ============================================ */
 
@@ -1167,6 +1334,18 @@ button:focus-visible {
 /* ============================================
    RESPONSIVE ADJUSTMENTS
    ============================================ */
+
+/* Keep the seven-item desktop nav on a single line on mid-size screens, before
+   the mobile menu takes over at 768px. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .header-nav {
+    gap: var(--spacing-md);
+  }
+
+  .nav-link {
+    font-size: var(--font-size-xs);
+  }
+}
 
 @media (max-width: 768px) {
   .hero-content {

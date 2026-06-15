@@ -318,7 +318,9 @@
           <a href="#escuchar" class="nav-link" data-section="escuchar">Escuchar</a>
           <a href="#entradas" class="nav-link" data-section="entradas">Entradas</a>
           <a href="#about" class="nav-link" data-section="about">Banda</a>
+          <a href="#faq" class="nav-link" data-section="faq">FAQ</a>
           <a href="#conectar" class="nav-link" data-section="conectar">Conectar</a>
+          <a href="#contacto" class="nav-link" data-section="contacto">Contacto</a>
         </nav>
         <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menú">
           <span></span>
@@ -335,7 +337,9 @@
         <a href="#escuchar" class="mobile-nav-link" data-section="escuchar">Escuchar</a>
         <a href="#entradas" class="mobile-nav-link" data-section="entradas">Entradas</a>
         <a href="#about" class="mobile-nav-link" data-section="about">Banda</a>
+        <a href="#faq" class="mobile-nav-link" data-section="faq">FAQ</a>
         <a href="#conectar" class="mobile-nav-link" data-section="conectar">Conectar</a>
+        <a href="#contacto" class="mobile-nav-link" data-section="contacto">Contacto</a>
       </nav>
     </div>
 
@@ -810,6 +814,96 @@
         </div>
       </section>
 
+      <!-- FAQ Section -->
+      <section class="section section-faq" id="faq">
+        <div class="section-container section-container--narrow">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Preguntas frecuentes</h2>
+            <p class="section-subtitle reveal-up">Lo que más nos preguntan sobre la banda</p>
+          </header>
+
+          <div class="faq-list reveal-up">
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">¿Dónde puedo escuchar a Still Louder?</summary>
+              <div class="faq-item__a">
+                <p>
+                  En todas las plataformas: Spotify, Apple Music, YouTube, Deezer y Amazon Music.
+                  Encuentra todos los enlaces en la sección
+                  <a href="#escuchar">Escuchar</a>.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">¿Cómo compro entradas para sus shows?</summary>
+              <div class="faq-item__a">
+                <p>
+                  Las entradas se venden en línea, directamente con la banda en
+                  <a
+                    href="https://entradas.stilllouder.space/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >entradas.stilllouder.space</a
+                  >. Si tienes dudas sobre tu compra (precios, pagos, cómo recibir tu QR), revisa la
+                  <a
+                    href="https://entradas.stilllouder.space/ayuda"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >ayuda y preguntas frecuentes de entradas</a
+                  >.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">¿Tienen merch o tienda oficial?</summary>
+              <div class="faq-item__a">
+                <p>
+                  Sí. Consigue merch y más en nuestra
+                  <a
+                    href="https://cuanto.app/still_louder"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >tienda oficial</a
+                  >.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">¿Cómo los contrato para tocar en mi evento?</summary>
+              <div class="faq-item__a">
+                <p>
+                  ¡Nos encanta tocar en vivo! Escríbenos desde la sección
+                  <a href="#contacto">Contacto</a> con la fecha, el lugar y los detalles de tu
+                  evento, y te respondemos para coordinar.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">¿De dónde es la banda?</summary>
+              <div class="faq-item__a">
+                <p>
+                  Still Louder es una banda de rock de <strong>Chiriquí, Panamá</strong>, formada en
+                  2009. Conoce más en la sección <a href="#about">Banda</a>.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">¿Dónde los sigo en redes sociales?</summary>
+              <div class="faq-item__a">
+                <p>
+                  En Instagram, Facebook, YouTube y TikTok. Todos los enlaces están en la sección
+                  <a href="#conectar">Conectar</a>.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
       <!-- Connect Section -->
       <section class="section section-connect" id="conectar">
         <div class="section-container">
@@ -949,6 +1043,73 @@
               </div>
             </a>
           </div>
+        </div>
+      </section>
+
+      <!-- Contact Section -->
+      <section class="section section-contact" id="contacto">
+        <div class="section-container section-container--narrow">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Contacto</h2>
+            <p class="section-subtitle reveal-up">¿Booking, prensa o una pregunta? Escríbenos</p>
+          </header>
+
+          <form class="contact-form glass-card reveal-up" id="contact-form" novalidate>
+            <div class="contact-form__field">
+              <label for="contact-name">Nombre</label>
+              <input
+                id="contact-name"
+                name="name"
+                type="text"
+                autocomplete="name"
+                required
+                minlength="2"
+              />
+            </div>
+
+            <div class="contact-form__field">
+              <label for="contact-email">Correo electrónico</label>
+              <input id="contact-email" name="email" type="email" autocomplete="email" required />
+            </div>
+
+            <div class="contact-form__field">
+              <label for="contact-message">Mensaje</label>
+              <textarea
+                id="contact-message"
+                name="message"
+                rows="5"
+                required
+                minlength="10"
+              ></textarea>
+            </div>
+
+            <!-- Honeypot anti-spam: oculto para humanos, tentador para bots. Si
+                 viene lleno, descartamos el envío en silencio. -->
+            <div class="contact-form__hp" aria-hidden="true">
+              <label for="contact-website">No llenes este campo</label>
+              <input
+                id="contact-website"
+                name="website"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary contact-form__submit" id="contact-submit">
+              Enviar mensaje
+            </button>
+
+            <p class="contact-form__alt">
+              O escríbenos directamente por
+              <a
+                href="https://www.instagram.com/still_louder/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Instagram</a
+              >.
+            </p>
+          </form>
         </div>
       </section>
     </main>
