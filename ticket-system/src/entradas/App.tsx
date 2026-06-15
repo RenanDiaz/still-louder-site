@@ -353,7 +353,7 @@ function PresaleNotOpenNotice() {
     <div className="tk-closed-notice tk-reveal" role="status">
       <strong>⚡ La preventa aún no abre</strong>
       <p>
-        Las entradas estarán disponibles el <b>15 de junio al mediodía</b>. El contador de
+        Las entradas estarán disponibles a la <b>medianoche del 15 de junio</b>. El contador de
         arriba marca cuánto falta — vuelve cuando llegue a cero para comprar la tuya.
       </p>
     </div>

@@ -92,7 +92,7 @@ export function isPresaleOpenByDate(now: Date = new Date()): boolean {
 // form is hidden client-side until then, but the server is authoritative: no
 // order can be created before this instant, even via a direct POST. Mirrors
 // EVENT.presaleStart in the client config.
-const PRESALE_START_ISO = '2026-06-15T12:00:00-05:00';
+const PRESALE_START_ISO = '2026-06-15T00:00:00-05:00';
 
 export function areSalesOpenByDate(now: Date = new Date()): boolean {
   return now.getTime() >= new Date(PRESALE_START_ISO).getTime();
