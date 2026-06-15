@@ -230,7 +230,7 @@ export function buildRefundReceiptHtml(order: Order): string {
 </head>
 <body>
   <div class="toolbar">
-    <button type="button" onclick="window.print()">Imprimir / Guardar PDF</button>
+    <button type="button" id="sl-print">Imprimir / Guardar PDF</button>
   </div>
   <div class="sheet">
     <div class="header">
