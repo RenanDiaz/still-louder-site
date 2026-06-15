@@ -584,6 +584,11 @@ function OrdenesTab({ password }: { password: string }) {
   // for refunds from any date — the receipt is rendered from the stored order.
   // The blank tab is opened synchronously (before the await) so popup blockers
   // don't swallow it; the fetched HTML is then written into it.
+  //
+  // The receipt's "Imprimir / Guardar PDF" button can't use an inline onclick:
+  // the about:blank tab inherits this admin page's CSP (script-src 'self', no
+  // 'unsafe-inline'), which blocks inline event handlers. Since the tab is
+  // same-origin with the opener, we attach the print handler from here instead.
   async function handleReceipt(order: AdminOrder) {
     const win = window.open('', '_blank');
     setBusyId(order.id);
@@ -593,6 +598,7 @@ function OrdenesTab({ password }: { password: string }) {
         win.document.open();
         win.document.write(html);
         win.document.close();
+        win.document.getElementById('sl-print')?.addEventListener('click', () => win.print());
         notify(`✓ Comprobante de reembolso de ${order.buyer_name} generado.`);
       } else {
         notifyError('Permite las ventanas emergentes para ver el comprobante.');
