@@ -68,15 +68,18 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 
 ### Structure
 
-- **Three surfaces**, built as a Vite multi-page app (entries in
+- **Four surfaces**, built as a Vite multi-page app (entries in
   `vite.config.ts`): `/entradas` (public purchase flow), `/admin` (tabbed
   panel: reports, orders — mark paid / cancel pending / resend QR email —,
   ticket tracking with revoke/unrevoke, courtesy issuance, live check-in,
   stage-2 toggle, CSV export), `/validar` (gate QR scanner with
-  camera + sound). Root `index.html` redirects to `/entradas`;
+  camera + sound), `/support` (read-only customer support: look up orders by
+  email/phone/name/order-id, view order + ticket status, resend QR email —
+  no mutations, no sales stats; gated by `SUPPORT_PASSWORD` or the admin
+  password via `isSupport()`). Root `index.html` redirects to `/entradas`;
   `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
-- **Frontend**: `src/entradas/`, `src/admin/`, `src/validar/`, plus
-  `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
+- **Frontend**: `src/entradas/`, `src/admin/`, `src/validar/`, `src/support/`,
+  plus `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
 - **Backend**: `api/` serverless functions; shared server-only logic in
   `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
   QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in

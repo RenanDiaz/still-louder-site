@@ -50,6 +50,11 @@ export const env = {
   get staffPassword() {
     return required('STAFF_PASSWORD');
   },
+  // Customer-support role: read-only lookup + resend QR email. Optional and
+  // opt-in — when unset, only ADMIN_PASSWORD can reach the /support surface.
+  get supportPassword() {
+    return optional('SUPPORT_PASSWORD');
+  },
   get cronSecret() {
     return optional('CRON_SECRET');
   },
