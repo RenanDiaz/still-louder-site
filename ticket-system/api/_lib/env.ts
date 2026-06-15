@@ -81,12 +81,14 @@ export const env = {
   // --- Yappy Comercial transactional API (reversals; server-only) ------------
   // SEPARATE credentials from Botón de Pago V2 — the "Commerce Integration" API
   // used to reverse a same-day charge. Auth is a session-login flow: the
-  // serverless layer derives the login code from api-key + secret-key (HMAC),
-  // gets a bearer token, then PUTs /v1/transaction/{id}. All optional in
-  // practice: when unset, the refund button falls back to a manual mark, so
-  // these getters are only read after isYappyRefundConfigured() confirms the
-  // api-key/secret-key exist. `seed` is the portal's seed credential (sent as
-  // the client id); `channel` defaults to a placeholder — confirm with Yappy.
+  // serverless layer derives the login `code` as HMAC-SHA256(apiKey + date)
+  // keyed with the SEED CODE, sends it to {base}/session/login (with api-key +
+  // secret-key headers) to get a bearer token, then PUTs {base}/transaction/{id}.
+  // All optional in practice: when unset, the refund button falls back to a
+  // manual mark, so these getters are only read after isYappyRefundConfigured()
+  // confirms api-key/secret-key/seed all exist. The seed is the HMAC key (NOT a
+  // header, NOT in the body); `channel` defaults to a placeholder — confirm with
+  // Yappy. The host comes from YAPPY_API_BASE (read directly in yappy.ts).
   get yappyApiKey() {
     return required('YAPPY_API_KEY');
   },
@@ -94,7 +96,7 @@ export const env = {
     return required('YAPPY_API_SECRET_KEY');
   },
   get yappyApiSeed() {
-    return optional('YAPPY_API_SEED');
+    return required('YAPPY_API_SEED');
   },
   get yappyApiChannel() {
     return optional('YAPPY_API_CHANNEL', 'API');

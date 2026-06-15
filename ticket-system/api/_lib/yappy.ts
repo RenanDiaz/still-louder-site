@@ -16,6 +16,16 @@ const API_BASE = {
   test: 'https://api-comecom-uat.yappycloud.com'
 } as const;
 
+// Yappy Comercial / Commerce Integration API (reversals) — a DIFFERENT product
+// and host than Botón de Pago V2 above. These base URLs already include `/v1`,
+// so the request paths below append `/session/login` and `/transaction/{id}`
+// WITHOUT a `/v1` prefix. Override with YAPPY_API_BASE (the env var is what we
+// set in Vercel; default to the env-appropriate host so it still works unset).
+const REFUND_API_BASE = {
+  prod: 'https://api-integration-business.yappy.cloud/v1',
+  test: 'https://api-integration-business-uat.yappycloud.com/v1'
+} as const;
+
 // The official doc spells the prod CDN two ways (bt-cdn.yappy.cloud in prose,
 // bt-cdn.yappycloud.com in the code sample). Default to the prose variant and
 // allow YAPPY_BTN_CDN_URL to override once UAT/prod confirms which resolves.
@@ -49,7 +59,11 @@ export function isYappyConfigured(): boolean {
  * record a refund manually.
  */
 export function isYappyRefundConfigured(): boolean {
-  return Boolean(process.env.YAPPY_API_KEY && process.env.YAPPY_API_SECRET_KEY);
+  // All three are required: api-key + secret-key are sent as headers and the
+  // seed code is the HMAC key used to derive the login `code`. Without the seed
+  // the login signature can't be produced, so treat it as not configured (the
+  // admin then falls back to a manual refund).
+  return Boolean(process.env.YAPPY_API_KEY && process.env.YAPPY_API_SECRET_KEY && process.env.YAPPY_API_SEED);
 }
 
 function mode(): 'prod' | 'test' {
@@ -148,16 +162,21 @@ export async function createYappyPaymentOrder(opts: {
 
 // --- Yappy Comercial transactional API (reversals) ---------------------------
 // Distinct from Botón de Pago V2 above. Two steps: open a session (login) to get
-// a bearer token, then PUT the reversal. Base URL defaults to the Botón host for
-// the current env; override with YAPPY_API_BASE.
+// a bearer token, then PUT the reversal. Base URL comes from YAPPY_API_BASE
+// (which already includes `/v1`); when unset, defaults to the env-appropriate
+// Yappy Comercial host. We strip any trailing slash so the paths below join
+// cleanly as `${base}/session/login` and `${base}/transaction/{id}`.
 
 function refundApiBase(): string {
-  return process.env.YAPPY_API_BASE || API_BASE[mode()];
+  return (process.env.YAPPY_API_BASE || REFUND_API_BASE[mode()]).replace(/\/+$/, '');
 }
 
-/** Today's date as YYYY-MM-DD in Panama time (the session code is date-scoped). */
+/** Today's date as YYYY-MM-DD in Panama time (the login code is date-scoped). */
 function panamaDate(now: Date = new Date()): string {
-  // en-CA formats as YYYY-MM-DD; America/Panama is UTC-5 (no DST).
+  // en-CA formats as YYYY-MM-DD; America/Panama is UTC-5 (no DST). The reversal
+  // window is "same day before midnight", so the date is computed in Panama
+  // local time. (If UAT shows a midnight-boundary mismatch, Yappy may key the
+  // code on UTC instead — confirm with support.)
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Panama',
     year: 'numeric',
@@ -167,32 +186,48 @@ function panamaDate(now: Date = new Date()): string {
 }
 
 /**
- * Session login `code` per the integration manual (§"Generación del código"):
- * HMAC-SHA256 of (apiKey + today's date YYYY-MM-DD) keyed with the secret key,
- * hex-encoded (64 chars). The manual's worked example concatenates the API Key;
- * the portal's separate "seed" credential is sent alongside as the client id.
+ * Login `code` per the integration manual: HMAC-SHA256 of the message
+ * (apiKey + date YYYY-MM-DD) keyed with the **Seed Code**, hex-encoded. The
+ * Seed Code — NOT the secret key — is the HMAC key; the secret key is only ever
+ * sent as the `secret-key` header. Verified against the manual's worked example
+ * (see the self-test below).
  */
+function loginCode(apiKey: string, date: string, seed: string): string {
+  return crypto.createHmac('sha256', seed).update(`${apiKey}${date}`).digest('hex');
+}
+
 function sessionCode(): string {
-  const subject = `${env.yappyApiKey}${panamaDate()}`;
-  return crypto.createHmac('sha256', env.yappyApiSecretKey).update(subject).digest('hex');
+  return loginCode(env.yappyApiKey, panamaDate(), env.yappyApiSeed);
+}
+
+// Sanity-check the login-code algorithm against the manual's worked example at
+// module load, so a regression (wrong key, wrong subject) surfaces here instead
+// of only as a live 403 from Yappy.
+{
+  const expected = 'f957f8b8f9664832e6051e3389864682624a8e2b9aaf4dd80fb2aaea7af58940';
+  const got = loginCode('30170525-6ba7-4606-98e3-1391f38662d3', '2025-07-07', 'UKEUY-90122904');
+  if (got !== expected) {
+    console.error('[yappy] login-code HMAC self-test FAILED — sessionCode() is broken');
+  }
 }
 
 /**
- * POST /v1/session/login — opens a Yappy Comercial session and returns the
+ * POST {base}/session/login — opens a Yappy Comercial session and returns the
  * bearer token used to authorize the reversal. The request body is wrapped in
- * { body: {...} } per the spec, and the token may come back either as a string
- * or as { token } depending on the environment, so we accept both.
+ * { body: { code } } per the spec (the seed is NOT in the body — it's only the
+ * HMAC key). The token may come back either as a string or as { token }
+ * depending on the environment, so we accept both.
  */
 async function openRefundSession(): Promise<string> {
-  const res = await fetch(`${refundApiBase()}/v1/session/login`, {
+  const url = `${refundApiBase()}/session/login`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'api-key': env.yappyApiKey,
-      'secret-key': env.yappyApiSecretKey,
-      ...(env.yappyApiSeed ? { seed: env.yappyApiSeed } : {})
+      'secret-key': env.yappyApiSecretKey
     },
-    body: JSON.stringify({ body: { code: sessionCode(), seed: env.yappyApiSeed || undefined } })
+    body: JSON.stringify({ body: { code: sessionCode() } })
   });
 
   type LoginResponse = { status?: { code?: string; description?: string }; body?: { token?: unknown } };
@@ -204,6 +239,8 @@ async function openRefundSession(): Promise<string> {
   }
 
   const code = json?.status?.code ?? `HTTP_${res.status}`;
+  // TEMP diagnostics (Vercel Logs → filter /api/admin): which step failed and how.
+  console.error(`[yappy] session/login url=${url} httpStatus=${res.status} code=${code}`);
   if (code !== 'YP-0000') {
     throw new YappyError(code, `session/login: ${json?.status?.description ?? 'login failed'}`);
   }
@@ -218,13 +255,13 @@ async function openRefundSession(): Promise<string> {
 
 /**
  * Reverse (refund) a same-day Yappy transaction. Logs in for a session token,
- * then PUT /v1/transaction/{id}. Per the manual this only works while the charge
- * is still "en tránsito" (not yet accredited); once settled, Yappy rejects it
- * and the refund must be handled out-of-band. transactionId is what payment-wc
- * returned (stored in orders.yappy_transaction_id).
+ * then PUT {base}/transaction/{id}. Per the manual this only works while the
+ * charge is still "en tránsito" (EXECUTED, not yet accredited); once settled
+ * (COMPLETED) Yappy returns YP-0014 and the refund must be handled out-of-band.
+ * transactionId is what payment-wc returned (stored in orders.yappy_transaction_id).
  *
- * Returns the status pair on success (code YP-0000); throws YappyError with
- * Yappy's code (e.g. YP-0002 BAD_REQUEST when out of window) otherwise.
+ * Returns the status pair on success (YP-0000, or YP-0016 already reversed);
+ * throws YappyError with Yappy's code (e.g. YP-0014 out of window) otherwise.
  */
 export async function reverseYappyPayment(
   transactionId: string,
@@ -232,12 +269,17 @@ export async function reverseYappyPayment(
 ): Promise<{ code: string; description: string }> {
   const token = await openRefundSession();
 
-  const res = await fetch(`${refundApiBase()}/v1/transaction/${encodeURIComponent(transactionId)}`, {
+  const url = `${refundApiBase()}/transaction/${encodeURIComponent(transactionId)}`;
+  const res = await fetch(url, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
       'api-key': env.yappyApiKey,
       'secret-key': env.yappyApiSecretKey,
+      // `channel` and the client IP are the "cabeceras obligatorias" — a missing
+      // one yields YP-0008. NOTE: clientIp here is the admin browser's IP (from
+      // x-forwarded-for); confirm with Yappy whether the IP header must instead
+      // be the merchant server's egress IP and the exact header name.
       'client-ip': clientIp,
       channel: env.yappyApiChannel
     }
@@ -252,9 +294,13 @@ export async function reverseYappyPayment(
 
   const code = json?.status?.code ?? `HTTP_${res.status}`;
   const description = json?.status?.description ?? 'Yappy reversal failed';
-  // YP-0000 = SUCCESS. Anything else (YP-0002 BAD_REQUEST, YP-9999, HTTP_*) is a
-  // failure the caller surfaces so the admin can fall back to a manual refund.
-  if (code !== 'YP-0000') {
+  // TEMP diagnostics (Vercel Logs → filter /api/admin): which step failed and how.
+  console.error(`[yappy] transaction PUT url=${url} httpStatus=${res.status} code=${code}`);
+  // YP-0000 = reversed. YP-0016 = already reversed: treat as idempotent success
+  // (the money is back regardless). Everything else (YP-0014 already settled /
+  // out of window, YP-0013, YP-0008 missing headers, YP-0002, YP-9999, HTTP_*)
+  // is a failure the caller surfaces so the admin can fall back to a manual refund.
+  if (code !== 'YP-0000' && code !== 'YP-0016') {
     throw new YappyError(code, `reverse ${transactionId}: ${description}`);
   }
   return { code, description };

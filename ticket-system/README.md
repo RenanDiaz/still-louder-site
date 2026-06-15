@@ -357,14 +357,17 @@ solo para pendientes): pasa a un estado nuevo `refunded`.
 
 1. **Reversa del dinero (solo Yappy, automática):** llama
    `reverseYappyPayment()` contra la **API de Yappy Comercial** (distinta del
-   Botón de Pago V2). Son **dos pasos**: (a) `POST /v1/session/login` con un
-   `code` derivado server-side — `HMAC-SHA256(apiKey + fecha YYYY-MM-DD)`
-   firmado con el secret key, en hora de Panamá — para obtener un **token de
-   sesión**; (b) `PUT /v1/transaction/{transactionId}` con
-   `Authorization: Bearer <token>` + `api-key` + `secret-key` (+ `client-ip` /
-   `channel`). `transactionId` es el `orders.yappy_transaction_id` guardado al
-   crear el pago. Solo `YP-0000` es éxito; cualquier otro código (p. ej.
-   `YP-0002`) se trata como fallo y **no se toca la base de datos**.
+   Botón de Pago V2; host `YAPPY_API_BASE`, que **ya incluye `/v1`**). Son **dos
+   pasos**: (a) `POST {base}/session/login` con un `code` derivado server-side
+   — `HMAC-SHA256(apiKey + fecha YYYY-MM-DD)` firmado con el **Seed Code** (no el
+   secret key), en hora de Panamá — y headers `api-key` + `secret-key`, para
+   obtener un **token de sesión**; (b) `PUT {base}/transaction/{transactionId}`
+   con `Authorization: Bearer <token>` + `api-key` + `secret-key` + `client-ip` +
+   `channel`. `transactionId` es el `orders.yappy_transaction_id` guardado al
+   crear el pago. `YP-0000` (reversada) y `YP-0016` (ya reversada) se tratan como
+   éxito; cualquier otro código (`YP-0014` ya liquidada/fuera de ventana,
+   `YP-0013`, `YP-0008` cabeceras faltantes, `YP-0002`, `YP-9999`) se trata como
+   fallo y **no se toca la base de datos**.
 2. **Registro atómico:** al confirmar la reversa (o de una vez para
    efectivo/CuantoApp/manual), la RPC `refund_order` marca la orden `refunded`,
    sella `refunded_at`/`refund_ref` y **anula (`void`) todas las entradas
@@ -381,17 +384,27 @@ manualmente** (`{ manual: true }`): se anulan las entradas igual y el dinero se
 devuelve por fuera (portal de Yappy). Para efectivo/CuantoApp el reembolso es
 siempre manual (no hay API).
 
-**Configuración** (`api/_lib/env.ts`, todas opcionales — sin ellas solo queda el
-modo manual): `YAPPY_API_KEY` y `YAPPY_API_SECRET_KEY` (credenciales del portal
-Yappy Comercial → Integraciones → Generar Credenciales; bastan para generar el
-`code` de login), `YAPPY_API_SEED` (el "código semilla" del portal, se envía
-como client id), `YAPPY_API_CHANNEL` (confirmar valor con Yappy) y
-`YAPPY_API_BASE` (opcional; por defecto el host del Botón según `YAPPY_BTN_ENV`).
+**Configuración** (`api/_lib/env.ts`; sin las credenciales solo queda el modo
+manual): las **tres** credenciales del portal Yappy Comercial → Integraciones →
+Generar Credenciales — `YAPPY_API_KEY` (header `api-key` **y** sujeto del hash),
+`YAPPY_API_SECRET_KEY` (solo header `secret-key`) y `YAPPY_API_SEED` (el "código
+semilla", que es la **clave del HMAC** del `code` de login — ni header ni body) —
+más `YAPPY_API_CHANNEL` (confirmar valor con Yappy) y, **crítico**,
+`YAPPY_API_BASE` (el host, que **ya incluye `/v1`**; probar primero la URL **UAT**
+y luego prod). `isYappyRefundConfigured()` exige las tres credenciales.
 Migración: `supabase/migrations/0006_refunds.sql` (estado `refunded` + columnas
 + RPC).
 
-> **A confirmar en UAT:** el manual genera el `code` concatenando el **API Key**
-> + fecha; si el login devuelve error, probar con el `seed` como sujeto del HMAC
-> (ver `sessionCode()` en `api/_lib/yappy.ts`). Igualmente confirmar si Yappy
-> exige los headers `client-ip` / `channel` (el catálogo de errores incluye
-> `YP-0008` "cabeceras obligatorias faltantes").
+El algoritmo del `code` está verificado contra el ejemplo del manual mediante un
+*self-test* en `yappy.ts` (HMAC con Seed Code sobre `apiKey+fecha`); si se rompe,
+el módulo loguea `login-code HMAC self-test FAILED`. Hay además logging temporal
+(`console.error [yappy] ...`) en ambos pasos para ver en los Logs de Vercel
+(proyecto ticket-system → Logs, filtrar `/api/admin`) en qué paso y con qué
+código rebota.
+
+> **A confirmar con soporte de Yappy / en UAT:** (1) si exigen **allowlist de la
+> IP de origen** — las funciones de Vercel salen con IPs dinámicas, lo que sería
+> el principal riesgo arquitectónico; (2) el **nombre exacto y el valor** del
+> header de IP (hoy `client-ip` con la IP del navegador del admin) y de `channel`
+> (`YP-0008` = cabeceras obligatorias faltantes); (3) la TZ esperada de la fecha
+> del `code` (hoy Panamá) cerca de medianoche.
