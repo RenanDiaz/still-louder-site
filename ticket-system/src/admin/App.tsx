@@ -7,6 +7,7 @@ import {
   fetchAdminOrders,
   fetchAdminTickets,
   markOrderPaid,
+  refundOrder,
   resendTicketEmail,
   revokeTicket,
   toggleStage2,
@@ -339,6 +340,14 @@ function ResumenTab({ password }: { password: string }) {
           <strong>{money(stats.feesCents)}</strong> son recargos por servicio que cubren las
           comisiones de pago. El neto ({money(stats.revenueCents)}) es lo que recibe la banda.
         </p>
+        {stats.refundedOrders > 0 && (
+          <p className="muted" style={{ marginTop: 4 }}>
+            Reembolsadas: <strong>{stats.refundedOrders}</strong> orden(es) ·{' '}
+            <strong>{stats.refundedTickets}</strong> entrada(s) anuladas ·{' '}
+            <strong>{money(stats.refundedGrossCents)}</strong> devueltos (no incluidos en los
+            ingresos de arriba).
+          </p>
+        )}
         <h3 style={{ marginBottom: 8 }}>Ingresos netos por método de pago</h3>
         <table style={{ maxWidth: 360 }}>
           <tbody>
@@ -515,6 +524,61 @@ function OrdenesTab({ password }: { password: string }) {
     }
   }
 
+  // Marks a paid order refunded and voids its tickets. For Yappy it first tries
+  // the API reversal (only works while the charge is still "en tránsito"); if
+  // that fails it offers to record the refund manually so the admin can settle
+  // the money through Yappy's portal. Non-Yappy orders go straight to manual.
+  async function markRefundedManually(order: AdminOrder): Promise<void> {
+    const ref = window.prompt('Referencia del reembolso (opcional):', '') ?? '';
+    const result = await refundOrder(password, order.id, { manual: true, refund_ref: ref || undefined });
+    notify(`✓ Orden de ${order.buyer_name} marcada como reembolsada. ${result.voidedCount} entrada(s) anuladas.`);
+    await load();
+  }
+
+  async function handleRefund(order: AdminOrder) {
+    const isYappy = order.payment_method === 'yappy';
+    const confirmMsg = isYappy
+      ? `¿Reembolsar la orden de ${order.buyer_name} (${money(order.total_cents)})?\n\nSe intentará la reversa automática por la API de Yappy (solo funciona mientras la transacción siga "en tránsito") y se ANULARÁN sus ${order.quantity} entrada(s).`
+      : `¿Marcar como reembolsada la orden de ${order.buyer_name} (${money(order.total_cents)}) y ANULAR sus ${order.quantity} entrada(s)?\n\nLa devolución del dinero se gestiona por fuera (este método no tiene reversa por API).`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setBusyId(order.id);
+    try {
+      if (!isYappy) {
+        await markRefundedManually(order);
+        return;
+      }
+      const result = await refundOrder(password, order.id, {});
+      notify(`✓ Reembolsada vía Yappy. ${result.voidedCount} entrada(s) anuladas.`);
+      await load();
+    } catch (err) {
+      const code = (err as Error & { code?: string }).code;
+      if (isYappy && (code === 'yappy_failed' || code === 'yappy_not_configured' || code === 'no_transaction_id')) {
+        const reason =
+          code === 'yappy_failed'
+            ? 'Yappy rechazó la reversa (probablemente la transacción ya se acreditó / está fuera de la ventana "en tránsito").'
+            : code === 'yappy_not_configured'
+              ? 'La API transaccional de Yappy no está configurada.'
+              : 'La orden no tiene un transactionId de Yappy para reversar.';
+        if (
+          window.confirm(
+            `${reason}\n\n¿Marcar la orden como reembolsada de todos modos? Tendrás que hacer la devolución del dinero manualmente por el portal de Yappy.`
+          )
+        ) {
+          try {
+            await markRefundedManually(order);
+          } catch {
+            notifyError('Error al marcar reembolsada.');
+          }
+        }
+      } else {
+        notifyError(code === 'order_not_paid' ? 'La orden no está pagada.' : 'Error al reembolsar.');
+      }
+    } finally {
+      setBusyId('');
+    }
+  }
+
   function exportCsv() {
     const rows: (string | number | null)[][] = [
       ['Comprador', 'Correo', 'Teléfono', 'Tipo', 'Cantidad', 'Neto', 'Cargo por servicio', 'Total cobrado', 'Pago', 'Referencia', 'Estado', 'Creada', 'Pagada'],
@@ -579,6 +643,7 @@ function OrdenesTab({ password }: { password: string }) {
             <option value="pending">Pendientes</option>
             <option value="paid">Pagadas</option>
             <option value="cancelled">Canceladas</option>
+            <option value="refunded">Reembolsadas</option>
           </select>
           <button className="secondary" onClick={load}>
             Refrescar
@@ -642,13 +707,22 @@ function OrdenesTab({ password }: { password: string }) {
                           </>
                         )}
                         {o.status === 'paid' && (
-                          <button
-                            className="secondary small"
-                            onClick={() => handleResend(o)}
-                            disabled={busyId === o.id}
-                          >
-                            {busyId === o.id ? '…' : 'Reenviar correo'}
-                          </button>
+                          <>
+                            <button
+                              className="secondary small"
+                              onClick={() => handleResend(o)}
+                              disabled={busyId === o.id}
+                            >
+                              {busyId === o.id ? '…' : 'Reenviar correo'}
+                            </button>
+                            <button
+                              className="secondary small"
+                              onClick={() => handleRefund(o)}
+                              disabled={busyId === o.id}
+                            >
+                              Reembolsar
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

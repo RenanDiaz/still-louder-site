@@ -1,6 +1,6 @@
 export type Tier = 'preventa' | 'general' | 'cortesia';
 export type PaymentMethod = 'yappy' | 'cuantoapp' | 'cash' | 'courtesy';
-export type OrderStatus = 'pending' | 'paid' | 'cancelled';
+export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'refunded';
 export type TicketStatus = 'valid' | 'used' | 'void';
 
 export interface Order {
@@ -23,6 +23,10 @@ export interface Order {
   paid_at: string | null;
   reservation_expires_at: string | null;
   emailed_at: string | null;
+  // Set when the order is refunded (status -> 'refunded'); refund_ref holds the
+  // reversed Yappy transactionId or the admin's manual reference.
+  refunded_at: string | null;
+  refund_ref: string | null;
   // Short ref (<= 15 alphanumeric chars) sent to Yappy as its orderId — the
   // UUID is too long for Yappy's 15-char limit. Unique; resolved in the IPN.
   order_ref: string | null;

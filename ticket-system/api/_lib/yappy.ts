@@ -41,6 +41,17 @@ export function isYappyConfigured(): boolean {
   return Boolean(process.env.YAPPY_BTN_MERCHANT_ID && process.env.YAPPY_BTN_SECRET_KEY);
 }
 
+/**
+ * True when the Yappy *transactional* API (used for reversals) has its
+ * credentials configured. This is the SEPARATE "Yappy Comercial / Commerce
+ * Integration" API, not Botón de Pago V2: it uses a session-login flow keyed by
+ * a static api-key + secret-key pair. When unconfigured, the admin can still
+ * record a refund manually.
+ */
+export function isYappyRefundConfigured(): boolean {
+  return Boolean(process.env.YAPPY_API_KEY && process.env.YAPPY_API_SECRET_KEY);
+}
+
 function mode(): 'prod' | 'test' {
   return env.yappyBtnEnv === 'prod' ? 'prod' : 'test';
 }
@@ -133,6 +144,120 @@ export async function createYappyPaymentOrder(opts: {
     throw new YappyError('E100', 'payment-wc returned an incomplete body');
   }
   return body as YappyPaymentSession;
+}
+
+// --- Yappy Comercial transactional API (reversals) ---------------------------
+// Distinct from Botón de Pago V2 above. Two steps: open a session (login) to get
+// a bearer token, then PUT the reversal. Base URL defaults to the Botón host for
+// the current env; override with YAPPY_API_BASE.
+
+function refundApiBase(): string {
+  return process.env.YAPPY_API_BASE || API_BASE[mode()];
+}
+
+/** Today's date as YYYY-MM-DD in Panama time (the session code is date-scoped). */
+function panamaDate(now: Date = new Date()): string {
+  // en-CA formats as YYYY-MM-DD; America/Panama is UTC-5 (no DST).
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Panama',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(now);
+}
+
+/**
+ * Session login `code` per the integration manual (§"Generación del código"):
+ * HMAC-SHA256 of (apiKey + today's date YYYY-MM-DD) keyed with the secret key,
+ * hex-encoded (64 chars). The manual's worked example concatenates the API Key;
+ * the portal's separate "seed" credential is sent alongside as the client id.
+ */
+function sessionCode(): string {
+  const subject = `${env.yappyApiKey}${panamaDate()}`;
+  return crypto.createHmac('sha256', env.yappyApiSecretKey).update(subject).digest('hex');
+}
+
+/**
+ * POST /v1/session/login — opens a Yappy Comercial session and returns the
+ * bearer token used to authorize the reversal. The request body is wrapped in
+ * { body: {...} } per the spec, and the token may come back either as a string
+ * or as { token } depending on the environment, so we accept both.
+ */
+async function openRefundSession(): Promise<string> {
+  const res = await fetch(`${refundApiBase()}/v1/session/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': env.yappyApiKey,
+      'secret-key': env.yappyApiSecretKey,
+      ...(env.yappyApiSeed ? { seed: env.yappyApiSeed } : {})
+    },
+    body: JSON.stringify({ body: { code: sessionCode(), seed: env.yappyApiSeed || undefined } })
+  });
+
+  type LoginResponse = { status?: { code?: string; description?: string }; body?: { token?: unknown } };
+  let json: LoginResponse | null = null;
+  try {
+    json = (await res.json()) as LoginResponse;
+  } catch {
+    // fall through to the code/description defaults below
+  }
+
+  const code = json?.status?.code ?? `HTTP_${res.status}`;
+  if (code !== 'YP-0000') {
+    throw new YappyError(code, `session/login: ${json?.status?.description ?? 'login failed'}`);
+  }
+  const tokenField = json?.body?.token;
+  const token =
+    typeof tokenField === 'string'
+      ? tokenField
+      : ((tokenField as { token?: string } | undefined)?.token ?? '');
+  if (!token) throw new YappyError('E100', 'session/login returned no token');
+  return token;
+}
+
+/**
+ * Reverse (refund) a same-day Yappy transaction. Logs in for a session token,
+ * then PUT /v1/transaction/{id}. Per the manual this only works while the charge
+ * is still "en tránsito" (not yet accredited); once settled, Yappy rejects it
+ * and the refund must be handled out-of-band. transactionId is what payment-wc
+ * returned (stored in orders.yappy_transaction_id).
+ *
+ * Returns the status pair on success (code YP-0000); throws YappyError with
+ * Yappy's code (e.g. YP-0002 BAD_REQUEST when out of window) otherwise.
+ */
+export async function reverseYappyPayment(
+  transactionId: string,
+  clientIp: string
+): Promise<{ code: string; description: string }> {
+  const token = await openRefundSession();
+
+  const res = await fetch(`${refundApiBase()}/v1/transaction/${encodeURIComponent(transactionId)}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'api-key': env.yappyApiKey,
+      'secret-key': env.yappyApiSecretKey,
+      'client-ip': clientIp,
+      channel: env.yappyApiChannel
+    }
+  });
+
+  let json: YappyApiResponse<unknown> | null = null;
+  try {
+    json = (await res.json()) as YappyApiResponse<unknown>;
+  } catch {
+    // non-JSON body — fall through to the code/description defaults below
+  }
+
+  const code = json?.status?.code ?? `HTTP_${res.status}`;
+  const description = json?.status?.description ?? 'Yappy reversal failed';
+  // YP-0000 = SUCCESS. Anything else (YP-0002 BAD_REQUEST, YP-9999, HTTP_*) is a
+  // failure the caller surfaces so the admin can fall back to a manual refund.
+  if (code !== 'YP-0000') {
+    throw new YappyError(code, `reverse ${transactionId}: ${description}`);
+  }
+  return { code, description };
 }
 
 /**

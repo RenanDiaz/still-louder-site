@@ -78,6 +78,28 @@ export const env = {
     return optional('YAPPY_BTN_ENV', 'test');
   },
 
+  // --- Yappy Comercial transactional API (reversals; server-only) ------------
+  // SEPARATE credentials from Botón de Pago V2 — the "Commerce Integration" API
+  // used to reverse a same-day charge. Auth is a session-login flow: the
+  // serverless layer derives the login code from api-key + secret-key (HMAC),
+  // gets a bearer token, then PUTs /v1/transaction/{id}. All optional in
+  // practice: when unset, the refund button falls back to a manual mark, so
+  // these getters are only read after isYappyRefundConfigured() confirms the
+  // api-key/secret-key exist. `seed` is the portal's seed credential (sent as
+  // the client id); `channel` defaults to a placeholder — confirm with Yappy.
+  get yappyApiKey() {
+    return required('YAPPY_API_KEY');
+  },
+  get yappyApiSecretKey() {
+    return required('YAPPY_API_SECRET_KEY');
+  },
+  get yappyApiSeed() {
+    return optional('YAPPY_API_SEED');
+  },
+  get yappyApiChannel() {
+    return optional('YAPPY_API_CHANNEL', 'API');
+  },
+
   // --- Google Wallet (server-only; signs the save-to-wallet JWT) -------------
   // All four are optional: the feature is opt-in (fase 3). When the issuer id,
   // service-account email or private key is missing, the "Add to Google Wallet"

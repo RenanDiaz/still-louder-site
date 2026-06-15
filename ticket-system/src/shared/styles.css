@@ -170,6 +170,11 @@ button.small {
   color: var(--red);
 }
 
+.badge--refunded {
+  background: rgba(161, 161, 170, 0.2);
+  color: var(--muted);
+}
+
 .badge--valid {
   background: rgba(22, 163, 74, 0.2);
   color: var(--green);

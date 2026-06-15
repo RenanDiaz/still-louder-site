@@ -94,7 +94,8 @@ ver nota abajo):
   por tipo.
 - **Órdenes:** búsqueda/filtros, marcar pagada (emite tickets + correo),
   **cancelar una pendiente puntual** (libera su cupo al instante), **reenviar el
-  correo con los QR** de una pagada (excluye entradas anuladas), generar
+  correo con los QR** de una pagada (excluye entradas anuladas), **reembolsar**
+  una pagada (reversa Yappy + anula sus entradas, ver abajo), generar
   **cortesías** (orden $0 que pasa por el mismo `issueOrder()` idempotente, con
   o sin correo) y exportar CSV.
 - **Entradas:** lista por comprador/tipo/estado con fecha y estación de uso;
@@ -344,3 +345,53 @@ si `paymentDate` va en segundos o milisegundos; cuál variante del CDN de prod
 resuelve (`bt-cdn.yappy.cloud` vs `bt-cdn.yappycloud.com` — override con
 `YAPPY_BTN_CDN_URL`); y si en prod `aliasYappy` es requerido o lo ingresa el
 cliente en el modal.
+
+## Reembolsos
+
+El botón **"Reembolsar"** (pestaña Órdenes, solo en órdenes `paid`) deshace el
+lado del dinero de una compra y anula sus entradas, en espejo de cómo "Anular"
+deshace una entrada individual. Una orden pagada **nunca** se "cancela" (eso es
+solo para pendientes): pasa a un estado nuevo `refunded`.
+
+**Flujo (`api/_lib/refund.ts` → `refundOrder()`):**
+
+1. **Reversa del dinero (solo Yappy, automática):** llama
+   `reverseYappyPayment()` contra la **API de Yappy Comercial** (distinta del
+   Botón de Pago V2). Son **dos pasos**: (a) `POST /v1/session/login` con un
+   `code` derivado server-side — `HMAC-SHA256(apiKey + fecha YYYY-MM-DD)`
+   firmado con el secret key, en hora de Panamá — para obtener un **token de
+   sesión**; (b) `PUT /v1/transaction/{transactionId}` con
+   `Authorization: Bearer <token>` + `api-key` + `secret-key` (+ `client-ip` /
+   `channel`). `transactionId` es el `orders.yappy_transaction_id` guardado al
+   crear el pago. Solo `YP-0000` es éxito; cualquier otro código (p. ej.
+   `YP-0002`) se trata como fallo y **no se toca la base de datos**.
+2. **Registro atómico:** al confirmar la reversa (o de una vez para
+   efectivo/CuantoApp/manual), la RPC `refund_order` marca la orden `refunded`,
+   sella `refunded_at`/`refund_ref` y **anula (`void`) todas las entradas
+   `valid`** en una sola transacción (las `used` se respetan: ya entraron).
+   Idempotente.
+3. **Reportes:** como las stats de ingresos solo cuentan `status='paid'`, una
+   orden `refunded` sale automáticamente de los ingresos; el Resumen muestra un
+   total reembolsado aparte.
+
+**Ventana "en tránsito":** la reversa por API de Yappy solo funciona el mismo
+día, mientras la transacción no se haya acreditado. Si Yappy la rechaza (o la
+API no está configurada), la UI ofrece **marcar la orden como reembolsada
+manualmente** (`{ manual: true }`): se anulan las entradas igual y el dinero se
+devuelve por fuera (portal de Yappy). Para efectivo/CuantoApp el reembolso es
+siempre manual (no hay API).
+
+**Configuración** (`api/_lib/env.ts`, todas opcionales — sin ellas solo queda el
+modo manual): `YAPPY_API_KEY` y `YAPPY_API_SECRET_KEY` (credenciales del portal
+Yappy Comercial → Integraciones → Generar Credenciales; bastan para generar el
+`code` de login), `YAPPY_API_SEED` (el "código semilla" del portal, se envía
+como client id), `YAPPY_API_CHANNEL` (confirmar valor con Yappy) y
+`YAPPY_API_BASE` (opcional; por defecto el host del Botón según `YAPPY_BTN_ENV`).
+Migración: `supabase/migrations/0006_refunds.sql` (estado `refunded` + columnas
++ RPC).
+
+> **A confirmar en UAT:** el manual genera el `code` concatenando el **API Key**
+> + fecha; si el login devuelve error, probar con el `seed` como sujeto del HMAC
+> (ver `sessionCode()` en `api/_lib/yappy.ts`). Igualmente confirmar si Yappy
+> exige los headers `client-ip` / `channel` (el catálogo de errores incluye
+> `YP-0008` "cabeceras obligatorias faltantes").

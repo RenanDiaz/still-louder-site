@@ -3,6 +3,7 @@ import { getSupabase } from './_lib/supabase.js';
 import { isAdmin, isCron, isSupport } from './_lib/auth.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
 import { issueOrder, resendOrderEmail, IssueError } from './_lib/issue.js';
+import { refundOrder, RefundError } from './_lib/refund.js';
 import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
 import { ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
 import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
@@ -19,6 +20,7 @@ import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 //   POST /api/admin/orders/cleanup             cancel expired pendings (also GET, cron)
 //   POST /api/admin/orders/:id/mark-paid       mark paid -> issue tickets + email
 //   POST /api/admin/orders/:id/cancel          cancel a specific pending order
+//   POST /api/admin/orders/:id/refund          paid -> refunded (Yappy reversal + void tickets)
 //   POST /api/admin/orders/:id/resend-email    re-send the QR email for a paid order
 //   POST /api/admin/presale/stage2             toggle the second presale stage
 //   GET  /api/admin/tickets?q=&status=&tier=   ticket list + usage stats
@@ -84,6 +86,7 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     const [, id, action] = segments;
     if (action === 'mark-paid') return markOrderPaid(req, res, id);
     if (action === 'cancel') return cancelOrder(res, id);
+    if (action === 'refund') return refund(req, res, id);
   }
   if (route === 'presale/stage2') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
@@ -173,6 +176,15 @@ async function listOrders(
     .eq('status', 'paid');
   if (paidErr) throw new Error(`stats query failed: ${paidErr.message}`);
 
+  // Refunded orders are excluded from every revenue figure above (those only
+  // count status='paid'); report them separately for reconciliation.
+  const { data: refundedOrders, error: refundedErr } = await supabase
+    .from('orders')
+    .select('quantity, total_cents')
+    .eq('status', 'refunded');
+  if (refundedErr) throw new Error(`refund stats query failed: ${refundedErr.message}`);
+  const refunded = (refundedOrders ?? []) as Pick<Order, 'quantity' | 'total_cents'>[];
+
   const paid = (paidOrders ?? []) as Pick<
     Order,
     'tier' | 'quantity' | 'total_cents' | 'net_cents' | 'fee_cents' | 'payment_method'
@@ -205,7 +217,11 @@ async function listOrders(
     revenueCents: paid.reduce((sum, o) => sum + o.net_cents, 0),
     feesCents: paid.reduce((sum, o) => sum + o.fee_cents, 0),
     grossCents: paid.reduce((sum, o) => sum + o.total_cents, 0),
-    revenueByMethod
+    revenueByMethod,
+    // Reembolsos (no cuentan en los ingresos de arriba).
+    refundedOrders: refunded.length,
+    refundedTickets: refunded.reduce((sum, o) => sum + o.quantity, 0),
+    refundedGrossCents: refunded.reduce((sum, o) => sum + o.total_cents, 0)
   };
 
   res.setHeader('Cache-Control', 'no-store');
@@ -259,6 +275,48 @@ async function cancelOrder(res: VercelResponse, id: string): Promise<void> {
   if (!order) return sendJson(res, 404, { error: 'order_not_found' });
   if (order.status === 'cancelled') return sendJson(res, 200, { orderId: id, status: 'cancelled' });
   return sendJson(res, 409, { error: 'order_paid' });
+}
+
+// Best-effort client IP for the Yappy reversal's `client-ip` header. Vercel
+// puts the real chain in x-forwarded-for (client first).
+function clientIpOf(req: VercelRequest): string {
+  const fwd = req.headers['x-forwarded-for'];
+  const raw = Array.isArray(fwd) ? fwd[0] : fwd;
+  const ip = raw?.split(',')[0].trim() || (req.headers['x-real-ip'] as string) || '';
+  return ip || '0.0.0.0';
+}
+
+// Refunds a paid order: reverses the Yappy charge (when applicable) and voids
+// its tickets. Body: { manual?: boolean, refund_ref?: string }. `manual` skips
+// the Yappy API call (cash/CuantoApp, or a Yappy charge already settled that the
+// admin reverses by hand). Paid orders are never "cancelled" — this is how the
+// money side is undone while keeping the audit trail.
+async function refund(req: VercelRequest, res: VercelResponse, id: string): Promise<void> {
+  const body = parseBody<{ manual?: boolean; refund_ref?: string }>(req);
+  const manual = body.manual === true;
+  const refundRef = (body.refund_ref ?? '').trim() || null;
+
+  try {
+    const result = await refundOrder(id, { manual, refundRef, clientIp: clientIpOf(req) });
+    return sendJson(res, 200, {
+      orderId: result.order.id,
+      status: result.order.status,
+      via: result.via,
+      voidedCount: result.voidedCount,
+      refundRef: result.refundRef
+    });
+  } catch (err) {
+    if (err instanceof RefundError) {
+      if (err.code === 'order_not_found') return sendJson(res, 404, { error: 'order_not_found' });
+      if (err.code === 'order_not_paid') return sendJson(res, 409, { error: 'order_not_paid' });
+      if (err.code === 'no_transaction_id') return sendJson(res, 409, { error: 'no_transaction_id' });
+      if (err.code === 'yappy_not_configured') return sendJson(res, 501, { error: 'yappy_not_configured' });
+      if (err.code === 'yappy_failed') {
+        return sendJson(res, 502, { error: 'yappy_failed', code: err.yappyCode });
+      }
+    }
+    throw err;
+  }
 }
 
 async function resendEmail(res: VercelResponse, id: string): Promise<void> {
