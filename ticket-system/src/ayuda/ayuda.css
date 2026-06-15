@@ -1,0 +1,140 @@
+/*
+  Estilos propios de /ayuda (FAQ + contacto). Se montan SOBRE el tema público de
+  /entradas (theme.css), del que heredan tokens y fuentes. Mismo principio: el
+  grunge vive en la identidad; el contenido informativo manda legibilidad.
+*/
+
+/* ===================== FAQ (acordeón nativo <details>) ===================== */
+.help-faq {
+  max-width: 520px;
+  margin: 26px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Cada pregunta es un sticker de papel sólido (sin filtro rasgado, para máxima
+   legibilidad), igual de duro que el formulario de compra. */
+.help-faq__item {
+  background: var(--paper);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 0 5px 0 var(--ink);
+  overflow: hidden;
+}
+
+.help-faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  font-family: var(--font-patch);
+  font-size: 17px;
+  letter-spacing: 0.3px;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+/* Oculta el triángulo nativo (Chrome/Safari) para usar nuestro indicador. */
+.help-faq__q::-webkit-details-marker {
+  display: none;
+}
+
+/* Indicador +/− a la derecha, en rosa de acento. */
+.help-faq__q::after {
+  content: '+';
+  font-family: var(--font-patch);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--pink);
+  flex: 0 0 auto;
+}
+.help-faq__item[open] .help-faq__q::after {
+  content: '–';
+}
+
+.help-faq__q:focus-visible {
+  outline: 3px solid var(--pink);
+  outline-offset: -3px;
+}
+
+.help-faq__a {
+  padding: 0 18px 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.help-faq__a p {
+  margin: 0 0 10px;
+}
+.help-faq__a p:last-child {
+  margin-bottom: 0;
+}
+.help-faq__a a {
+  color: #c01a5b;
+  font-weight: 600;
+}
+
+/* ===================== CONTACTO ===================== */
+.help-contact {
+  max-width: 520px;
+  margin: 28px auto 0;
+  background: var(--paper);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  padding: 22px 20px;
+  box-shadow:
+    0 8px 0 var(--ink),
+    0 18px 30px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.help-contact p {
+  margin: 0 0 10px;
+}
+.help-contact__title {
+  font-family: var(--font-patch);
+  font-size: 24px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.help-contact__channel {
+  margin: 14px 0;
+  font-size: 18px;
+}
+.help-contact__channel a {
+  color: #c01a5b;
+  text-decoration: none;
+}
+.help-contact__channel a b {
+  color: var(--pink);
+}
+.help-contact__note {
+  font-size: 13px;
+  color: #5a5468;
+  margin: 0;
+}
+
+/* El enlace de regreso reutiliza .tk-trust del tema, solo aseguramos contraste. */
+.tk-trust a {
+  color: var(--pink);
+  text-decoration: none;
+}
+
+/* ===================== ANIMACIÓN ===================== */
+/* theme.css ya define .tk-reveal y respeta prefers-reduced-motion. Aquí solo
+   evitamos que el acordeón herede animaciones inesperadas. */
+@media (prefers-reduced-motion: reduce) {
+  .help-faq__item {
+    transition: none;
+  }
+}

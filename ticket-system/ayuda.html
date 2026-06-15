@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ayuda y preguntas frecuentes · When We Were Young 3</title>
+    <meta
+      name="description"
+      content="Preguntas frecuentes sobre tus entradas para When We Were Young 3 de Still Louder: precios, pagos, cómo recibir tu QR y cómo contactarnos."
+    />
+    <meta name="theme-color" content="#3e2768" />
+    <link rel="canonical" href="https://entradas.stilllouder.space/ayuda" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Still Louder" />
+    <meta property="og:locale" content="es_PA" />
+    <meta property="og:url" content="https://entradas.stilllouder.space/ayuda" />
+    <meta property="og:title" content="Ayuda y preguntas frecuentes · When We Were Young 3" />
+    <meta
+      property="og:description"
+      content="Preguntas frecuentes sobre tus entradas para When We Were Young 3 de Still Louder: precios, pagos, cómo recibir tu QR y cómo contactarnos."
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <!-- Fuentes auto-hospedadas vía @font-face en theme.css (CSP: font-src 'self'). -->
+  </head>
+  <body>
+    <!--
+      Filtro SVG reutilizable para bordes "papel rasgado". Igual que en
+      entradas.html: vive aquí (no en React) para evitar IDs duplicados por el
+      doble render de StrictMode y para estar disponible antes de montar la app.
+      El tema (theme.css) lo referencia como url(#tk-rough) en capas decorativas
+      (p. ej. el parche del título); sin él, esas capas no se renderizarían.
+    -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <filter id="tk-rough">
+        <feTurbulence type="fractalNoise" baseFrequency="0.014 0.018" numOctaves="3" seed="7" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="8" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+    <div id="root"></div>
+    <script type="module" src="/src/ayuda/main.tsx"></script>
+  </body>
+</html>
