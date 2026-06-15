@@ -68,18 +68,23 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 
 ### Structure
 
-- **Four surfaces**, built as a Vite multi-page app (entries in
-  `vite.config.ts`): `/entradas` (public purchase flow), `/admin` (tabbed
+- **Surfaces**, built as a Vite multi-page app (entries in
+  `vite.config.ts`): `/entradas` (public purchase flow), `/ayuda` (public,
+  static customer help: FAQ + official contact channels — no backend, no user
+  data; the QR-resend self-service deliberately does NOT live here, the staff
+  resend it from `/support` when a customer writes in), `/admin` (tabbed
   panel: reports, orders — mark paid / cancel pending / resend QR email —,
   ticket tracking with revoke/unrevoke, courtesy issuance, live check-in,
   stage-2 toggle, CSV export), `/validar` (gate QR scanner with
-  camera + sound), `/support` (read-only customer support: look up orders by
-  email/phone/name/order-id, view order + ticket status, resend QR email —
+  camera + sound), `/support` (staff read-only customer support: look up orders
+  by email/phone/name/order-id, view order + ticket status, resend QR email —
   no mutations, no sales stats; gated by `SUPPORT_PASSWORD` or the admin
   password via `isSupport()`). Root `index.html` redirects to `/entradas`;
   `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
-- **Frontend**: `src/entradas/`, `src/admin/`, `src/validar/`, `src/support/`,
-  plus `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
+  `/ayuda` reuses the public `/entradas` theme (`src/entradas/theme.css`), not
+  the dark shared `styles.css` used by the staff surfaces.
+- **Frontend**: `src/entradas/`, `src/ayuda/`, `src/admin/`, `src/validar/`,
+  `src/support/`, plus `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
 - **Backend**: `api/` serverless functions; shared server-only logic in
   `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
   QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in
@@ -386,6 +391,19 @@ platforms: {
 2. Add the HTML in `public/index.html` following the existing pattern with proper ARIA labels.
 
 3. Add brand color to `variables.css` if needed.
+
+### Contact form (no backend)
+
+The `#contacto` section posts to a **Google Form** with no backend of its own
+(same trick as the `al-vacio-pre-release` comments form). `initContactForm()` in
+`main.js` validates the fields, folds name + email + message into the Form's
+single text field (`CONFIG.contact.messageField`), and submits via
+`fetch(url, { mode: 'no-cors' })`. A hidden honeypot (`#contact-website`) drops
+bot submissions. **The Form URL is config-driven (`CONFIG.contact`), and
+`docs.google.com` must stay in the `connect-src` CSP directive in `vercel.json`
+or the submit fails silently.** To capture separate columns instead of one
+composed field, point `CONFIG.contact.formUrl`/`messageField` at a dedicated
+Form (and extend the handler with per-field `entry.*` IDs).
 
 ### Tracking Analytics Events
 

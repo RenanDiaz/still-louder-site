@@ -323,6 +323,12 @@ export default function App() {
             <b>{SOCIAL.instagramHandle}</b>
           </a>
           . No vendemos por intermediarios.
+          <br />
+          ¿Dudas?{' '}
+          <a href="/ayuda">
+            <b>Ayuda y preguntas frecuentes</b>
+          </a>
+          .
         </p>
       </div>
     </div>
@@ -463,6 +469,10 @@ function Confirmation({
           ¿Dudas? Escríbenos por nuestros canales oficiales:{' '}
           <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
             <b>{SOCIAL.instagramHandle}</b>
+          </a>{' '}
+          o revisa la{' '}
+          <a href="/ayuda">
+            <b>ayuda y preguntas frecuentes</b>
           </a>
           .
         </p>

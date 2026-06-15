@@ -109,6 +109,22 @@ export const CONFIG = {
     commentField: 'entry.1365306044'
   },
 
+  // Contact / Booking form — backend-less, submitted to a Google Form.
+  // The existing Google Form has a SINGLE text field, so we compose the
+  // visitor's name + email + message into that one field (messageField).
+  // To switch to a dedicated form with separate columns, create a new Google
+  // Form, then replace formUrl + messageField here (or add name/email fields).
+  // NOTE: docs.google.com must be allowed in `connect-src` (vercel.json CSP),
+  // since the submit is a `fetch(..., { mode: 'no-cors' })`.
+  contact: {
+    formUrl:
+      'https://docs.google.com/forms/d/e/1FAIpQLSe8YfvuBNMBNjpclU3-0d0O_N5429TlJ4QWPpLwv_o0uh8n0A/formResponse',
+    messageField: 'entry.1365306044',
+    // Optional booking email rendered as a mailto. Leave null to show only the
+    // form + Instagram DM as the human channel.
+    bookingEmail: null
+  },
+
   // Sponsors
   sponsors: [
     {
@@ -139,6 +155,7 @@ export const CONFIG = {
     webShareAPI: true,
     offlineSupport: false, // PWA not yet implemented
     comments: true,
+    contact: true,
     sponsors: true
   },
 
@@ -157,10 +174,14 @@ export const CONFIG = {
       network: 'No hay conexión a internet. Verifica tu conexión.',
       commentEmpty: 'Por favor, escribe un comentario antes de enviar.',
       commentFailed: 'Ocurrió un error al enviar. Intenta de nuevo.',
+      contactIncomplete: 'Completa tu nombre, correo y mensaje antes de enviar.',
+      contactInvalidEmail: 'Revisa tu correo: parece inválido.',
+      contactFailed: 'No se pudo enviar tu mensaje. Intenta de nuevo.',
       shareFailed: 'No se pudo compartir el contenido.'
     },
     success: {
       commentSent: '¡Gracias por tu comentario!',
+      contactSent: '¡Mensaje enviado! Te responderemos pronto.',
       shareSuccess: '¡Contenido compartido exitosamente!',
       copiedToClipboard: '¡Enlace copiado al portapapeles!'
     }
@@ -175,6 +196,7 @@ Object.freeze(CONFIG.analytics);
 Object.freeze(CONFIG.release);
 Object.freeze(CONFIG.site);
 Object.freeze(CONFIG.comments);
+Object.freeze(CONFIG.contact);
 Object.freeze(CONFIG.features);
 Object.freeze(CONFIG.ui);
 Object.freeze(CONFIG.messages);

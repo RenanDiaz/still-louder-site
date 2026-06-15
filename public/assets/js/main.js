@@ -3,6 +3,8 @@
  * Modern website with scroll spy, reveal animations, and audio player
  */
 
+import APP_CONFIG from './config.js';
+
 // ============================================
 // CONFIGURATION
 // ============================================
@@ -334,6 +336,75 @@ const initPlatformTracking = () => {
 };
 
 // ============================================
+// CONTACT FORM (Google Forms, backend-less)
+// ============================================
+
+const initContactForm = () => {
+  if (!APP_CONFIG.features?.contact) return;
+
+  const form = document.getElementById('contact-form');
+  if (!form) return;
+
+  const nameInput = document.getElementById('contact-name');
+  const emailInput = document.getElementById('contact-email');
+  const messageInput = document.getElementById('contact-message');
+  const honeypot = document.getElementById('contact-website');
+  const submitBtn = document.getElementById('contact-submit');
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const { formUrl, messageField } = APP_CONFIG.contact;
+  const { error: errMsg, success: okMsg } = APP_CONFIG.messages;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Bot trap: a real visitor never fills the hidden honeypot. Pretend success
+    // so the bot gets no signal, and bail without sending.
+    if (honeypot && honeypot.value.trim() !== '') {
+      form.reset();
+      return;
+    }
+
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const message = messageInput.value.trim();
+
+    if (name.length < 2 || !email || message.length < 2) {
+      showToast(errMsg.contactIncomplete, 'error');
+      return;
+    }
+    if (!EMAIL_RE.test(email)) {
+      showToast(errMsg.contactInvalidEmail, 'error');
+      return;
+    }
+
+    // The reused Google Form has a single text field, so we fold name, email
+    // and message into one composed value.
+    const composed = `Nombre: ${name}\nCorreo: ${email}\n\nMensaje:\n${message}`;
+    const formData = new FormData();
+    formData.append(messageField, composed);
+
+    submitBtn.disabled = true;
+    submitBtn.setAttribute('aria-busy', 'true');
+
+    try {
+      // no-cors: Google Forms returns no CORS headers, so the response is
+      // opaque (unreadable), but the submission still registers.
+      await fetch(formUrl, { method: 'POST', mode: 'no-cors', body: formData });
+      form.reset();
+      showToast(okMsg.contactSent, 'success');
+      trackEvent('contact_submit', { event_category: 'contact', event_label: 'success' });
+    } catch (err) {
+      showToast(errMsg.contactFailed, 'error');
+      trackEvent('contact_submit', { event_category: 'contact', event_label: 'error' });
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.removeAttribute('aria-busy');
+    }
+  });
+};
+
+// ============================================
 // PARALLAX EFFECT FOR HERO
 // ============================================
 
@@ -400,6 +471,7 @@ const init = () => {
   // Features
   initShare();
   initPlatformTracking();
+  initContactForm();
   initParallax();
   initPWAShortcuts();
 
