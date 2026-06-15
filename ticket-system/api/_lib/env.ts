@@ -78,6 +78,26 @@ export const env = {
     return optional('YAPPY_BTN_ENV', 'test');
   },
 
+  // --- Yappy transactional API (reversals; server-only) ----------------------
+  // SEPARATE credentials from Botón de Pago V2 — used to reverse a same-day
+  // charge via PUT /v1/transaction/{id}. All optional in practice: when unset,
+  // the refund button falls back to a manual mark (no API call), so these
+  // getters are only read after isYappyRefundConfigured() confirms they exist.
+  // `channel` defaults to a placeholder — confirm the real value with Yappy
+  // support (botondepagoyappy@bgeneral.com).
+  get yappyApiKey() {
+    return required('YAPPY_API_KEY');
+  },
+  get yappyApiSecretKey() {
+    return required('YAPPY_API_SECRET_KEY');
+  },
+  get yappyApiAuthorization() {
+    return required('YAPPY_API_AUTHORIZATION');
+  },
+  get yappyApiChannel() {
+    return optional('YAPPY_API_CHANNEL', 'API');
+  },
+
   // --- Google Wallet (server-only; signs the save-to-wallet JWT) -------------
   // All four are optional: the feature is opt-in (fase 3). When the issuer id,
   // service-account email or private key is missing, the "Add to Google Wallet"

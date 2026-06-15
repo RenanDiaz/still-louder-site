@@ -41,6 +41,19 @@ export function isYappyConfigured(): boolean {
   return Boolean(process.env.YAPPY_BTN_MERCHANT_ID && process.env.YAPPY_BTN_SECRET_KEY);
 }
 
+/**
+ * True when the Yappy *transactional* API (used for reversals) has its
+ * credentials configured. This is a SEPARATE API from Botón de Pago V2 — it
+ * authenticates with a static api-key / secret-key / authorization trio rather
+ * than the validate/merchant session token — so the env vars are distinct.
+ * When unconfigured, the admin can still record a refund manually.
+ */
+export function isYappyRefundConfigured(): boolean {
+  return Boolean(
+    process.env.YAPPY_API_KEY && process.env.YAPPY_API_SECRET_KEY && process.env.YAPPY_API_AUTHORIZATION
+  );
+}
+
 function mode(): 'prod' | 'test' {
   return env.yappyBtnEnv === 'prod' ? 'prod' : 'test';
 }
@@ -133,6 +146,50 @@ export async function createYappyPaymentOrder(opts: {
     throw new YappyError('E100', 'payment-wc returned an incomplete body');
   }
   return body as YappyPaymentSession;
+}
+
+/**
+ * Reverse (refund) a same-day Yappy transaction — PUT /v1/transaction/{id} on
+ * the transactional API. Per the spec this only works while the charge is still
+ * "en tránsito" (not yet settled): once accredited, Yappy rejects it and the
+ * refund must be handled out-of-band. transactionId is what payment-wc returned
+ * (stored in orders.yappy_transaction_id). Auth is the static api-key /
+ * secret-key / authorization headers, NOT the Botón session token.
+ *
+ * Returns the status pair on success (code YP-0000); throws YappyError with
+ * Yappy's code (e.g. YP-0002 BAD_REQUEST when out of window) otherwise.
+ */
+export async function reverseYappyPayment(
+  transactionId: string,
+  clientIp: string
+): Promise<{ code: string; description: string }> {
+  const base = process.env.YAPPY_API_BASE || API_BASE[mode()];
+  const res = await fetch(`${base}/v1/transaction/${encodeURIComponent(transactionId)}`, {
+    method: 'PUT',
+    headers: {
+      authorization: env.yappyApiAuthorization,
+      'api-key': env.yappyApiKey,
+      'secret-key': env.yappyApiSecretKey,
+      'client-ip': clientIp,
+      channel: env.yappyApiChannel
+    }
+  });
+
+  let json: YappyApiResponse<unknown> | null = null;
+  try {
+    json = (await res.json()) as YappyApiResponse<unknown>;
+  } catch {
+    // non-JSON body — fall through to the code/description defaults below
+  }
+
+  const code = json?.status?.code ?? `HTTP_${res.status}`;
+  const description = json?.status?.description ?? 'Yappy reversal failed';
+  // YP-0000 = SUCCESS. Anything else (YP-0002 BAD_REQUEST, YP-9999, HTTP_*) is a
+  // failure the caller surfaces so the admin can fall back to a manual refund.
+  if (code !== 'YP-0000') {
+    throw new YappyError(code, `reverse ${transactionId}: ${description}`);
+  }
+  return { code, description };
 }
 
 /**

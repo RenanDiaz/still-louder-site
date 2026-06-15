@@ -103,7 +103,7 @@ export function createYappyPayment(orderId: string): Promise<YappyPaymentSession
 
 export interface OrderStatusResponse {
   orderId: string;
-  status: 'pending' | 'paid' | 'cancelled';
+  status: 'pending' | 'paid' | 'cancelled' | 'refunded';
   paidAt: string | null;
   reservationExpiresAt: string | null;
   emailed: boolean;
@@ -132,6 +132,8 @@ export interface AdminOrder {
   paid_at: string | null;
   reservation_expires_at: string | null;
   emailed_at: string | null;
+  refunded_at?: string | null;
+  refund_ref?: string | null;
 }
 
 export interface AdminStats {
@@ -153,6 +155,10 @@ export interface AdminStats {
   feesCents: number;
   grossCents: number;
   revenueByMethod: Record<string, number>;
+  // Reembolsos (excluidos de las cifras de ingresos de arriba).
+  refundedOrders: number;
+  refundedTickets: number;
+  refundedGrossCents: number;
 }
 
 export interface AdminOrdersResponse {
@@ -219,6 +225,29 @@ export function cancelOrder(
   return request(`/api/admin/orders/${orderId}/cancel`, {
     method: 'POST',
     headers: authHeader(password)
+  });
+}
+
+export interface RefundResult {
+  orderId: string;
+  status: string;
+  via: 'yappy' | 'manual';
+  voidedCount: number;
+  refundRef: string | null;
+}
+
+// Refunds a paid order. By default a Yappy order is reversed via Yappy's API;
+// pass { manual: true } to skip the API call and just record the refund (cash /
+// CuantoApp, or a Yappy charge already settled that is refunded by hand).
+export function refundOrder(
+  password: string,
+  orderId: string,
+  opts: { manual?: boolean; refund_ref?: string } = {}
+): Promise<RefundResult> {
+  return request<RefundResult>(`/api/admin/orders/${orderId}/refund`, {
+    method: 'POST',
+    headers: authHeader(password),
+    body: JSON.stringify(opts)
   });
 }
 
