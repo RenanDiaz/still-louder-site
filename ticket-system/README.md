@@ -17,6 +17,7 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 | `/entradas` | Público      | Compra: formulario → crea orden → instrucciones de pago.        |
 | `/admin`    | Admin        | Reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV. |
 | `/validar`  | Staff/puerta | Escáner de QR con resultado verde/rojo + sonido.                |
+| `/support`  | Soporte      | **Solo lectura**: buscar órdenes por email/teléfono/nombre/# de orden, ver su estado y sus entradas, y reenviar el correo con el QR. Sin acceso a mutaciones (pagar, cancelar, anular, cortesías, Etapa 2) ni a las estadísticas de ventas. |
 
 ## Arquitectura
 
@@ -126,6 +127,8 @@ EMAIL_REPLY_TO                # opcional: buzón real (p. ej. Gmail) que recibe 
 ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compra (lista separada por comas)
 TICKET_HMAC_SECRET            # openssl rand -hex 32
 ADMIN_PASSWORD, STAFF_PASSWORD
+SUPPORT_PASSWORD              # opcional: rol de soporte (/support, solo lectura + reenviar correo).
+                              # Vacío = solo el admin puede entrar a /support
 CRON_SECRET                   # para el cron de limpieza (openssl rand -hex 16)
 CUANTOAPP_PAYMENT_URL         # fallback genérico (link de pago con tarjeta)
 CUANTOAPP_PAYMENT_URL_1..10   # un link por cantidad: producto oculto en el catálogo

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
-import { isAdmin, isCron } from './_lib/auth.js';
+import { isAdmin, isCron, isSupport } from './_lib/auth.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
 import { issueOrder, resendOrderEmail, IssueError } from './_lib/issue.js';
 import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
@@ -25,15 +25,21 @@ import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 //   POST /api/admin/tickets/:id/revoke         valid -> void (gate will reject it)
 //   POST /api/admin/tickets/:id/unrevoke       void -> valid
 //   POST /api/admin/courtesy                   create + issue a courtesy order ($0)
+//   GET  /api/admin/orders/:id              one order + its tickets (support)
 //   POST /api/admin/wallet/google/ensure-class create the Google Wallet event class (idempotent)
 //
-// Everything is admin-gated except orders/cleanup, which also accepts the cron
-// secret (the daily Vercel Cron hits it with GET).
+// Everything is admin-gated except:
+//   - orders/cleanup, which also accepts the cron secret (daily Vercel Cron, GET);
+//   - the read-only customer-support routes (GET orders search, GET orders/:id,
+//     POST orders/:id/resend-email), which also accept SUPPORT_PASSWORD via
+//     isSupport(). Support never reaches the mutating routes (mark-paid, cancel,
+//     revoke, courtesy, stage2) nor the sales/revenue stats.
 
 const ORDER_STATUSES = ['pending', 'paid', 'cancelled'];
 const TICKET_STATUSES = ['valid', 'used', 'void'];
 const TICKET_TIERS = ['preventa', 'general', 'cortesia'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
   // The rewrite delivers the sub-path slash-joined in `path`
@@ -43,23 +49,41 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   const segments = joined.split('/').filter(Boolean);
   const route = segments.join('/');
 
-  // cleanup is the only route the cron may call; everything else is admin-only.
+  const admin = isAdmin(req);
+
+  // cleanup is the only route the cron may call; everything else is gated below.
   if (route === 'orders/cleanup') {
-    if (!isAdmin(req) && !isCron(req)) return sendJson(res, 401, { error: 'unauthorized' });
+    if (!admin && !isCron(req)) return sendJson(res, 401, { error: 'unauthorized' });
     return cleanupOrders(req, res);
   }
-  if (!isAdmin(req)) return sendJson(res, 401, { error: 'unauthorized' });
 
-  if (route === 'orders') {
-    if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
-    return listOrders(req, res);
+  // --- Customer-support routes (read-only lookup + resend email) -------------
+  // Reachable by SUPPORT_PASSWORD or ADMIN_PASSWORD (isSupport covers both).
+  // Listed BEFORE the admin gate so support can reach them; passing `admin`
+  // into listOrders is what unlocks the full table + sales stats for admins.
+  if (route === 'orders' && req.method === 'GET') {
+    if (!isSupport(req)) return sendJson(res, 401, { error: 'unauthorized' });
+    return listOrders(req, res, admin);
   }
+  if (segments[0] === 'orders' && segments.length === 2 && req.method === 'GET') {
+    // GET orders/:id — one order + its tickets (orders/cleanup handled above).
+    if (!isSupport(req)) return sendJson(res, 401, { error: 'unauthorized' });
+    return getOrderDetail(res, segments[1]);
+  }
+  if (segments[0] === 'orders' && segments.length === 3 && segments[2] === 'resend-email') {
+    if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
+    if (!isSupport(req)) return sendJson(res, 401, { error: 'unauthorized' });
+    return resendEmail(res, segments[1]);
+  }
+
+  // --- Everything below is admin-only ----------------------------------------
+  if (!admin) return sendJson(res, 401, { error: 'unauthorized' });
+
   if (segments[0] === 'orders' && segments.length === 3) {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
     const [, id, action] = segments;
     if (action === 'mark-paid') return markOrderPaid(req, res, id);
     if (action === 'cancel') return cancelOrder(res, id);
-    if (action === 'resend-email') return resendEmail(res, id);
   }
   if (route === 'presale/stage2') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
@@ -89,10 +113,23 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
 
 // --- Orders --------------------------------------------------------------------
 
-async function listOrders(req: VercelRequest, res: VercelResponse): Promise<void> {
+// includeStats distinguishes the two callers: admin (true) gets the full recent
+// list plus sales/revenue stats; the support role (false) gets only the matching
+// orders and MUST provide a search term — an empty query returns nothing so the
+// whole table is never dumped (this also doubles as the support login check).
+async function listOrders(
+  req: VercelRequest,
+  res: VercelResponse,
+  includeStats: boolean
+): Promise<void> {
   const supabase = getSupabase();
   const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const status = typeof req.query.status === 'string' ? req.query.status : '';
+
+  if (!includeStats && !q) {
+    res.setHeader('Cache-Control', 'no-store');
+    return sendJson(res, 200, { orders: [] });
+  }
 
   let query = supabase
     .from('orders')
@@ -104,12 +141,25 @@ async function listOrders(req: VercelRequest, res: VercelResponse): Promise<void
     query = query.eq('status', status);
   }
   if (q) {
-    const safe = q.replace(/[%,]/g, '');
-    query = query.or(`buyer_name.ilike.%${safe}%,buyer_email.ilike.%${safe}%`);
+    // A full order id pasted into the search box does an exact lookup; anything
+    // else is a case-insensitive substring match on name / email / phone.
+    if (UUID_RE.test(q)) {
+      query = query.eq('id', q);
+    } else {
+      const safe = q.replace(/[%,]/g, '');
+      query = query.or(
+        `buyer_name.ilike.%${safe}%,buyer_email.ilike.%${safe}%,buyer_phone.ilike.%${safe}%`
+      );
+    }
   }
 
   const { data: orders, error } = await query;
   if (error) throw new Error(`orders query failed: ${error.message}`);
+
+  if (!includeStats) {
+    res.setHeader('Cache-Control', 'no-store');
+    return sendJson(res, 200, { orders: orders ?? [] });
+  }
 
   // --- Stats ---
   const { data: presale, error: presaleErr } = await supabase
@@ -225,6 +275,31 @@ async function resendEmail(res: VercelResponse, id: string): Promise<void> {
   }
 }
 
+// One order plus its tickets, for the support detail view. Read-only: support
+// can see ticket statuses (valid / used / void) but cannot change them.
+async function getOrderDetail(res: VercelResponse, id: string): Promise<void> {
+  if (!UUID_RE.test(id)) return sendJson(res, 404, { error: 'order_not_found' });
+  const supabase = getSupabase();
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle<Order>();
+  if (error) throw new Error(`order lookup failed: ${error.message}`);
+  if (!order) return sendJson(res, 404, { error: 'order_not_found' });
+
+  const { data: tickets, error: ticketsErr } = await supabase
+    .from('tickets')
+    .select('id, order_id, tier, status, used_at, used_by, created_at')
+    .eq('order_id', id)
+    .order('created_at', { ascending: true });
+  if (ticketsErr) throw new Error(`order tickets lookup failed: ${ticketsErr.message}`);
+
+  res.setHeader('Cache-Control', 'no-store');
+  return sendJson(res, 200, { order, tickets: tickets ?? [] });
+}
+
 async function cleanupOrders(req: VercelRequest, res: VercelResponse): Promise<void> {
   // Cron uses GET; the admin button uses POST.
   if (req.method !== 'POST' && req.method !== 'GET') {
@@ -280,9 +355,10 @@ async function listTickets(req: VercelRequest, res: VercelResponse): Promise<voi
   }
   if (q) {
     const safe = q.replace(/[%,]/g, '');
-    query = query.or(`buyer_name.ilike.%${safe}%,buyer_email.ilike.%${safe}%`, {
-      foreignTable: 'orders'
-    });
+    query = query.or(
+      `buyer_name.ilike.%${safe}%,buyer_email.ilike.%${safe}%,buyer_phone.ilike.%${safe}%`,
+      { foreignTable: 'orders' }
+    );
   }
 
   const { data, error } = await query;

@@ -40,6 +40,17 @@ export function isStaff(req: VercelRequest): boolean {
   return safeEqual(provided, env.staffPassword) || safeEqual(provided, env.adminPassword);
 }
 
+// Customer-support role: read-only order/ticket lookup + resend QR email.
+// SUPPORT_PASSWORD is optional; when it's unset, env.supportPassword is '' and
+// only the admin password passes (a non-empty provided value can never equal '',
+// so support is simply disabled until the env var is configured).
+export function isSupport(req: VercelRequest): boolean {
+  const provided = readPassword(req);
+  if (provided.length === 0) return false;
+  // Admins can also use the support view.
+  return safeEqual(provided, env.supportPassword) || safeEqual(provided, env.adminPassword);
+}
+
 /** True when the request is an authenticated Vercel Cron invocation. */
 export function isCron(req: VercelRequest): boolean {
   const secret = env.cronSecret;

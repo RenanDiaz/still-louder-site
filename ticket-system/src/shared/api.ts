@@ -309,6 +309,47 @@ export function unrevokeTicket(
   });
 }
 
+// --- Support (read-only customer support) ------------------------------------
+// Reuses the admin endpoints, but the server gates these with isSupport() and
+// withholds the sales stats / full table from the support role. resendTicketEmail
+// (above) is also support-accessible. The password is SUPPORT_PASSWORD (or the
+// admin password). See api/admin.ts.
+
+// A ticket as returned by the support order-detail endpoint — no buyer fields,
+// since the parent order already carries them.
+export type SupportTicket = Pick<
+  AdminTicket,
+  'id' | 'order_id' | 'tier' | 'status' | 'used_at' | 'used_by' | 'created_at'
+>;
+
+export interface SupportOrderDetail {
+  order: AdminOrder;
+  tickets: SupportTicket[];
+}
+
+// Search orders by name, email, phone or full order id. An empty query returns
+// no rows (the support role never receives the whole table).
+export function fetchSupportOrders(
+  password: string,
+  q: string
+): Promise<{ orders: AdminOrder[] }> {
+  const qs = new URLSearchParams();
+  if (q) qs.set('q', q);
+  const suffix = qs.toString() ? `?${qs}` : '';
+  return request<{ orders: AdminOrder[] }>(`/api/admin/orders${suffix}`, {
+    headers: authHeader(password)
+  });
+}
+
+export function fetchSupportOrder(
+  password: string,
+  orderId: string
+): Promise<SupportOrderDetail> {
+  return request<SupportOrderDetail>(`/api/admin/orders/${orderId}`, {
+    headers: authHeader(password)
+  });
+}
+
 // --- Staff (gate) ------------------------------------------------------------
 
 export type ValidateOutcome = 'valid' | 'already_used' | 'void' | 'not_found' | 'forged';
