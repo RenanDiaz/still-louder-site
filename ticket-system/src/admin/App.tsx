@@ -6,6 +6,7 @@ import {
   ensureWalletClass,
   fetchAdminOrders,
   fetchAdminTickets,
+  fetchRefundReceipt,
   markOrderPaid,
   refundOrder,
   resendTicketEmail,
@@ -579,6 +580,36 @@ function OrdenesTab({ password }: { password: string }) {
     }
   }
 
+  // Opens the printable refund receipt for a refunded order in a new tab. Works
+  // for refunds from any date — the receipt is rendered from the stored order.
+  // The blank tab is opened synchronously (before the await) so popup blockers
+  // don't swallow it; the fetched HTML is then written into it.
+  async function handleReceipt(order: AdminOrder) {
+    const win = window.open('', '_blank');
+    setBusyId(order.id);
+    try {
+      const html = await fetchRefundReceipt(password, order.id);
+      if (win) {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        notify(`✓ Comprobante de reembolso de ${order.buyer_name} generado.`);
+      } else {
+        notifyError('Permite las ventanas emergentes para ver el comprobante.');
+      }
+    } catch (err) {
+      if (win) win.close();
+      const code = (err as Error & { code?: string }).code;
+      notifyError(
+        code === 'order_not_refunded'
+          ? 'Solo las órdenes reembolsadas tienen comprobante.'
+          : 'Error al generar el comprobante.'
+      );
+    } finally {
+      setBusyId('');
+    }
+  }
+
   function exportCsv() {
     const rows: (string | number | null)[][] = [
       ['Comprador', 'Correo', 'Teléfono', 'Tipo', 'Cantidad', 'Neto', 'Cargo por servicio', 'Total cobrado', 'Pago', 'Referencia', 'Estado', 'Creada', 'Pagada'],
@@ -723,6 +754,15 @@ function OrdenesTab({ password }: { password: string }) {
                               Reembolsar
                             </button>
                           </>
+                        )}
+                        {o.status === 'refunded' && (
+                          <button
+                            className="secondary small"
+                            onClick={() => handleReceipt(o)}
+                            disabled={busyId === o.id}
+                          >
+                            {busyId === o.id ? '…' : 'Comprobante'}
+                          </button>
                         )}
                       </div>
                     </td>
