@@ -7,7 +7,9 @@ export const EVENT = {
   band: 'Still Louder',
   venue: 'Hops',
   // ISO dates (local Panama time, UTC-5).
-  presaleStart: '2026-06-15T00:00:00-05:00',
+  // La preventa abre el 15 de junio al mediodía: el countdown apunta aquí y el
+  // formulario de compra permanece oculto hasta esta hora (cliente y servidor).
+  presaleStart: '2026-06-15T12:00:00-05:00',
   // Presale closes at the start of the event day; from then on only the
   // general/"día del evento" price applies. Mirrored server-side in
   // api/_lib/pricing.ts (PRESALE_END_ISO) — the server is authoritative.

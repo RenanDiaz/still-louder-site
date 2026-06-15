@@ -343,30 +343,32 @@ body::before {
   color: var(--paper);
 }
 
-/* ===================== AVISO FASE DE PRUEBAS ===================== */
-/* Sticker de advertencia ámbar: mismo lenguaje de parche duro que el form. */
-.tk-test-notice {
+/* ===================== AVISO PREVENTA NO ABIERTA ===================== */
+/* Sticker informativo ámbar: mismo lenguaje de parche duro que el form. Ocupa
+   el lugar del formulario mientras la preventa todavía no abre. */
+.tk-closed-notice {
   max-width: 460px;
-  margin: 18px auto 0;
+  margin: 28px auto 0;
   background: #ffe9a8;
   color: #4a3200;
   border: 3px solid var(--ink);
   border-radius: 4px;
-  padding: 12px 16px;
+  padding: 16px 20px;
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.5;
   text-align: center;
   box-shadow: 0 5px 0 var(--ink);
 }
-.tk-test-notice strong {
+.tk-closed-notice strong {
   display: block;
   font-family: var(--font-patch);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 4px;
+  font-size: 18px;
 }
-.tk-test-notice p {
+.tk-closed-notice p {
   margin: 0;
 }
 

@@ -3,6 +3,7 @@ import { getSupabase } from './_lib/supabase.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
 import {
   MAX_QUANTITY_PER_ORDER,
+  areSalesOpenByDate,
   isPresaleOpenByDate,
   priceBreakdown,
   reservationMinutesFor
@@ -86,6 +87,11 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   }
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY_PER_ORDER) {
     return sendJson(res, 400, { error: 'invalid_quantity' });
+  }
+  // Sales haven't opened yet: the buy form is hidden client-side until the
+  // presale start time, but reject direct POSTs too — nothing is sold before then.
+  if (!areSalesOpenByDate()) {
+    return sendJson(res, 409, { error: 'sales_not_open' });
   }
   // Once the presale window has closed, preventa can no longer be sold — even
   // if cupo remains. The client falls back to general on this error.
