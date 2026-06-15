@@ -11,6 +11,7 @@ import {
 import {
   EVENT,
   PAYMENT_METHODS,
+  SOCIAL,
   TIERS,
   formatMoney,
   priceBreakdown,
@@ -317,8 +318,11 @@ export default function App() {
 
         {/* Confianza: canales oficiales */}
         <p className="tk-trust">
-          Compra directamente con la banda. Canales oficiales: <b>@stilllouder</b>. No vendemos por
-          intermediarios.
+          Compra directamente con la banda. Canales oficiales:{' '}
+          <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
+            <b>{SOCIAL.instagramHandle}</b>
+          </a>
+          . No vendemos por intermediarios.
         </p>
       </div>
     </div>
@@ -456,7 +460,11 @@ function Confirmation({
         </div>
 
         <p className="tk-trust">
-          ¿Dudas? Escríbenos por nuestros canales oficiales: <b>@stilllouder</b>.
+          ¿Dudas? Escríbenos por nuestros canales oficiales:{' '}
+          <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
+            <b>{SOCIAL.instagramHandle}</b>
+          </a>
+          .
         </p>
       </div>
     </div>

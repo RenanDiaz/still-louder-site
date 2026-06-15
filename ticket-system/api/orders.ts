@@ -50,7 +50,7 @@ function paymentInstructions(method: PaymentMethod, totalCents: number, quantity
       return {
         method,
         amount,
-        note: 'Coordina el pago en efectivo por nuestros canales oficiales (@stilllouder). Reservamos tu cupo por 48 horas.'
+        note: 'Coordina el pago en efectivo por nuestros canales oficiales (@still_louder). Reservamos tu cupo por 48 horas.'
       };
     case 'yappy':
       return {

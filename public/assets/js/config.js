@@ -42,8 +42,8 @@ export const CONFIG = {
   social: {
     instagram: {
       name: 'Instagram',
-      url: 'https://www.instagram.com/stilllouder/',
-      handle: '@stilllouder'
+      url: 'https://www.instagram.com/still_louder/',
+      handle: '@still_louder'
     },
     facebook: {
       name: 'Facebook',
