@@ -223,7 +223,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
           <td style="background:#3e2768;padding:20px 24px;text-align:center;">
             <div style="font-size:13px;color:#e7dcf7;line-height:1.6;">
               ${contactLine}
-              <strong style="color:#ff6cb6;">@stilllouder</strong>.
+              <a href="https://ig.me/m/still_louder" style="color:#ff6cb6;text-decoration:none;"><strong>@still_louder</strong></a>.
             </div>
             <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:#9b86c4;text-transform:uppercase;margin-top:10px;">
               Orden #${order.id}

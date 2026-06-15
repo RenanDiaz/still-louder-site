@@ -276,7 +276,7 @@ Apple Developer de pago).
   llega a nadie. `EMAIL_REPLY_TO` (opcional) pone un buzón real (p. ej. el
   Gmail de la banda) en el header Reply-To y habilita la frase "responde a
   este correo" en el footer; sin configurarla, el footer solo menciona los
-  canales oficiales (@stilllouder).
+  canales oficiales (@still_louder).
 
 ## Notas operativas
 

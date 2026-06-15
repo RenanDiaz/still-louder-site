@@ -17,6 +17,13 @@ export const EVENT = {
   eventDate: '2026-08-01T20:00:00-05:00'
 } as const;
 
+// Canales oficiales de la banda. El Instagram es el canal principal; el enlace
+// usa ig.me/m/ para abrir un mensaje directo (DM) en vez del perfil.
+export const SOCIAL = {
+  instagramHandle: '@still_louder',
+  instagramDm: 'https://ig.me/m/still_louder'
+} as const;
+
 export const TIERS = {
   preventa: { label: 'Preventa', priceLabel: '$6', priceCents: 600 },
   general: { label: 'General (día del evento)', priceLabel: '$8', priceCents: 800 }

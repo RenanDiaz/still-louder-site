@@ -543,4 +543,4 @@ perf: optimize cover image loading
 
 - **Developer**: Renan Diaz
 - **Band**: Still Louder
-- **Social**: @stilllouder on Instagram, Facebook, YouTube
+- **Social**: @still_louder on Instagram, @stilllouder on Facebook/YouTube
