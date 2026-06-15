@@ -5,6 +5,12 @@ export function sendJson(res: VercelResponse, status: number, body: unknown): vo
   res.send(JSON.stringify(body));
 }
 
+export function sendHtml(res: VercelResponse, status: number, html: string): void {
+  res.status(status).setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(html);
+}
+
 export function methodNotAllowed(res: VercelResponse, allowed: string[]): void {
   res.setHeader('Allow', allowed.join(', '));
   sendJson(res, 405, { error: 'method_not_allowed' });

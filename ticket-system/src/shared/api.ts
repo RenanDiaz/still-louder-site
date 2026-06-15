@@ -251,6 +251,30 @@ export function refundOrder(
   });
 }
 
+// Fetches the printable refund receipt (HTML) for a refunded order. Unlike the
+// JSON endpoints this returns raw HTML, so it bypasses the shared `request`
+// helper (which parses JSON) and reads the body as text. Errors still come back
+// as JSON, so we surface their `error` code the same way.
+export async function fetchRefundReceipt(password: string, orderId: string): Promise<string> {
+  const res = await fetch(`/api/admin/orders/${orderId}/refund-receipt`, {
+    headers: authHeader(password)
+  });
+  if (!res.ok) {
+    let code = `http_${res.status}`;
+    try {
+      const data = (await res.json()) as ApiError;
+      if (data.error) code = data.error;
+    } catch {
+      // non-JSON error body; keep the http_<status> code
+    }
+    const err = new Error(code) as Error & { status?: number; code?: string };
+    err.status = res.status;
+    err.code = code;
+    throw err;
+  }
+  return res.text();
+}
+
 export function resendTicketEmail(
   password: string,
   orderId: string

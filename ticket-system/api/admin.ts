@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { isAdmin, isCron, isSupport } from './_lib/auth.js';
-import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
+import { methodNotAllowed, parseBody, sendHtml, sendJson, withErrorHandling } from './_lib/http.js';
 import { issueOrder, resendOrderEmail, IssueError } from './_lib/issue.js';
 import { refundOrder, RefundError } from './_lib/refund.js';
+import { buildRefundReceiptHtml } from './_lib/receipt.js';
 import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
 import { ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
 import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
@@ -21,6 +22,7 @@ import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 //   POST /api/admin/orders/:id/mark-paid       mark paid -> issue tickets + email
 //   POST /api/admin/orders/:id/cancel          cancel a specific pending order
 //   POST /api/admin/orders/:id/refund          paid -> refunded (Yappy reversal + void tickets)
+//   GET  /api/admin/orders/:id/refund-receipt  printable refund receipt (HTML) for a refunded order
 //   POST /api/admin/orders/:id/resend-email    re-send the QR email for a paid order
 //   POST /api/admin/presale/stage2             toggle the second presale stage
 //   GET  /api/admin/tickets?q=&status=&tier=   ticket list + usage stats
@@ -81,6 +83,10 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   // --- Everything below is admin-only ----------------------------------------
   if (!admin) return sendJson(res, 401, { error: 'unauthorized' });
 
+  if (segments[0] === 'orders' && segments.length === 3 && segments[2] === 'refund-receipt') {
+    if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
+    return refundReceipt(res, segments[1]);
+  }
   if (segments[0] === 'orders' && segments.length === 3) {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
     const [, id, action] = segments;
@@ -317,6 +323,25 @@ async function refund(req: VercelRequest, res: VercelResponse, id: string): Prom
     }
     throw err;
   }
+}
+
+// Returns a printable HTML "comprobante de reembolso" for a refunded order.
+// Read-only and idempotent: it renders entirely from the stored order row, so a
+// receipt can be generated at any time, even days after the refund happened.
+async function refundReceipt(res: VercelResponse, id: string): Promise<void> {
+  if (!UUID_RE.test(id)) return sendJson(res, 404, { error: 'order_not_found' });
+  const supabase = getSupabase();
+
+  const { data: order, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle<Order>();
+  if (error) throw new Error(`refund receipt lookup failed: ${error.message}`);
+  if (!order) return sendJson(res, 404, { error: 'order_not_found' });
+  if (order.status !== 'refunded') return sendJson(res, 409, { error: 'order_not_refunded' });
+
+  return sendHtml(res, 200, buildRefundReceiptHtml(order));
 }
 
 async function resendEmail(res: VercelResponse, id: string): Promise<void> {
