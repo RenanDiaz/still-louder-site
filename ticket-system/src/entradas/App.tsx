@@ -199,7 +199,7 @@ export default function App() {
           <div className="tk-badge tk-patch tk-patch--dark tk-reveal" style={{ transform: 'rotate(4deg)' }}>
             <small>BOLETOS</small>
             <span className="amt">{TIERS.general.priceLabel}</span>
-            <small>EL DÍA</small>
+            <small>GENERAL</small>
           </div>
         </div>
 
@@ -308,6 +308,11 @@ export default function App() {
                   <strong className="tk-price-summary__total">{formatMoney(totalCents)}</strong>
                 </p>
               </div>
+
+              <p className="tk-hint">
+                Todas las compras son finales: <b>no hacemos reembolsos</b>. Una vez comprada, la
+                entrada es tuya — úsala, regálala, transfiérela o revéndela.
+              </p>
 
               <button type="submit" className="tk-cta" disabled={submitting}>
                 {submitting ? 'Procesando…' : `Comprar — ${formatMoney(totalCents)} ⚡`}

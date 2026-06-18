@@ -105,8 +105,10 @@ const FAQS: Faq[] = [
     q: '¿Hay reembolsos o cambios?',
     a: (
       <p>
-        No. Todas las compras son finales: no hacemos reembolsos ni cambios. Si tuviste algún
-        problema con tu orden, escríbenos por {IG} y vemos cómo ayudarte.
+        No. Todas las compras son finales: no hacemos reembolsos ni cambios. Una vez comprada, la
+        entrada es tuya y puedes hacer lo que quieras con ella: usarla, regalarla, transferirla o
+        revenderla. Si tuviste algún problema con tu orden, escríbenos por {IG} y vemos cómo
+        ayudarte.
       </p>
     )
   },
