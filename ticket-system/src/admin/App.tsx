@@ -203,6 +203,9 @@ function ResumenTab({ password }: { password: string }) {
   const [ticketStats, setTicketStats] = useState<AdminTicketsResponse['stats'] | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  // Cuántas entradas extra liberar al activar la Etapa 2. Precargado con el
+  // valor guardado mientras la etapa está inactiva (oculto cuando ya está activa).
+  const [stage2CapInput, setStage2CapInput] = useState('25');
 
   const load = useCallback(async () => {
     setError('');
@@ -222,10 +225,23 @@ function ResumenTab({ password }: { password: string }) {
     load();
   }, [load]);
 
+  // Mantener el input en sync con el cupo guardado mientras la Etapa 2 esté
+  // inactiva; no pisar lo que el usuario escriba una vez activa.
+  useEffect(() => {
+    if (stats && !stats.presale.stage2Active) {
+      setStage2CapInput(String(stats.presale.stage2Cap));
+    }
+  }, [stats]);
+
   async function handleStage2(active: boolean) {
-    if (!window.confirm(active ? '¿Activar Etapa 2 (75 cupos extra)?' : '¿Desactivar Etapa 2?')) return;
+    const cap = active ? Number(stage2CapInput) : undefined;
+    if (active && (!Number.isInteger(cap) || (cap as number) < 0)) {
+      setError('Ingresa una cantidad válida de entradas para la Etapa 2.');
+      return;
+    }
+    if (!window.confirm(active ? `¿Activar Etapa 2 (${cap} cupos extra)?` : '¿Desactivar Etapa 2?')) return;
     try {
-      await toggleStage2(password, active);
+      await toggleStage2(password, active, cap);
       await load();
     } catch {
       setError('Error al cambiar la Etapa 2.');
@@ -299,13 +315,27 @@ function ResumenTab({ password }: { password: string }) {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <span>
             Etapa 2: <strong>{stats.presale.stage2Active ? 'ACTIVA' : 'inactiva'}</strong>
+            {stats.presale.stage2Active ? ` (+${stats.presale.stage2Cap} cupos)` : ''}
           </span>
           {stats.presale.stage2Active ? (
             <button className="secondary" onClick={() => handleStage2(false)}>
               Desactivar Etapa 2
             </button>
           ) : (
-            <button onClick={() => handleStage2(true)}>Activar Etapa 2 (+75)</button>
+            <>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                Cupos extra:
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={stage2CapInput}
+                  onChange={(e) => setStage2CapInput(e.target.value)}
+                  style={{ width: 80 }}
+                />
+              </label>
+              <button onClick={() => handleStage2(true)}>Activar Etapa 2</button>
+            </>
           )}
           <button className="secondary" onClick={handleCleanup}>
             Limpiar pendientes vencidas

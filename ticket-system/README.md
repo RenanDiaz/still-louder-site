@@ -265,10 +265,13 @@ Apple Developer de pago).
   constante) y devuelve 401 sin él.
 - **Tope de preventa race-safe:** `create_order` toma `... for update` sobre la
   fila única de `event_config`, serializando los chequeos de cupo. No se vende de
-  más con Etapa 2 inactiva (75) ni activa (150), contando pagadas + pendientes
+  más con Etapa 2 inactiva (`presale_stage1_cap`) ni activa
+  (`presale_stage1_cap + presale_stage2_cap`), contando pagadas + pendientes
   vigentes + cortesías pagadas.
-- **Etapa 2 inmediata:** la capacidad se recalcula en vivo desde `event_config`;
-  el toggle abre 75 cupos al instante.
+- **Etapa 2 inmediata y configurable:** la capacidad se recalcula en vivo desde
+  `event_config`; al activarla el admin elige cuántas entradas extra liberar
+  (input en el panel → `presale_stage2_cap`, default 25) y el toggle las abre al
+  instante.
 - **Pending vencida libera cupo:** el conteo de cupo (`presale_status` y
   `create_order`) solo cuenta pendientes con `reservation_expires_at > now()`,
   así que una reserva vencida libera su cupo **al instante por timestamp**, sin

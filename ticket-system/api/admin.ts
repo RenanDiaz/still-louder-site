@@ -213,6 +213,7 @@ async function listOrders(
       courtesy: presale!.courtesy_count,
       available: presale!.available,
       stage2Active: presale!.stage2_active,
+      stage2Cap: presale!.stage2_cap,
       soldOut: presale!.sold_out
     },
     generalPaid: sumQty(paid.filter((o) => o.tier === 'general')),
@@ -396,20 +397,39 @@ async function cleanupOrders(req: VercelRequest, res: VercelResponse): Promise<v
 // --- Presale -------------------------------------------------------------------
 
 async function toggleStage2(req: VercelRequest, res: VercelResponse): Promise<void> {
-  const body = parseBody<{ active?: boolean }>(req);
+  const body = parseBody<{ active?: boolean; cap?: number }>(req);
   if (typeof body.active !== 'boolean') {
     return sendJson(res, 400, { error: 'invalid_active' });
   }
 
+  const update: {
+    presale_stage2_active: boolean;
+    presale_stage2_cap?: number;
+    updated_at: string;
+  } = { presale_stage2_active: body.active, updated_at: new Date().toISOString() };
+
+  // Al activar, el admin elige cuántas entradas extra libera la Etapa 2. Al
+  // desactivar, el cap es irrelevante (la capacidad ignora stage2_cap), así que
+  // no lo tocamos: conservamos el último valor como preset del input.
+  if (body.active && body.cap !== undefined) {
+    if (!Number.isInteger(body.cap) || body.cap < 0) {
+      return sendJson(res, 400, { error: 'invalid_cap' });
+    }
+    update.presale_stage2_cap = body.cap;
+  }
+
   const { data, error } = await getSupabase()
     .from('event_config')
-    .update({ presale_stage2_active: body.active, updated_at: new Date().toISOString() })
+    .update(update)
     .eq('id', 1)
-    .select('presale_stage2_active')
-    .single<{ presale_stage2_active: boolean }>();
+    .select('presale_stage2_active, presale_stage2_cap')
+    .single<{ presale_stage2_active: boolean; presale_stage2_cap: number }>();
   if (error) throw new Error(`stage2 toggle failed: ${error.message}`);
 
-  return sendJson(res, 200, { stage2Active: data!.presale_stage2_active });
+  return sendJson(res, 200, {
+    stage2Active: data!.presale_stage2_active,
+    stage2Cap: data!.presale_stage2_cap
+  });
 }
 
 // --- Tickets -------------------------------------------------------------------

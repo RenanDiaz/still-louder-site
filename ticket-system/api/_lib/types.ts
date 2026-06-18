@@ -52,6 +52,7 @@ export interface PresaleStatus {
   committed: number;
   available: number;
   stage2_active: boolean;
+  stage2_cap: number;
   sold_out: boolean;
 }
 

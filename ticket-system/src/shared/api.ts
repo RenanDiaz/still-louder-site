@@ -144,6 +144,7 @@ export interface AdminStats {
     courtesy: number;
     available: number;
     stage2Active: boolean;
+    stage2Cap: number;
     soldOut: boolean;
   };
   generalPaid: number;
@@ -193,12 +194,13 @@ export function markOrderPaid(
 
 export function toggleStage2(
   password: string,
-  active: boolean
-): Promise<{ stage2Active: boolean }> {
+  active: boolean,
+  cap?: number
+): Promise<{ stage2Active: boolean; stage2Cap: number }> {
   return request('/api/admin/presale/stage2', {
     method: 'POST',
     headers: authHeader(password),
-    body: JSON.stringify({ active })
+    body: JSON.stringify(cap === undefined ? { active } : { active, cap })
   });
 }
 
