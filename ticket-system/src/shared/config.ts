@@ -26,7 +26,7 @@ export const SOCIAL = {
 
 export const TIERS = {
   preventa: { label: 'Preventa', priceLabel: '$6', priceCents: 600 },
-  general: { label: 'General (día del evento)', priceLabel: '$8', priceCents: 800 }
+  general: { label: 'General', priceLabel: '$8', priceCents: 800 }
 } as const;
 
 export type TierKey = keyof typeof TIERS;

@@ -390,7 +390,7 @@ function PresaleIndicator({
   if (presale.soldOut) {
     return (
       <p className="tk-stock tk-stock--soldout">
-        preventa agotada — entrada general el día del evento ★
+        preventa agotada — entrada general ★
       </p>
     );
   }

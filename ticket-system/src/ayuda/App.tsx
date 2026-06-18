@@ -34,7 +34,7 @@ const FAQS: Faq[] = [
     q: '¿Cuánto cuestan las entradas?',
     a: (
       <p>
-        Preventa a <b>$6</b> mientras haya cupo, y <b>$8</b> el día del evento. Te aplicamos
+        Preventa a <b>$6</b> mientras haya cupo, y <b>$8</b> una vez agotada la preventa. Te aplicamos
         automáticamente el mejor precio disponible al momento de comprar. Según el método de pago
         puede sumarse un pequeño cargo por servicio, que siempre verás reflejado en el total antes
         de confirmar.
