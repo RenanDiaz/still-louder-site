@@ -187,10 +187,20 @@ export default function App() {
 
         {/* Precios + fecha como stickers de collage */}
         <div className="tk-prices">
-          <div className="tk-badge tk-patch tk-patch--dark tk-reveal" style={{ transform: 'rotate(-4deg)' }}>
+          <div
+            className={`tk-badge tk-patch tk-patch--dark tk-reveal${
+              presaleAvailable ? '' : ' tk-badge--soldout'
+            }`}
+            style={{ transform: 'rotate(-4deg)' }}
+          >
             <small>BOLETOS</small>
             <span className="amt">{TIERS.preventa.priceLabel}</span>
             <small>PREVENTA</small>
+            {!presaleAvailable && (
+              <span className="tk-badge__stamp" aria-label="Preventa agotada">
+                Sold out
+              </span>
+            )}
           </div>
           <div className="tk-date tk-patch tk-reveal" style={{ transform: 'rotate(1.5deg)' }}>
             <span className="day">1 AGO</span>
