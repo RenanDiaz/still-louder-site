@@ -272,6 +272,32 @@ body::before {
   display: block;
   margin: 2px 0;
 }
+
+/* Preventa agotada: atenuamos el contenido y le sobreponemos un sello
+   diagonal "Sold out", como un timbre de papel sobre el parche. */
+.tk-badge--soldout small,
+.tk-badge--soldout .amt {
+  opacity: 0.4;
+}
+.tk-badge__stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-11deg);
+  font-family: var(--font-patch);
+  font-size: 22px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--pink);
+  background: var(--paper);
+  border: 3px solid var(--pink);
+  border-radius: 6px;
+  padding: 4px 10px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 3;
+}
 .tk-date {
   font-family: var(--font-patch);
   text-align: center;
