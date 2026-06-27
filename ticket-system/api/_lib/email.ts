@@ -13,7 +13,8 @@ function getResend(): Resend {
 const TIER_LABEL: Record<string, string> = {
   preventa: 'Preventa',
   general: 'General',
-  cortesia: 'Cortesía'
+  cortesia: 'Cortesía',
+  regalo: 'Regalo'
 };
 
 const METHOD_LABEL: Record<string, string> = {
@@ -180,9 +181,11 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
           <td style="padding:26px 24px 8px;">
             <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">
               Hola <strong>${escapeHtml(order.buyer_name)}</strong>, ${
-                order.payment_method === 'courtesy'
-                  ? `te ${order.quantity === 1 ? 'regalamos esta entrada' : 'regalamos estas entradas'} de cortesía. ¡Nos vemos en el pit! 🤘`
-                  : 'gracias por tu compra. ¡Nos vemos en el pit! 🤘'
+                order.payment_method === 'gift'
+                  ? `¡${order.quantity === 1 ? 'te ganaste esta entrada de regalo' : 'te ganaste estas entradas de regalo'}! 🎁 ¡Nos vemos en el pit! 🤘`
+                  : order.payment_method === 'courtesy'
+                    ? `te ${order.quantity === 1 ? 'regalamos esta entrada' : 'regalamos estas entradas'} de cortesía. ¡Nos vemos en el pit! 🤘`
+                    : 'gracias por tu compra. ¡Nos vemos en el pit! 🤘'
               }
             </p>
 

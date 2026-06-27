@@ -7,7 +7,10 @@ import { refundOrder, RefundError } from './_lib/refund.js';
 import { buildRefundReceiptHtml } from './_lib/receipt.js';
 import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
 import { ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
-import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
+import { tokenToDataUrl } from './_lib/qr.js';
+import { env } from './_lib/env.js';
+import { randomBytes } from 'node:crypto';
+import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_lib/types.js';
 
 // Single function for EVERY /api/admin/* route. Vercel Hobby caps a deployment
 // at 12 serverless functions, so all admin endpoints share one function instead
@@ -29,6 +32,10 @@ import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 //   POST /api/admin/tickets/:id/revoke         valid -> void (gate will reject it)
 //   POST /api/admin/tickets/:id/unrevoke       void -> valid
 //   POST /api/admin/courtesy                   create + issue a courtesy order ($0)
+//   GET  /api/admin/gifts                       list gift campaigns + metrics
+//   POST /api/admin/gifts                       create a gift campaign (token + QR)
+//   GET  /api/admin/gifts/:id                   campaign detail + claims list + QR
+//   POST /api/admin/gifts/:id/close             close an active campaign early
 //   GET  /api/admin/orders/:id              one order + its tickets (support)
 //   POST /api/admin/wallet/google/ensure-class create the Google Wallet event class (idempotent)
 //
@@ -41,7 +48,7 @@ import type { Order, PresaleStatus, Ticket } from './_lib/types.js';
 
 const ORDER_STATUSES = ['pending', 'paid', 'cancelled'];
 const TICKET_STATUSES = ['valid', 'used', 'void'];
-const TICKET_TIERS = ['preventa', 'general', 'cortesia'];
+const TICKET_TIERS = ['preventa', 'general', 'cortesia', 'regalo'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -111,6 +118,19 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   if (route === 'courtesy') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
     return createCourtesy(req, res);
+  }
+  if (route === 'gifts') {
+    if (req.method === 'GET') return listGiftCampaigns(res);
+    if (req.method === 'POST') return createGiftCampaign(req, res);
+    return methodNotAllowed(res, ['GET', 'POST']);
+  }
+  if (segments[0] === 'gifts' && segments.length === 2) {
+    if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
+    return getGiftCampaignDetail(res, segments[1]);
+  }
+  if (segments[0] === 'gifts' && segments.length === 3 && segments[2] === 'close') {
+    if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
+    return closeGiftCampaign(res, segments[1]);
   }
   if (route === 'wallet/google/ensure-class') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
@@ -591,6 +611,108 @@ async function createCourtesy(req: VercelRequest, res: VercelResponse): Promise<
     ticketCount: result.ticketCount,
     emailed: result.emailed
   });
+}
+
+// --- Gift campaigns ------------------------------------------------------------
+
+// A gift campaign is a hidden URL (/regalo/<token>) reachable only by scanning a
+// QR generated here. The first N people to submit the public form get a 'regalo'
+// ticket. The token is a long random secret; unguessability is the security.
+const GIFT_TOKEN_BYTES = 32; // 256-bit; base64url ~43 chars
+
+function giftCampaignUrl(token: string): string {
+  return `${env.publicBaseUrl}/regalo/${token}`;
+}
+
+interface CreateGiftBody {
+  max_gifts?: number;
+}
+
+async function createGiftCampaign(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const body = parseBody<CreateGiftBody>(req);
+  const maxGifts = Number(body.max_gifts);
+  // No hard upper bound on N, but keep it sane.
+  if (!Number.isInteger(maxGifts) || maxGifts < 1 || maxGifts > 10000) {
+    return sendJson(res, 400, { error: 'invalid_max_gifts' });
+  }
+
+  const token = randomBytes(GIFT_TOKEN_BYTES).toString('base64url');
+  const supabase = getSupabase();
+  const { data: campaign, error } = await supabase
+    .from('gift_campaign')
+    .insert({ token, max_gifts: maxGifts })
+    .select('*')
+    .single<GiftCampaign>();
+  if (error) throw new Error(`gift campaign insert failed: ${error.message}`);
+
+  const url = giftCampaignUrl(campaign!.token);
+  const qrDataUrl = await tokenToDataUrl(url);
+  res.setHeader('Cache-Control', 'no-store');
+  return sendJson(res, 201, { campaign, url, qrDataUrl });
+}
+
+async function listGiftCampaigns(res: VercelResponse): Promise<void> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('gift_campaign')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) throw new Error(`gift campaigns query failed: ${error.message}`);
+
+  const campaigns = ((data ?? []) as GiftCampaign[]).map((c) => ({
+    ...c,
+    url: giftCampaignUrl(c.token)
+  }));
+  res.setHeader('Cache-Control', 'no-store');
+  return sendJson(res, 200, { campaigns });
+}
+
+async function getGiftCampaignDetail(res: VercelResponse, id: string): Promise<void> {
+  if (!UUID_RE.test(id)) return sendJson(res, 400, { error: 'invalid_id' });
+  const supabase = getSupabase();
+
+  const { data: campaign, error } = await supabase
+    .from('gift_campaign')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle<GiftCampaign>();
+  if (error) throw new Error(`gift campaign lookup failed: ${error.message}`);
+  if (!campaign) return sendJson(res, 404, { error: 'not_found' });
+
+  const { data: claims, error: claimsError } = await supabase
+    .from('gift_claim')
+    .select('id, name, email, phone, order_id, created_at')
+    .eq('campaign_id', id)
+    .order('created_at', { ascending: true });
+  if (claimsError) throw new Error(`gift claims query failed: ${claimsError.message}`);
+
+  const url = giftCampaignUrl(campaign.token);
+  const qrDataUrl = await tokenToDataUrl(url);
+  res.setHeader('Cache-Control', 'no-store');
+  return sendJson(res, 200, {
+    campaign,
+    url,
+    qrDataUrl,
+    claims: (claims ?? []) as Partial<GiftClaim>[]
+  });
+}
+
+// Manual early close. Only an active campaign can be closed; exhausted ones are
+// already terminal. Idempotent-ish: closing a non-active campaign just no-ops.
+async function closeGiftCampaign(res: VercelResponse, id: string): Promise<void> {
+  if (!UUID_RE.test(id)) return sendJson(res, 400, { error: 'invalid_id' });
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('gift_campaign')
+    .update({ status: 'closed' })
+    .eq('id', id)
+    .eq('status', 'active')
+    .select('*')
+    .maybeSingle<GiftCampaign>();
+  if (error) throw new Error(`gift campaign close failed: ${error.message}`);
+  if (!data) return sendJson(res, 409, { error: 'not_active' });
+  return sendJson(res, 200, { campaign: data });
 }
 
 // --- Google Wallet -------------------------------------------------------------

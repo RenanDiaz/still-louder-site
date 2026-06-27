@@ -6,7 +6,8 @@ import type { PaymentMethod, Tier } from './types.js';
 const TIER_PRICE_CENTS: Record<Tier, number> = {
   preventa: 600, // $6 presale
   general: 800, // $8 day-of / general
-  cortesia: 0 // admin-issued comps; never purchasable via /api/orders
+  cortesia: 0, // admin-issued comps; never purchasable via /api/orders
+  regalo: 0 // gift-campaign tickets; issued $0 via the hidden /regalo claim
 };
 
 export function priceFor(tier: Tier, quantity: number): number {
@@ -43,7 +44,8 @@ const PAYMENT_FEES: Record<PaymentMethod, FeeConfig> = {
   cuantoapp: { pct: 0.049, fixedCents: 35, minFeeCents: 0 },
   yappy: { pct: 0.0107, fixedCents: 0, minFeeCents: 2 },
   cash: { pct: 0, fixedCents: 0, minFeeCents: 0 },
-  courtesy: { pct: 0, fixedCents: 0, minFeeCents: 0 }
+  courtesy: { pct: 0, fixedCents: 0, minFeeCents: 0 },
+  gift: { pct: 0, fixedCents: 0, minFeeCents: 0 }
 };
 
 export interface PriceBreakdown {
@@ -105,7 +107,8 @@ const RESERVATION_MINUTES: Record<PaymentMethod, number> = {
   cash: 48 * 60,
   cuantoapp: 48 * 60,
   yappy: 15,
-  courtesy: 0 // courtesy orders are issued paid on the spot; never reserved
+  courtesy: 0, // courtesy orders are issued paid on the spot; never reserved
+  gift: 0 // gift orders are issued paid immediately on claim; never reserved
 };
 
 export function reservationMinutesFor(method: PaymentMethod): number {

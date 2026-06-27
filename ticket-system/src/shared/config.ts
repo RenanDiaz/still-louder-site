@@ -36,7 +36,8 @@ export type TierKey = keyof typeof TIERS;
 export const TIER_LABELS: Record<string, string> = {
   preventa: 'Preventa',
   general: 'General',
-  cortesia: 'Cortesía'
+  cortesia: 'Cortesía',
+  regalo: 'Regalo'
 };
 
 export const PAYMENT_METHODS = [

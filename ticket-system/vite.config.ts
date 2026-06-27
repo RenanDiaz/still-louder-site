@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 //   /admin     -> staff back office (mark paid, stats, stage 2)
 //   /validar   -> gate scanner (PWA-ish)
 //   /support   -> staff customer support (read-only lookup + resend QR email)
+//   /regalo    -> hidden gift-claim form, reached only via a campaign QR token
 // The root index.html just redirects to /entradas.
 export default defineConfig({
   plugins: [react()],
@@ -21,7 +22,8 @@ export default defineConfig({
         ayuda: resolve(__dirname, 'ayuda.html'),
         admin: resolve(__dirname, 'admin.html'),
         validar: resolve(__dirname, 'validar.html'),
-        support: resolve(__dirname, 'support.html')
+        support: resolve(__dirname, 'support.html'),
+        regalo: resolve(__dirname, 'regalo.html')
       }
     }
   },

@@ -10,7 +10,8 @@
   ],
   "rewrites": [
     { "source": "/api/admin/:path*", "destination": "/api/admin?path=:path*" },
-    { "source": "/when-we-were-young-3", "destination": "/entradas" }
+    { "source": "/when-we-were-young-3", "destination": "/entradas" },
+    { "source": "/regalo/:token", "destination": "/regalo" }
   ],
   "headers": [
     {
@@ -37,6 +38,12 @@
       "source": "/api/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/regalo(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     }
   ]

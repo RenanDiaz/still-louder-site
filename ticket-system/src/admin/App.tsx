@@ -2,11 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   cancelOrder,
   cleanupExpired,
+  closeGiftCampaign,
   createCourtesyOrder,
+  createGiftCampaign,
   ensureWalletClass,
   fetchAdminOrders,
   fetchAdminTickets,
   fetchRefundReceipt,
+  getGiftCampaign,
+  listGiftCampaigns,
   markOrderPaid,
   refundOrder,
   resendTicketEmail,
@@ -16,7 +20,10 @@ import {
   type AdminOrder,
   type AdminStats,
   type AdminTicket,
-  type AdminTicketsResponse
+  type AdminTicketsResponse,
+  type GiftCampaign,
+  type GiftCampaignCreated,
+  type GiftClaimRow
 } from '../shared/api';
 import { TIER_LABELS } from '../shared/config';
 
@@ -26,7 +33,8 @@ const METHOD_LABELS: Record<string, string> = {
   yappy: 'Yappy',
   cuantoapp: 'Tarjeta',
   cash: 'Efectivo',
-  courtesy: 'Cortesía'
+  courtesy: 'Cortesía',
+  gift: 'Regalo'
 };
 
 const TICKET_STATUS_LABELS: Record<string, string> = {
@@ -154,12 +162,13 @@ function Gate({
   );
 }
 
-type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'checkin';
+type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'resumen', label: 'Resumen' },
   { key: 'ordenes', label: 'Órdenes' },
   { key: 'entradas', label: 'Entradas' },
+  { key: 'regalos', label: 'Regalos' },
   { key: 'checkin', label: 'Check-in' }
 ];
 
@@ -191,6 +200,7 @@ function Dashboard({ password, onLogout }: { password: string; onLogout: () => v
       {tab === 'resumen' && <ResumenTab password={password} />}
       {tab === 'ordenes' && <OrdenesTab password={password} />}
       {tab === 'entradas' && <EntradasTab password={password} />}
+      {tab === 'regalos' && <RegalosTab password={password} />}
       {tab === 'checkin' && <CheckinTab password={password} />}
     </div>
   );
@@ -907,6 +917,271 @@ function CourtesyForm({
         {busy ? 'Generando…' : 'Generar cortesía'}
       </button>
     </form>
+  );
+}
+
+// --- Regalos (campañas de QR oculto) -------------------------------------------
+
+const GIFT_STATUS_LABELS: Record<string, string> = {
+  active: 'Activa',
+  exhausted: 'Agotada',
+  closed: 'Cerrada'
+};
+
+function RegalosTab({ password }: { password: string }) {
+  const [campaigns, setCampaigns] = useState<GiftCampaign[]>([]);
+  const [created, setCreated] = useState<GiftCampaignCreated | null>(null);
+  const [maxGifts, setMaxGifts] = useState(10);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [detail, setDetail] = useState<{
+    id: string;
+    url: string;
+    qrDataUrl: string;
+    claims: GiftClaimRow[];
+  } | null>(null);
+
+  const load = useCallback(async () => {
+    setError('');
+    try {
+      const r = await listGiftCampaigns(password);
+      setCampaigns(r.campaigns);
+    } catch {
+      setError('Error cargando las campañas.');
+    }
+  }, [password]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!Number.isInteger(maxGifts) || maxGifts < 1) {
+      setError('Ingresa una cantidad válida de entradas de regalo.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const res = await createGiftCampaign(password, maxGifts);
+      setCreated(res);
+      setMessage(`✓ Campaña creada con ${maxGifts} entrada(s) de regalo.`);
+      load();
+    } catch {
+      setError('Error al crear la campaña.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleClose(id: string) {
+    if (!window.confirm('¿Cerrar esta campaña? No se podrán reclamar más entradas de regalo.')) {
+      return;
+    }
+    try {
+      await closeGiftCampaign(password, id);
+      setMessage('✓ Campaña cerrada.');
+      load();
+      if (detail?.id === id) viewDetail(id);
+    } catch {
+      setError('No se pudo cerrar la campaña (¿ya no estaba activa?).');
+    }
+  }
+
+  async function viewDetail(id: string) {
+    setError('');
+    try {
+      const d = await getGiftCampaign(password, id);
+      setDetail({ id, url: d.url, qrDataUrl: d.qrDataUrl, claims: d.claims });
+    } catch {
+      setError('Error cargando el detalle de la campaña.');
+    }
+  }
+
+  function copyUrl(url: string) {
+    navigator.clipboard
+      ?.writeText(url)
+      .then(() => setMessage('✓ URL copiada al portapapeles.'))
+      .catch(() => setError('No se pudo copiar la URL.'));
+  }
+
+  return (
+    <>
+      {message && <div className="alert alert--success">{message}</div>}
+      {error && <div className="alert alert--error">{error}</div>}
+
+      <div className="card" style={{ marginBottom: 20 }}>
+        <h2 style={{ marginTop: 0 }}>Nueva campaña de regalo</h2>
+        <p style={{ marginTop: 0, color: '#9b96a8' }}>
+          Genera un QR secreto. Las primeras <b>N</b> personas que escaneen y completen el
+          formulario reciben una entrada de regalo. El enlace no se indexa ni se anuncia: solo
+          llega por el QR.
+        </p>
+        <form onSubmit={handleCreate} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div>
+            <label htmlFor="g-n">Cantidad de regalos (N)</label>
+            <input
+              id="g-n"
+              type="number"
+              min={1}
+              max={10000}
+              value={maxGifts}
+              onChange={(e) => setMaxGifts(Number(e.target.value))}
+              required
+              style={{ width: 160, marginBottom: 0 }}
+            />
+          </div>
+          <button type="submit" disabled={busy}>
+            {busy ? 'Creando…' : 'Crear campaña + QR'}
+          </button>
+        </form>
+
+        {created && (
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #2a2536' }}>
+            <GiftQr url={created.url} qrDataUrl={created.qrDataUrl} onCopy={copyUrl} />
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>Campañas</h2>
+        {campaigns.length === 0 ? (
+          <p style={{ color: '#9b96a8' }}>Aún no hay campañas de regalo.</p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Creada</th>
+                  <th>Reclamadas</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaigns.map((c) => (
+                  <tr key={c.id}>
+                    <td>{fmtDateTime(c.created_at)}</td>
+                    <td>
+                      {c.claimed_count} / {c.max_gifts}
+                    </td>
+                    <td>{GIFT_STATUS_LABELS[c.status] ?? c.status}</td>
+                    <td style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <button className="secondary" onClick={() => viewDetail(c.id)}>
+                        Ver QR / reclamos
+                      </button>
+                      {c.status === 'active' && (
+                        <button className="secondary" onClick={() => handleClose(c.id)}>
+                          Cerrar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {detail && (
+        <div className="card" style={{ marginTop: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <h2 style={{ margin: 0 }}>Detalle de la campaña</h2>
+            <button className="secondary" onClick={() => setDetail(null)}>
+              Cerrar detalle
+            </button>
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <GiftQr url={detail.url} qrDataUrl={detail.qrDataUrl} onCopy={copyUrl} />
+          </div>
+          <h3>Reclamos ({detail.claims.length})</h3>
+          {detail.claims.length === 0 ? (
+            <p style={{ color: '#9b96a8' }}>Todavía nadie ha reclamado.</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Teléfono</th>
+                    <th>Reclamado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detail.claims.map((claim, i) => (
+                    <tr key={claim.id}>
+                      <td>{i + 1}</td>
+                      <td>{claim.name}</td>
+                      <td>{claim.email}</td>
+                      <td>{claim.phone ?? '—'}</td>
+                      <td>{fmtDateTime(claim.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+// QR + URL block, reused by the create result and the campaign detail. The QR is
+// a server-rendered data URL, so download is a plain anchor with `download`.
+function GiftQr({
+  url,
+  qrDataUrl,
+  onCopy
+}: {
+  url: string;
+  qrDataUrl: string;
+  onCopy: (url: string) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+      <img
+        src={qrDataUrl}
+        alt="Código QR de la campaña"
+        width={180}
+        height={180}
+        style={{ background: '#fff', borderRadius: 8, padding: 8 }}
+      />
+      <div style={{ flex: 1, minWidth: 220 }}>
+        <p style={{ margin: '0 0 8px', wordBreak: 'break-all' }}>
+          <code>{url}</code>
+        </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" className="secondary" onClick={() => onCopy(url)}>
+            Copiar enlace
+          </button>
+          <a
+            href={qrDataUrl}
+            download="regalo-qr.png"
+            role="button"
+            style={{
+              fontSize: 16,
+              fontWeight: 600,
+              padding: '12px 20px',
+              borderRadius: 8,
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              color: '#fff',
+              textDecoration: 'none',
+              display: 'inline-block'
+            }}
+          >
+            Descargar QR
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
 

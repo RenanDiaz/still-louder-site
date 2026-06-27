@@ -1,5 +1,5 @@
-export type Tier = 'preventa' | 'general' | 'cortesia';
-export type PaymentMethod = 'yappy' | 'cuantoapp' | 'cash' | 'courtesy';
+export type Tier = 'preventa' | 'general' | 'cortesia' | 'regalo';
+export type PaymentMethod = 'yappy' | 'cuantoapp' | 'cash' | 'courtesy' | 'gift';
 export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'refunded';
 export type TicketStatus = 'valid' | 'used' | 'void';
 
@@ -57,3 +57,39 @@ export interface PresaleStatus {
 }
 
 export type ValidateResult = 'valid' | 'already_used' | 'void' | 'not_found';
+
+export type GiftCampaignStatus = 'active' | 'exhausted' | 'closed';
+
+export interface GiftCampaign {
+  id: string;
+  token: string;
+  max_gifts: number;
+  claimed_count: number;
+  status: GiftCampaignStatus;
+  created_at: string;
+}
+
+export interface GiftClaim {
+  id: string;
+  campaign_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  order_id: string | null;
+  claimer_ip: string | null;
+  created_at: string;
+}
+
+// Outcome of the claim_gift RPC. 'claimed' carries the $0 order to issue;
+// every other value maps to a friendly public message.
+export type ClaimGiftStatus =
+  | 'claimed'
+  | 'exhausted'
+  | 'closed'
+  | 'already_claimed'
+  | 'not_found';
+
+export interface ClaimGiftRow {
+  status: ClaimGiftStatus;
+  order_id: string | null;
+}

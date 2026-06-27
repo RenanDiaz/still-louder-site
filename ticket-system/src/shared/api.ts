@@ -113,6 +113,40 @@ export function getOrderStatus(orderId: string): Promise<OrderStatusResponse> {
   return request<OrderStatusResponse>(`/api/orders/${orderId}/status`);
 }
 
+// --- Gift campaigns (hidden /regalo/<token> page) ----------------------------
+// The token is the campaign secret carried in the URL path; PII only ever
+// travels in the POST body. An unknown token yields a 404 (code 'not_found').
+
+export interface GiftCampaignStatusResponse {
+  status: 'active' | 'exhausted' | 'closed';
+}
+
+export function fetchGiftCampaign(token: string): Promise<GiftCampaignStatusResponse> {
+  return request<GiftCampaignStatusResponse>(`/api/gifts?token=${encodeURIComponent(token)}`);
+}
+
+export interface ClaimGiftInput {
+  token: string;
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface ClaimGiftResponse {
+  status: 'claimed';
+  emailed: boolean;
+}
+
+// On success resolves with { status:'claimed' }. When the campaign ran out or
+// the email already claimed, the server returns 409 with a `status`/`error`
+// code that `request` surfaces as the thrown error's `.code`.
+export function claimGift(input: ClaimGiftInput): Promise<ClaimGiftResponse> {
+  return request<ClaimGiftResponse>('/api/gifts', {
+    method: 'POST',
+    body: JSON.stringify(input)
+  });
+}
+
 // --- Admin -------------------------------------------------------------------
 
 export interface AdminOrder {
@@ -303,6 +337,73 @@ export function createCourtesyOrder(
     method: 'POST',
     headers: authHeader(password),
     body: JSON.stringify(input)
+  });
+}
+
+// --- Admin: gift campaigns ---------------------------------------------------
+
+export interface GiftCampaign {
+  id: string;
+  token: string;
+  max_gifts: number;
+  claimed_count: number;
+  status: 'active' | 'exhausted' | 'closed';
+  created_at: string;
+  url?: string;
+}
+
+export interface GiftClaimRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  order_id: string | null;
+  created_at: string;
+}
+
+export interface GiftCampaignCreated {
+  campaign: GiftCampaign;
+  url: string;
+  qrDataUrl: string;
+}
+
+export function createGiftCampaign(
+  password: string,
+  maxGifts: number
+): Promise<GiftCampaignCreated> {
+  return request<GiftCampaignCreated>('/api/admin/gifts', {
+    method: 'POST',
+    headers: authHeader(password),
+    body: JSON.stringify({ max_gifts: maxGifts })
+  });
+}
+
+export function listGiftCampaigns(password: string): Promise<{ campaigns: GiftCampaign[] }> {
+  return request<{ campaigns: GiftCampaign[] }>('/api/admin/gifts', {
+    headers: authHeader(password)
+  });
+}
+
+export interface GiftCampaignDetail {
+  campaign: GiftCampaign;
+  url: string;
+  qrDataUrl: string;
+  claims: GiftClaimRow[];
+}
+
+export function getGiftCampaign(password: string, id: string): Promise<GiftCampaignDetail> {
+  return request<GiftCampaignDetail>(`/api/admin/gifts/${id}`, {
+    headers: authHeader(password)
+  });
+}
+
+export function closeGiftCampaign(
+  password: string,
+  id: string
+): Promise<{ campaign: GiftCampaign }> {
+  return request<{ campaign: GiftCampaign }>(`/api/admin/gifts/${id}/close`, {
+    method: 'POST',
+    headers: authHeader(password)
   });
 }
 

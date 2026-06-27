@@ -79,12 +79,16 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   camera + sound), `/support` (staff read-only customer support: look up orders
   by email/phone/name/order-id, view order + ticket status, resend QR email —
   no mutations, no sales stats; gated by `SUPPORT_PASSWORD` or the admin
-  password via `isSupport()`). Root `index.html` redirects to `/entradas`;
+  password via `isSupport()`), `/regalo/<token>` (public **hidden** gift-claim
+  form, reachable only via a campaign QR token; `noindex`, never linked; the
+  first N claimants get a `regalo` ticket — see `docs/features/gift-qr-campaigns.md`).
+  Root `index.html` redirects to `/entradas`;
   `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
-  `/ayuda` reuses the public `/entradas` theme (`src/entradas/theme.css`), not
-  the dark shared `styles.css` used by the staff surfaces.
+  `/ayuda` and `/regalo` reuse the public `/entradas` theme
+  (`src/entradas/theme.css`), not the dark shared `styles.css` used by the staff
+  surfaces.
 - **Frontend**: `src/entradas/`, `src/ayuda/`, `src/admin/`, `src/validar/`,
-  `src/support/`, plus `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
+  `src/support/`, `src/regalo/`, plus `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
 - **Backend**: `api/` serverless functions; shared server-only logic in
   `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
   QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in
@@ -97,7 +101,11 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 - **Database**: `supabase/migrations/` — schema with RLS enabled and no
   policies (only the service-role key can access) plus atomic RPCs
   (`create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,
-  `cleanup_expired_orders`, `mark_order_emailed`).
+  `cleanup_expired_orders`, `mark_order_emailed`, `claim_gift`). Gift campaigns
+  add the `gift_campaign`/`gift_claim` tables and a `regalo` tier / `gift`
+  payment method (0008); `claim_gift` reserves a slot race-safely (same `FOR
+  UPDATE` + conditional-`UPDATE` pattern as `create_order`) and `regalo`/`gift`
+  are deliberately excluded from presale-capacity counting.
 
 ### Architecture invariants (do not break)
 
