@@ -69,6 +69,11 @@ export default function App() {
 
   useEffect(() => {
     getPresaleStatus().then(setPresale).catch(() => setPresale(null));
+    // Refresca el cupo periódicamente: el contador "quedan N" y el cierre por
+    // agotado deben reflejar compras de otros compradores sin recargar la página.
+    const timer = setInterval(() => {
+      getPresaleStatus().then(setPresale).catch(() => {});
+    }, 60_000);
     getYappyConfig()
       .then((cfg) => {
         setYappyCfg(cfg);
@@ -76,6 +81,7 @@ export default function App() {
         if (cfg.enabled) setMethod('yappy');
       })
       .catch(() => setYappyCfg({ enabled: false, cdnUrl: null }));
+    return () => clearInterval(timer);
   }, []);
 
   // Persist pending Yappy confirmations across refreshes (see PENDING_ORDER_KEY).
@@ -92,6 +98,10 @@ export default function App() {
   }, [confirmation]);
 
   const presaleSoldOut = presale?.soldOut ?? false;
+  // Aforo total (225): al agotarse no se vende más en NINGUNA tarifa — el
+  // formulario se reemplaza por el aviso de agotado. null = status aún no cargó.
+  const eventSoldOut = presale?.eventSoldOut ?? false;
+  const totalAvailable = presale?.totalAvailable ?? null;
   // Preventa can only be bought while its date is open AND cupo remains.
   const presaleAvailable = !presaleEnded && !presaleSoldOut;
   // The tier is never the buyer's choice: while presale is available everyone
@@ -100,6 +110,14 @@ export default function App() {
   // El total que paga el comprador incluye el "Cargo por servicio" que absorbe
   // la comisión del método elegido. Estimación en cliente; el servidor manda.
   const { netCents, feeCents, totalCents } = priceBreakdown(tier, quantity, method);
+
+  // No ofrecer más boletos de los que quedan (el servidor rechaza igual, pero
+  // el selector no debe invitar a pedir 10 cuando quedan 3).
+  const maxQuantity =
+    totalAvailable !== null ? Math.max(1, Math.min(10, totalAvailable)) : 10;
+  useEffect(() => {
+    if (quantity > maxQuantity) setQuantity(maxQuantity);
+  }, [quantity, maxQuantity]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -117,7 +135,20 @@ export default function App() {
       setConfirmation(result);
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
-      if (code === 'presale_sold_out') {
+      if (code === 'sold_out') {
+        // Aforo total agotado: se acabó la venta. Reflejarlo localmente al
+        // instante (el formulario se reemplaza por el aviso de agotado) y dejar
+        // que el refetch confirme.
+        setPresale((p) => ({
+          available: 0,
+          capacity: p?.capacity ?? 0,
+          stage2Active: p?.stage2Active ?? false,
+          soldOut: true,
+          totalAvailable: 0,
+          eventSoldOut: true
+        }));
+        getPresaleStatus().then(setPresale).catch(() => {});
+      } else if (code === 'presale_sold_out') {
         setError('La preventa se agotó. Ahora aplica el precio general — revisa el total antes de continuar.');
         // Flip availability locally right away (works even if the status fetch
         // failed earlier); the refetch then refines the real count.
@@ -125,7 +156,9 @@ export default function App() {
           available: 0,
           capacity: p?.capacity ?? 0,
           stage2Active: p?.stage2Active ?? false,
-          soldOut: true
+          soldOut: true,
+          totalAvailable: p?.totalAvailable ?? 0,
+          eventSoldOut: p?.eventSoldOut ?? false
         }));
         getPresaleStatus().then(setPresale).catch(() => {});
       } else if (code === 'presale_ended') {
@@ -218,9 +251,12 @@ export default function App() {
           <Countdown />
         </div>
         {/* Antes de que abra la preventa el formulario se oculta: el comprador
-            solo ve el countdown y un aviso de que aún no puede comprar. */}
+            solo ve el countdown y un aviso de que aún no puede comprar. Con el
+            aforo total agotado tampoco hay formulario: solo el aviso de agotado. */}
         {!salesOpen ? (
           <PresaleNotOpenNotice />
+        ) : eventSoldOut ? (
+          <SoldOutNotice />
         ) : (
           <>
             <PresaleIndicator presale={presale} presaleEnded={presaleEnded} />
@@ -251,7 +287,7 @@ export default function App() {
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
               >
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>
@@ -385,6 +421,22 @@ function PresaleNotOpenNotice() {
   );
 }
 
+/**
+ * Con el aforo total agotado (225 boletos comprometidos) la venta cierra en
+ * TODAS las tarifas: este aviso reemplaza al formulario de compra completo.
+ */
+function SoldOutNotice() {
+  return (
+    <div className="tk-closed-notice tk-reveal" role="status">
+      <strong>⚡ Boletos agotados</strong>
+      <p>
+        Vendimos <b>todas</b> las entradas disponibles — ¡gracias por el apoyo! Si tienes una orden
+        pendiente de pago, tu cupo sigue reservado hasta que expire.
+      </p>
+    </div>
+  );
+}
+
 function PresaleIndicator({
   presale,
   presaleEnded
@@ -392,27 +444,52 @@ function PresaleIndicator({
   presale: PresaleStatusResponse | null;
   presaleEnded: boolean;
 }) {
+  // Contador de aforo total: cuántos boletos quedan a la venta sumando todas
+  // las tarifas. El caso "0 / agotado" no llega aquí: reemplaza el formulario
+  // entero con <SoldOutNotice />.
+  const total = presale?.totalAvailable ?? null;
+  const totalLine =
+    total !== null && total > 0 ? (
+      <p className="tk-stock">
+        ★ {total === 1 ? 'queda' : 'quedan'} <b>{total}</b>{' '}
+        {total === 1 ? 'boleto disponible' : 'boletos disponibles'} ★
+      </p>
+    ) : null;
+
   // Date-based end takes priority: once the window closes there's no presale to
   // count, regardless of the cupo the status endpoint reports.
   if (presaleEnded) {
     return (
-      <p className="tk-stock tk-stock--soldout">
-        preventa finalizada — entrada general al precio del día ★
-      </p>
+      <>
+        {totalLine}
+        <p className="tk-stock tk-stock--soldout">
+          preventa finalizada — entrada general al precio del día ★
+        </p>
+      </>
     );
   }
   if (!presale) return null;
   if (presale.soldOut) {
     return (
-      <p className="tk-stock tk-stock--soldout">
-        preventa agotada — entrada general ★
-      </p>
+      <>
+        {totalLine}
+        <p className="tk-stock tk-stock--soldout">
+          preventa agotada — entrada general ★
+        </p>
+      </>
     );
   }
+  // Preventa activa: el contador total manda. Si el cupo de preventa es menor
+  // que los boletos restantes, aclarar cuántos conservan su precio.
   return (
-    <p className="tk-stock">
-      ★ quedan <b>{presale.available}</b> entradas de preventa ★
-    </p>
+    <>
+      {totalLine}
+      {total !== null && presale.available < total && (
+        <p className="tk-stock">
+          los próximos <b>{presale.available}</b> al precio de preventa ★
+        </p>
+      )}
+    </>
   );
 }
 
