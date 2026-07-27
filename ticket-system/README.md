@@ -85,7 +85,7 @@ tier `cortesia` y el método de pago `courtesy` (entradas de regalo, $0) más un
 pero si lo exceden la preventa aparece agotada.
 
 La migración `0010` añade el **aforo total del evento**
-(`event_config.total_capacity`, default **225**): un tope duro de venta que
+(`event_config.total_capacity`, default **230**): un tope duro de venta que
 suma **todas** las tarifas (pagadas + pendientes con reserva vigente).
 `create_order` lo valida de forma race-safe (mismo `for update` sobre
 `event_config` que la preventa) y lanza `EVENT_SOLD_OUT` → el endpoint responde

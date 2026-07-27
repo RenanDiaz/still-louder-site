@@ -1,11 +1,11 @@
 -- =============================================================================
--- WWWY3 — Aforo total del evento (tope duro de venta: 225 boletos)
+-- WWWY3 — Aforo total del evento (tope duro de venta: 230 boletos)
 -- =============================================================================
 -- Hasta ahora solo la preventa tenía cupo; la tarifa general vendía sin tope
--- ("capped by venue, not here"). Con ~200 vendidos y un máximo de 225 a vender,
+-- ("capped by venue, not here"). Con ~200 vendidos y un máximo de 230 a vender,
 -- el aforo pasa a ser un límite del sistema:
 --
---   * event_config.total_capacity (default 225) es el máximo de boletos
+--   * event_config.total_capacity (default 230) es el máximo de boletos
 --     comprometidos entre TODAS las tarifas (preventa, general, cortesía y
 --     regalo): órdenes pagadas + pendientes con reserva vigente. Las órdenes
 --     canceladas/reembolsadas liberan su cupo.
@@ -26,9 +26,9 @@
 -- =============================================================================
 
 alter table event_config
-  add column if not exists total_capacity int not null default 225;
+  add column if not exists total_capacity int not null default 230;
 
-update event_config set total_capacity = 225 where id = 1;
+update event_config set total_capacity = 230 where id = 1;
 
 -- --- presale_status: ahora también reporta el aforo total ---------------------
 

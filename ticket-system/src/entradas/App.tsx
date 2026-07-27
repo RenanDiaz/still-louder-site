@@ -98,7 +98,7 @@ export default function App() {
   }, [confirmation]);
 
   const presaleSoldOut = presale?.soldOut ?? false;
-  // Aforo total (225): al agotarse no se vende más en NINGUNA tarifa — el
+  // Aforo total (230): al agotarse no se vende más en NINGUNA tarifa — el
   // formulario se reemplaza por el aviso de agotado. null = status aún no cargó.
   const eventSoldOut = presale?.eventSoldOut ?? false;
   const totalAvailable = presale?.totalAvailable ?? null;
@@ -422,7 +422,7 @@ function PresaleNotOpenNotice() {
 }
 
 /**
- * Con el aforo total agotado (225 boletos comprometidos) la venta cierra en
+ * Con el aforo total agotado (230 boletos comprometidos) la venta cierra en
  * TODAS las tarifas: este aviso reemplaza al formulario de compra completo.
  */
 function SoldOutNotice() {
