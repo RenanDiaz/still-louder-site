@@ -16,6 +16,10 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     available: data!.available,
     capacity: data!.capacity,
     stage2Active: data!.stage2_active,
-    soldOut: data!.sold_out
+    soldOut: data!.sold_out,
+    // Aforo total: cuántos boletos quedan en el evento (todas las tarifas) y si
+    // ya no se vende más. Alimenta el contador y el bloqueo del form de compra.
+    totalAvailable: data!.total_available,
+    eventSoldOut: data!.event_sold_out
   });
 });

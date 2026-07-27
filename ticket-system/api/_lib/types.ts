@@ -54,6 +54,11 @@ export interface PresaleStatus {
   stage2_active: boolean;
   stage2_cap: number;
   sold_out: boolean;
+  // Aforo total del evento (todas las tarifas) — migración 0010.
+  total_capacity: number;
+  total_committed: number;
+  total_available: number;
+  event_sold_out: boolean;
 }
 
 export type ValidateResult = 'valid' | 'already_used' | 'void' | 'not_found';

@@ -107,7 +107,9 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
       .rpc('presale_status')
       .single<PresaleStatus>();
     if (presaleError) throw new Error(`presale_status failed: ${presaleError.message}`);
-    if (!presaleStatus!.sold_out) {
+    // Si el evento ya está agotado no hay nada que redirigir a preventa: el
+    // create_order de abajo lo rechazaría igual (EVENT_SOLD_OUT, race-safe).
+    if (!presaleStatus!.sold_out && !presaleStatus!.event_sold_out) {
       return sendJson(res, 409, { error: 'presale_available' });
     }
   }
@@ -134,6 +136,10 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     .single<Order>();
 
   if (error) {
+    // Aforo total agotado (migración 0010): no se vende más, en ninguna tarifa.
+    if (error.message.includes('EVENT_SOLD_OUT')) {
+      return sendJson(res, 409, { error: 'sold_out' });
+    }
     if (error.message.includes('PRESALE_SOLD_OUT')) {
       return sendJson(res, 409, { error: 'presale_sold_out' });
     }

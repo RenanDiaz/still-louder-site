@@ -84,6 +84,18 @@ tier `cortesia` y el método de pago `courtesy` (entradas de regalo, $0) más un
 70 y se emiten 5 cortesías → quedan 65); emitirlas nunca se bloquea por cupo,
 pero si lo exceden la preventa aparece agotada.
 
+La migración `0010` añade el **aforo total del evento**
+(`event_config.total_capacity`, default **230**): un tope duro de venta que
+suma **todas** las tarifas (pagadas + pendientes con reserva vigente).
+`create_order` lo valida de forma race-safe (mismo `for update` sobre
+`event_config` que la preventa) y lanza `EVENT_SOLD_OUT` → el endpoint responde
+409 `sold_out` y `/entradas` cierra el formulario con el aviso de "boletos
+agotados". `presale_status` devuelve además `total_available` /
+`event_sold_out`, que alimentan el contador público «quedan N boletos». Las
+cortesías y regalos no pasan por `create_order` (el admin nunca se bloquea),
+pero sí consumen aforo al contarse como pagadas. Para cambiar el tope:
+`update event_config set total_capacity = <N> where id = 1;`.
+
 ## Panel de admin
 
 Cuatro pestañas, todas contra rutas `/api/admin/*` (una sola función serverless,

@@ -36,6 +36,10 @@ export interface PresaleStatusResponse {
   capacity: number;
   stage2Active: boolean;
   soldOut: boolean;
+  // Aforo total del evento (todas las tarifas): boletos restantes y si ya no se
+  // vende más. Alimentan el contador "quedan N" y el bloqueo del formulario.
+  totalAvailable: number;
+  eventSoldOut: boolean;
 }
 
 export function getPresaleStatus(): Promise<PresaleStatusResponse> {
