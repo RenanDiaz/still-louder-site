@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
+import { haveSalesEnded } from './_lib/event.js';
 import { issueOrder } from './_lib/issue.js';
 import type { ClaimGiftRow, GiftCampaignStatus } from './_lib/types.js';
 
@@ -36,6 +37,10 @@ async function getCampaignStatus(req: VercelRequest, res: VercelResponse): Promi
   const token = (Array.isArray(raw) ? raw[0] : raw ?? '').trim();
   // Neutral 404 for missing/unknown token — never reveal whether a campaign exists.
   if (!token) return sendJson(res, 404, { error: 'not_found' });
+  // El evento ya pasó: las campañas quedan cerradas sin tocar la BD. El 404
+  // neutral es el mismo que para un token inválido, así que un QR de campaña
+  // que siga circulando impreso no revela nada — solo deja de dar boletos.
+  if (haveSalesEnded()) return sendJson(res, 404, { error: 'not_found' });
 
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -66,6 +71,9 @@ async function claimGift(req: VercelRequest, res: VercelResponse): Promise<void>
   const phone = (body.phone ?? '').trim() || null;
 
   if (!token) return sendJson(res, 404, { error: 'not_found' });
+  // Evento terminado: no se emiten más regalos. `closed` es el mismo código que
+  // ya devuelve una campaña desactivada, así que el cliente lo maneja tal cual.
+  if (haveSalesEnded()) return sendJson(res, 409, { error: 'closed' });
   if (name.length < 2) return sendJson(res, 400, { error: 'invalid_name' });
   if (!EMAIL_RE.test(email)) return sendJson(res, 400, { error: 'invalid_email' });
 

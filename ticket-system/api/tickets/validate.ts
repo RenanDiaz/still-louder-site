@@ -3,6 +3,7 @@ import { getSupabase } from '../_lib/supabase.js';
 import { isStaff } from '../_lib/auth.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from '../_lib/http.js';
 import { verifyToken } from '../_lib/hmac.js';
+import { isEventOver } from '../_lib/event.js';
 import type { ValidateResult } from '../_lib/types.js';
 
 interface ValidateBody {
@@ -26,6 +27,21 @@ interface ValidateRow {
 export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
   if (!isStaff(req)) return sendJson(res, 401, { error: 'unauthorized' });
+
+  // El evento terminó: la puerta queda congelada. Va DESPUÉS del gate de staff
+  // (el login de /validar sondea este endpoint y distingue 401 de 200, así que
+  // adelantarlo dejaría entrar con contraseña incorrecta) y ANTES de tocar la
+  // BD, para que ningún ticket quede consumido después del show — ver
+  // `_lib/event.ts` para por qué esto importa al reusar el sistema.
+  if (isEventOver()) {
+    return sendJson(res, 200, {
+      result: 'event_closed' satisfies ValidateResult,
+      tier: null,
+      usedAt: null,
+      usedBy: null,
+      buyerName: null
+    });
+  }
 
   const body = parseBody<ValidateBody>(req);
   const token = (body.token ?? '').trim();

@@ -297,6 +297,49 @@ Apple Developer de pago).
   este correo" en el footer; sin configurarla, el footer solo menciona los
   canales oficiales (@still_louder).
 
+## Estado post-evento (archivado) y cómo reusarlo
+
+El show del 1 de agosto **ya pasó**, así que el sistema está en modo *archivo*:
+la venta y la puerta están cerradas por fecha, pero **nada se borró ni se
+escondió** — `/admin`, `/support` y los datos siguen exactamente igual.
+
+Las dos fechas que apagan el evento viven en **`api/_lib/event.ts`** (servidor,
+autoridad) con espejo en `src/shared/config.ts` (`EVENT.salesEnd` /
+`EVENT.eventEnd`), mismo patrón que los precios:
+
+| Fecha       | Qué cierra                                                                              |
+| ----------- | --------------------------------------------------------------------------------------- |
+| `SALES_END` | `POST /api/orders` → `409 sales_closed`; `/api/gifts` (regalos) → cerrado. `/entradas` reemplaza el formulario y el countdown por el aviso "el show ya pasó". |
+| `EVENT_END` | `POST /api/tickets/validate` → `200 { result: 'event_closed' }`, **antes de tocar la BD**. `/validar` muestra "PUERTA CERRADA". |
+
+**Por qué la puerta se cierra y no solo la venta:** el payload del QR es
+`WWWY3.<ticket_id>.<sig>`, firmado con un `TICKET_HMAC_SECRET` que **no está
+scopeado por evento**. Quedan tickets `valid` sin usar de este show; con la
+validación abierta, esos QR pasarían el gate del **próximo** evento. El cierre
+por fecha corta esa vía hasta que los tickets tengan scope por evento.
+
+### Para el próximo evento
+
+Mientras el sistema siga siendo de **un solo evento** (una fila en
+`event_config`, tarifas y fechas en código), reusarlo es una edición manual:
+
+1. Fechas: `api/_lib/pricing.ts` (`PRESALE_START_ISO`, `PRESALE_END_ISO`),
+   `api/_lib/event.ts` (`SALES_END_ISO`, `EVENT_END_ISO`) y su espejo en
+   `src/shared/config.ts` (`EVENT`).
+2. Precios/tarifas: `TIER_PRICE_CENTS` (`pricing.ts`) + `TIERS` (`config.ts`).
+3. Aforo: `event_config.total_capacity` y los caps de preventa (admin / SQL).
+4. Copia y arte: `entradas.html` / `ayuda.html` (título, descripción, OG),
+   `src/entradas/App.tsx`, `src/ayuda/App.tsx` (hoy en pasado), `wwwy3-title.webp`.
+5. **Rotar `TICKET_HMAC_SECRET`** para que ningún QR viejo pueda validarse, y
+   cambiar el prefijo del token en `api/_lib/hmac.ts`.
+6. Datos del evento anterior: los `orders`/`tickets` viejos quedan mezclados con
+   los nuevos en los reportes de `/admin` — hoy no hay columna de evento.
+
+Los puntos 5 y 6 son exactamente los que **una tabla `events` resolvería de
+raíz** (FK en `orders`/`tickets`, config servida desde la BD, prefijo de QR y
+reportes con scope por evento). Es el siguiente trabajo pendiente si el
+ticketing se va a usar de forma recurrente; hasta entonces, seguir la lista.
+
 ## Notas operativas
 
 - **Resend plan gratis:** 3,000/mes y **100/día**. En días pico, un correo por

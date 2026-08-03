@@ -397,6 +397,15 @@ body::before {
 .tk-closed-notice p {
   margin: 0;
 }
+.tk-closed-notice p + p {
+  margin-top: 8px;
+}
+/* Sin color de enlace global: sobre el papel amarillo del aviso los links
+   quedarían en el azul del navegador. */
+.tk-closed-notice a {
+  color: #c01a5b;
+  font-weight: 700;
+}
 
 /* ===================== FORM (legible, tema sutil) ===================== */
 /* El form vive en un parche de papel SÓLIDO con borde recto y sombra dura:

@@ -512,7 +512,15 @@ export function fetchSupportOrder(
 
 // --- Staff (gate) ------------------------------------------------------------
 
-export type ValidateOutcome = 'valid' | 'already_used' | 'void' | 'not_found' | 'forged';
+// 'forged' lo decide el endpoint por firma inválida; 'event_closed' cuando el
+// evento ya terminó y la puerta está congelada (ver api/_lib/event.ts).
+export type ValidateOutcome =
+  | 'valid'
+  | 'already_used'
+  | 'void'
+  | 'not_found'
+  | 'forged'
+  | 'event_closed';
 
 export interface ValidateResponse {
   result: ValidateOutcome;

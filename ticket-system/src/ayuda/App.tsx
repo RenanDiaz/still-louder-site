@@ -7,6 +7,13 @@ import { EVENT, SOCIAL } from '../shared/config';
 // canales y el staff lo reenvía desde el backoffice (/support). Reutiliza el
 // tema público de /entradas para no romper la identidad entre comprar y pedir
 // ayuda.
+//
+// POST-EVENTO: el show ya pasó, así que la copia está en pasado y las preguntas
+// de venta (cómo comprar, métodos de pago) se reemplazaron por el aviso de
+// cierre. Lo que queda son las consultas que siguen llegando después del show:
+// cobros, entradas que no llegaron, reembolsos. Al anunciar el próximo evento
+// hay que reescribir estos textos (y las fechas de `api/_lib/event.ts`) —
+// mientras el sistema sea de un solo evento, esta copia es manual.
 
 const IG = (
   <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
@@ -21,83 +28,32 @@ interface Faq {
 
 const FAQS: Faq[] = [
   {
-    q: '¿Cuándo y dónde es el evento?',
+    q: '¿Puedo comprar entradas todavía?',
     a: (
       <p>
-        <b>{EVENT.name}</b> es el <b>1 de agosto a las 8:00 PM</b> en {EVENT.venue}. Una noche de
-        covers de las bandas que nos inspiraron, por {EVENT.band}. Es un evento{' '}
-        <b>solo para mayores de 18 años</b>: lleva tu identificación.
+        No. <b>{EVENT.name}</b> fue el <b>1 de agosto en {EVENT.venue}</b> y la venta está cerrada.
+        Cuando anunciemos la próxima fecha, las entradas se venderán otra vez aquí mismo, en{' '}
+        <b>entradas.stilllouder.space</b>, directamente con la banda. Para enterarte primero,
+        síguenos en Instagram {IG}.
       </p>
     )
   },
   {
-    q: '¿Cuánto cuestan las entradas?',
+    q: '¿Cuándo y dónde fue el evento?',
     a: (
       <p>
-        Preventa a <b>$6</b> mientras haya cupo, y <b>$8</b> una vez agotada la preventa. Te aplicamos
-        automáticamente el mejor precio disponible al momento de comprar. Según el método de pago
-        puede sumarse un pequeño cargo por servicio, que siempre verás reflejado en el total antes
-        de confirmar.
+        <b>{EVENT.name}</b> fue el <b>1 de agosto a las 8:00 PM</b> en {EVENT.venue}: una noche de
+        covers de las bandas que nos inspiraron, por {EVENT.band}.
       </p>
     )
   },
   {
-    q: '¿Cómo compro mis entradas?',
+    q: 'Compré entradas y no las usé. ¿Sirven para el próximo show?',
     a: (
       <p>
-        En línea, directamente con la banda en{' '}
-        <a href="/entradas">
-          <b>entradas.stilllouder.space</b>
-        </a>
-        . No vendemos por intermediarios. También podrás comprar en la puerta el día del evento al
-        precio general ($8), sujeto a disponibilidad.
-      </p>
-    )
-  },
-  {
-    q: '¿Qué métodos de pago aceptan?',
-    a: (
-      <p>
-        Yappy, tarjeta (CuantoApp) y efectivo. Con <b>Yappy</b> el pago se confirma al instante; con
-        tarjeta o efectivo confirmamos el pago manualmente y, en cuanto lo registramos, te llegan las
-        entradas por correo.
-      </p>
-    )
-  },
-  {
-    q: '¿Cómo recibo mis entradas?',
-    a: (
-      <p>
-        Cuando confirmamos tu pago, te enviamos un correo con tu(s) código(s) QR — uno por entrada.
-        Desde ese mismo correo puedes agregarlas a Google Wallet. Cada código QR es válido para una
-        sola admisión.
-      </p>
-    )
-  },
-  {
-    q: 'No me llegó el correo con las entradas. ¿Qué hago?',
-    a: (
-      <>
-        <p>
-          Primero revisa las carpetas de spam y promociones; busca el correo{' '}
-          <i>«Tu entrada para WWWY3 — Still Louder»</i>. Si pagaste con tarjeta o efectivo, recuerda
-          que el correo llega cuando confirmamos el pago, no al instante.
-        </p>
-        <p>
-          Si pasó un tiempo razonable y sigue sin aparecer, escríbenos por Instagram {IG} con el{' '}
-          <b>nombre y correo que usaste</b> al comprar (y tu número de orden si lo tienes) y te lo
-          reenviamos.
-        </p>
-      </>
-    )
-  },
-  {
-    q: '¿Puedo darle mi entrada a otra persona?',
-    a: (
-      <p>
-        Sí. Quien presente el código QR en la puerta entra, así que puedes transferir tu entrada:
-        solo envíale el QR a la persona correcta y asegúrate de que <b>una sola persona use cada
-        código</b> (sirve una única vez). Recuerda que el evento es solo para mayores de 18 años.
+        No. Cada entrada es válida solo para el evento para el que se compró, así que los códigos QR
+        de {EVENT.shortName} ya no admiten a nadie. El próximo show tendrá su propia venta y sus
+        propias entradas.
       </p>
     )
   },
@@ -105,19 +61,36 @@ const FAQS: Faq[] = [
     q: '¿Hay reembolsos o cambios?',
     a: (
       <p>
-        No. Todas las compras son finales: no hacemos reembolsos ni cambios. Una vez comprada, la
-        entrada es tuya y puedes hacer lo que quieras con ella: usarla, regalarla, transferirla o
-        revenderla. Si tuviste algún problema con tu orden, escríbenos por {IG} y vemos cómo
-        ayudarte.
+        No. Todas las compras son finales: no hacemos reembolsos ni cambios, y eso sigue aplicando
+        ahora que el evento pasó. Si hubo algún problema con tu orden, escríbenos por {IG} y vemos
+        cómo ayudarte.
       </p>
     )
   },
   {
-    q: '¿Qué necesito para entrar al evento?',
+    q: 'Nunca me llegó el correo con mis entradas. ¿Qué hago?',
+    a: (
+      <>
+        <p>
+          Primero revisa las carpetas de spam y promociones; busca el correo{' '}
+          <i>«Tu entrada para WWWY3 — Still Louder»</i>.
+        </p>
+        <p>
+          Si sigue sin aparecer y quieres el comprobante de tu compra, escríbenos por Instagram {IG}{' '}
+          con el <b>nombre y correo que usaste</b> al comprar (y tu número de orden si lo tienes) y
+          te lo reenviamos.
+        </p>
+      </>
+    )
+  },
+  {
+    q: 'Tengo una duda sobre un cobro. ¿Con quién hablo?',
     a: (
       <p>
-        Tu código QR (en el correo o en Google Wallet) y tu identificación, ya que el evento es solo
-        para mayores de 18 años. Te recomendamos tener el QR listo antes de llegar a la puerta.
+        Con nosotros directamente, por {IG}. Cuéntanos el <b>nombre y correo</b> con los que
+        compraste, el método de pago que usaste y el monto, y lo revisamos contra nuestros
+        registros. No vendimos por intermediarios: cualquier cobro legítimo salió de nuestra propia
+        venta o de la pasarela de pago que elegiste (Yappy o CuantoApp).
       </p>
     )
   },
@@ -125,8 +98,8 @@ const FAQS: Faq[] = [
     q: 'Perdí mi número de orden, ¿es un problema?',
     a: (
       <p>
-        No. Lo que importa para entrar es el correo con tu código QR. Si necesitas ayuda con tu
-        compra, escríbenos por {IG} con el nombre y correo que usaste y te ubicamos.
+        No. Nos basta con el nombre y el correo que usaste al comprar: escríbenos por {IG} y te
+        ubicamos en nuestros registros.
       </p>
     )
   }
@@ -146,6 +119,14 @@ export default function App() {
             </h1>
             <div className="tk-byline">{EVENT.shortName} · by {EVENT.band}</div>
           </div>
+        </div>
+
+        <div className="tk-closed-notice tk-reveal" role="status">
+          <strong>⚡ El show ya pasó</strong>
+          <p>
+            {EVENT.name} fue el <b>1 de agosto en {EVENT.venue}</b> y la venta está cerrada. Esta
+            página queda para consultas sobre compras de ese evento.
+          </p>
         </div>
 
         <p className="tk-meta tk-reveal">Preguntas frecuentes</p>
@@ -172,13 +153,14 @@ export default function App() {
             </a>
           </p>
           <p className="help-contact__note">
-            Compra siempre directamente con la banda. No vendemos por intermediarios.
+            Ahí también anunciamos la próxima fecha. Cuando haya venta, es siempre directa con la
+            banda: no vendemos por intermediarios.
           </p>
         </section>
 
         <p className="tk-trust">
           <a href="/entradas">
-            <b>← Volver a comprar entradas</b>
+            <b>← Volver a la página del evento</b>
           </a>
         </p>
       </div>
