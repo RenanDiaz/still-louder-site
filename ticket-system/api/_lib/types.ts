@@ -61,7 +61,9 @@ export interface PresaleStatus {
   event_sold_out: boolean;
 }
 
-export type ValidateResult = 'valid' | 'already_used' | 'void' | 'not_found';
+// 'event_closed' no viene del RPC: lo devuelve el endpoint cuando el evento ya
+// terminó, antes de tocar la BD (ver `_lib/event.ts`).
+export type ValidateResult = 'valid' | 'already_used' | 'void' | 'not_found' | 'event_closed';
 
 export type GiftCampaignStatus = 'active' | 'exhausted' | 'closed';
 

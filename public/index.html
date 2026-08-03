@@ -316,7 +316,7 @@
         <nav class="header-nav" aria-label="Navegación principal">
           <a href="#hero" class="nav-link active" data-section="hero">Inicio</a>
           <a href="#escuchar" class="nav-link" data-section="escuchar">Escuchar</a>
-          <a href="#entradas" class="nav-link" data-section="entradas">Entradas</a>
+          <a href="#shows" class="nav-link" data-section="shows">Shows</a>
           <a href="#about" class="nav-link" data-section="about">Banda</a>
           <a href="#faq" class="nav-link" data-section="faq">FAQ</a>
           <a href="#conectar" class="nav-link" data-section="conectar">Conectar</a>
@@ -335,7 +335,7 @@
       <nav class="mobile-nav" aria-label="Navegación móvil">
         <a href="#hero" class="mobile-nav-link" data-section="hero">Inicio</a>
         <a href="#escuchar" class="mobile-nav-link" data-section="escuchar">Escuchar</a>
-        <a href="#entradas" class="mobile-nav-link" data-section="entradas">Entradas</a>
+        <a href="#shows" class="mobile-nav-link" data-section="shows">Shows</a>
         <a href="#about" class="mobile-nav-link" data-section="about">Banda</a>
         <a href="#faq" class="mobile-nav-link" data-section="faq">FAQ</a>
         <a href="#conectar" class="mobile-nav-link" data-section="conectar">Conectar</a>
@@ -623,131 +623,71 @@
         </div>
       </section>
 
-      <!-- Tickets Section -->
-      <section class="section section-tickets" id="entradas">
+      <!-- Shows Section -->
+      <!--
+        Fechas en vivo. Estado actual: SIN FECHAS ANUNCIADAS — el último show
+        (When We Were Young 3, 1 ago 2026) ya pasó y su venta está cerrada.
+        Al anunciar una fecha nueva: reemplazar .shows-card--empty por la
+        tarjeta del evento con su CTA de venta y poner la URL en
+        CONFIG.shows.ticketsUrl (assets/js/config.js).
+      -->
+      <section class="section section-shows" id="shows">
         <div class="section-container">
           <header class="section-header">
-            <h2 class="section-title reveal-up">Entradas</h2>
-            <p class="section-subtitle reveal-up">Nos subimos al escenario — no te quedes fuera</p>
+            <h2 class="section-title reveal-up">Shows</h2>
+            <p class="section-subtitle reveal-up">Dónde nos vas a escuchar en vivo</p>
           </header>
 
-          <div class="ticket-card glass-card reveal-up">
-            <div class="ticket-card__main">
-              <p class="ticket-card__kicker">Still Louder en vivo</p>
-              <h3 class="ticket-card__event">When We Were Young 3</h3>
-              <p class="ticket-card__tagline">
-                Una noche emo &amp; pop-punk para gritar a todo pulmón
-              </p>
+          <div class="shows-card shows-card--empty glass-card reveal-up">
+            <p class="shows-card__status">
+              <span class="shows-card__dot" aria-hidden="true"></span>
+              Sin fechas anunciadas
+            </p>
+            <h3 class="shows-card__headline">Ya estamos armando la próxima</h3>
+            <p class="shows-card__text">
+              En cuanto tengamos fecha la anunciamos primero en Instagram, y las entradas se venden
+              directamente con la banda — sin intermediarios.
+            </p>
 
-              <ul class="ticket-meta">
-                <li class="ticket-meta__item">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                  <span class="ticket-meta__text">
-                    <strong>Sábado 1 de agosto, 2026</strong>
-                    <span class="ticket-meta__sub">8:00 PM</span>
-                  </span>
-                </li>
-                <li class="ticket-meta__item">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
-                  <span class="ticket-meta__text">
-                    <strong>Hops Food &amp; Drinks</strong>
-                    <span class="ticket-meta__sub">David, Chiriquí</span>
-                  </span>
-                </li>
-                <li class="ticket-meta__item">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path
-                      d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"
-                    ></path>
-                    <path d="M13 5v2"></path>
-                    <path d="M13 17v2"></path>
-                    <path d="M13 11v2"></path>
-                  </svg>
-                  <span class="ticket-meta__text">
-                    <strong>Preventa desde $6</strong>
-                    <span class="ticket-meta__sub">General $8 el día del evento</span>
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="ticket-card__cta">
-              <a
-                href="https://entradas.stilllouder.space/when-we-were-young-3"
-                class="btn btn-tickets"
-                id="tickets-link"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Comprar entradas para When We Were Young 3 (se abre en nueva ventana)"
+            <a
+              href="https://www.instagram.com/still_louder/"
+              class="btn btn-shows"
+              id="shows-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Seguir a Still Louder en Instagram para enterarte de la próxima fecha (se abre en nueva ventana)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path
-                    d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"
-                  ></path>
-                  <path d="M13 5v2"></path>
-                  <path d="M13 17v2"></path>
-                  <path d="M13 11v2"></path>
-                </svg>
-                Comprar Entradas
-              </a>
-              <p class="ticket-card__note">Compra directa con la banda · pago seguro</p>
-            </div>
+                <path
+                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+                />
+              </svg>
+              Enterarme de la próxima fecha
+            </a>
+            <p class="shows-card__note">También lo avisamos por aquí y en nuestras redes</p>
+          </div>
+
+          <div class="shows-past reveal-up">
+            <h3 class="shows-past__title">Último show</h3>
+            <ul class="shows-past__list">
+              <li class="shows-past__item">
+                <span class="shows-past__date">
+                  <time datetime="2026-08-01">1 ago 2026</time>
+                </span>
+                <span class="shows-past__body">
+                  <strong class="shows-past__name">When We Were Young 3</strong>
+                  <span class="shows-past__venue">Hops Food &amp; Drinks · David, Chiriquí</span>
+                </span>
+              </li>
+            </ul>
           </div>
         </div>
       </section>
@@ -838,13 +778,16 @@
               <summary class="faq-item__q">¿Cómo compro entradas para sus shows?</summary>
               <div class="faq-item__a">
                 <p>
-                  Las entradas se venden en línea, directamente con la banda en
+                  Ahora mismo no tenemos fechas anunciadas — revisa la sección
+                  <a href="#shows">Shows</a> para el estado actual. Cuando anunciemos una, las
+                  entradas se venden en línea directamente con la banda en
                   <a
                     href="https://entradas.stilllouder.space/"
                     target="_blank"
                     rel="noopener noreferrer"
                     >entradas.stilllouder.space</a
-                  >. Si tienes dudas sobre tu compra (precios, pagos, cómo recibir tu QR), revisa la
+                  >: nunca por intermediarios. Si tienes una consulta sobre una compra anterior,
+                  escríbenos o revisa la
                   <a
                     href="https://entradas.stilllouder.space/ayuda"
                     target="_blank"

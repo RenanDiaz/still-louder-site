@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
+import { haveSalesEnded } from './_lib/event.js';
 import {
   MAX_QUANTITY_PER_ORDER,
   areSalesOpenByDate,
@@ -92,6 +93,12 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   // presale start time, but reject direct POSTs too — nothing is sold before then.
   if (!areSalesOpenByDate()) {
     return sendJson(res, 409, { error: 'sales_not_open' });
+  }
+  // El evento ya pasó: la venta está cerrada en TODAS las tarifas, quede cupo o
+  // no. El cliente reemplaza el formulario por el aviso de cierre al recibir
+  // este código, pero la decisión es de aquí — un POST directo tampoco pasa.
+  if (haveSalesEnded()) {
+    return sendJson(res, 409, { error: 'sales_closed' });
   }
   // Once the presale window has closed, preventa can no longer be sold — even
   // if cupo remains. The client falls back to general on this error.

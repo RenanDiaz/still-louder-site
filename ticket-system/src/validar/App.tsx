@@ -244,6 +244,11 @@ function ResultOverlay({ response }: { response: ValidateResponse }) {
   } else if (response.result === 'forged') {
     title = '✗ FALSA';
     detail = 'Firma inválida';
+  } else if (response.result === 'event_closed') {
+    // El evento terminó: el backend no valida más QR (api/_lib/event.ts). No es
+    // un rechazo del boleto — la puerta está cerrada.
+    title = '✗ PUERTA CERRADA';
+    detail = 'El evento ya terminó';
   } else {
     title = '✗ ANULADA';
   }

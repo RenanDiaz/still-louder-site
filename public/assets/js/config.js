@@ -69,10 +69,18 @@ export const CONFIG = {
     platform: 'Cuanto'
   },
 
-  // Tickets (separate ticket-system app)
-  tickets: {
-    name: 'Comprar Entradas',
-    url: 'https://entradas.stilllouder.space/when-we-were-young-3'
+  // Shows / fechas en vivo. Las entradas se venden en la app aparte
+  // (ticket-system, en entradas.stilllouder.space).
+  shows: {
+    // null = no hay fecha anunciada: la sección #shows muestra el estado vacío
+    // y el CTA lleva a Instagram. Al anunciar un show, poner aquí la URL de su
+    // venta y devolverle el botón de compra a la tarjeta en index.html.
+    ticketsUrl: null,
+    // Canal donde se anuncian las fechas (destino del CTA del estado vacío).
+    announceUrl: 'https://www.instagram.com/still_louder/',
+    // Página de ayuda del sistema de entradas: sigue en pie para consultas
+    // sobre compras del último show, aunque su venta esté cerrada.
+    helpUrl: 'https://entradas.stilllouder.space/ayuda'
   },
 
   // Analytics Configuration

@@ -323,13 +323,14 @@ const initPlatformTracking = () => {
     });
   }
 
-  // Tickets link tracking
-  const ticketsLink = document.getElementById('tickets-link');
-  if (ticketsLink) {
-    ticketsLink.addEventListener('click', () => {
-      trackEvent('click_tickets', {
-        event_category: 'tickets',
-        event_label: 'when-we-were-young-3'
+  // Shows link tracking. Sin fecha anunciada el CTA lleva a Instagram; cuando
+  // haya show, apunta a su venta y el label debería ser el slug del evento.
+  const showsLink = document.getElementById('shows-link');
+  if (showsLink) {
+    showsLink.addEventListener('click', () => {
+      trackEvent('click_shows', {
+        event_category: 'shows',
+        event_label: APP_CONFIG.shows?.ticketsUrl ? 'tickets' : 'announce_instagram'
       });
     });
   }

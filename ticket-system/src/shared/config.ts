@@ -14,7 +14,15 @@ export const EVENT = {
   // general/"día del evento" price applies. Mirrored server-side in
   // api/_lib/pricing.ts (PRESALE_END_ISO) — the server is authoritative.
   presaleEnd: '2026-08-01T00:00:00-05:00',
-  eventDate: '2026-08-01T20:00:00-05:00'
+  eventDate: '2026-08-01T20:00:00-05:00',
+  // Cierre de la venta (fin de la noche del show): desde aquí /entradas deja de
+  // mostrar el formulario y solo queda el aviso de "el show ya pasó". Espejo de
+  // SALES_END_ISO en api/_lib/event.ts — el servidor manda: rechaza cualquier
+  // orden con `sales_closed` aunque un cliente viejo siga mostrando el form.
+  salesEnd: '2026-08-02T02:00:00-05:00',
+  // Fin del evento: la puerta (/validar) deja de aceptar QR. Espejo de
+  // EVENT_END_ISO en api/_lib/event.ts.
+  eventEnd: '2026-08-02T06:00:00-05:00'
 } as const;
 
 // Canales oficiales de la banda. El Instagram es el canal principal; el enlace

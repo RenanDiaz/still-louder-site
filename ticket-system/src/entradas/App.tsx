@@ -53,6 +53,12 @@ export default function App() {
   // constant) so it flips on its own at the opening time without a redeploy.
   const presaleStartMs = new Date(EVENT.presaleStart).getTime();
   const [salesOpen, setSalesOpen] = useState(() => Date.now() >= presaleStartMs);
+  // El evento ya pasó: la venta cerró y la página queda como archivo. Estado
+  // (no constante) para que un rechazo `sales_closed` del servidor —un cliente
+  // con reloj atrasado— también lo active. El servidor es la autoridad.
+  const [salesEnded, setSalesEnded] = useState(
+    () => Date.now() >= new Date(EVENT.salesEnd).getTime()
+  );
   const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<Method>('cuantoapp');
   const [submitting, setSubmitting] = useState(false);
@@ -67,13 +73,22 @@ export default function App() {
     return () => clearTimeout(id);
   }, [salesOpen, presaleStartMs]);
 
+  // Cupo de preventa. Con la venta cerrada no hay contador que mostrar ni
+  // formulario que alimentar: no consultamos nada ni dejamos el sondeo corriendo.
   useEffect(() => {
+    if (salesEnded) return;
     getPresaleStatus().then(setPresale).catch(() => setPresale(null));
     // Refresca el cupo periódicamente: el contador "quedan N" y el cierre por
     // agotado deben reflejar compras de otros compradores sin recargar la página.
     const timer = setInterval(() => {
       getPresaleStatus().then(setPresale).catch(() => {});
     }, 60_000);
+    return () => clearInterval(timer);
+  }, [salesEnded]);
+
+  // La config de Yappy se pide siempre: una orden pendiente restaurada de
+  // sessionStorage necesita el CDN del botón incluso si la venta ya cerró.
+  useEffect(() => {
     getYappyConfig()
       .then((cfg) => {
         setYappyCfg(cfg);
@@ -81,7 +96,6 @@ export default function App() {
         if (cfg.enabled) setMethod('yappy');
       })
       .catch(() => setYappyCfg({ enabled: false, cdnUrl: null }));
-    return () => clearInterval(timer);
   }, []);
 
   // Persist pending Yappy confirmations across refreshes (see PENDING_ORDER_KEY).
@@ -135,7 +149,11 @@ export default function App() {
       setConfirmation(result);
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
-      if (code === 'sold_out') {
+      if (code === 'sales_closed') {
+        // El servidor dice que el evento ya pasó (nuestro reloj iba atrasado):
+        // el formulario se reemplaza por el aviso de cierre.
+        setSalesEnded(true);
+      } else if (code === 'sold_out') {
         // Aforo total agotado: se acabó la venta. Reflejarlo localmente al
         // instante (el formulario se reemplaza por el aviso de agotado) y dejar
         // que el refetch confirme.
@@ -215,7 +233,9 @@ export default function App() {
         </div>
 
         <p className="tk-meta tk-reveal">
-          Una noche de covers de las bandas que nos inspiraron
+          {salesEnded
+            ? 'Fue una noche de covers de las bandas que nos inspiraron'
+            : 'Una noche de covers de las bandas que nos inspiraron'}
         </p>
 
         {/* Precios + fecha como stickers de collage */}
@@ -239,21 +259,37 @@ export default function App() {
             <span className="day">1 AGO</span>
             <span className="venue">{EVENT.venue} ⚡</span>
           </div>
-          <div className="tk-badge tk-patch tk-patch--dark tk-reveal" style={{ transform: 'rotate(4deg)' }}>
+          {/* Con la venta cerrada el sello también va en la tarifa general: nada
+              en esta página debe sugerir que todavía se puede comprar. */}
+          <div
+            className={`tk-badge tk-patch tk-patch--dark tk-reveal${salesEnded ? ' tk-badge--soldout' : ''}`}
+            style={{ transform: 'rotate(4deg)' }}
+          >
             <small>BOLETOS</small>
             <span className="amt">{TIERS.general.priceLabel}</span>
             <small>GENERAL</small>
+            {salesEnded && (
+              <span className="tk-badge__stamp" aria-label="Venta cerrada">
+                Sold out
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Countdown + urgencia */}
-        <div className="tk-reveal">
-          <Countdown />
-        </div>
+        {/* Countdown + urgencia. Con el evento pasado no hay nada que contar:
+            el countdown desaparece en vez de quedarse clavado en ceros. */}
+        {!salesEnded && (
+          <div className="tk-reveal">
+            <Countdown />
+          </div>
+        )}
         {/* Antes de que abra la preventa el formulario se oculta: el comprador
             solo ve el countdown y un aviso de que aún no puede comprar. Con el
-            aforo total agotado tampoco hay formulario: solo el aviso de agotado. */}
-        {!salesOpen ? (
+            aforo total agotado tampoco hay formulario: solo el aviso de agotado.
+            Y con el evento ya pasado la página queda como archivo del show. */}
+        {salesEnded ? (
+          <EventOverNotice />
+        ) : !salesOpen ? (
           <PresaleNotOpenNotice />
         ) : eventSoldOut ? (
           <SoldOutNotice />
@@ -369,11 +405,23 @@ export default function App() {
 
         {/* Confianza: canales oficiales */}
         <p className="tk-trust">
-          Compra directamente con la banda. Canales oficiales:{' '}
-          <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
-            <b>{SOCIAL.instagramHandle}</b>
-          </a>
-          . No vendemos por intermediarios.
+          {salesEnded ? (
+            <>
+              Canales oficiales de la banda:{' '}
+              <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
+                <b>{SOCIAL.instagramHandle}</b>
+              </a>
+              . Ahí anunciamos la próxima fecha.
+            </>
+          ) : (
+            <>
+              Compra directamente con la banda. Canales oficiales:{' '}
+              <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
+                <b>{SOCIAL.instagramHandle}</b>
+              </a>
+              . No vendemos por intermediarios.
+            </>
+          )}
           <br />
           ¿Dudas?{' '}
           <a href="/ayuda">
@@ -416,6 +464,35 @@ function PresaleNotOpenNotice() {
       <p>
         Las entradas estarán disponibles a la <b>medianoche del 15 de junio</b>. El contador de
         arriba marca cuánto falta — vuelve cuando llegue a cero para comprar la tuya.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Post-evento: la venta cerró y la página queda como archivo del show. Este
+ * aviso reemplaza al formulario y al countdown; el resto de la página (arte,
+ * precios con sello, enlace a /ayuda) sigue en pie para quien llegue buscando
+ * su compra. Se activa solo por fecha (EVENT.salesEnd) — sin redeploy.
+ */
+function EventOverNotice() {
+  return (
+    <div className="tk-closed-notice tk-reveal" role="status">
+      <strong>⚡ El show ya pasó</strong>
+      <p>
+        {EVENT.name} fue el <b>1 de agosto en {EVENT.venue}</b> — gracias a todos los que llegaron.
+        Ya no vendemos entradas para este evento.
+      </p>
+      <p>
+        La próxima fecha la anunciamos primero en Instagram{' '}
+        <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
+          <b>{SOCIAL.instagramHandle}</b>
+        </a>
+        . ¿Tienes una consulta sobre tu compra? Revisa la{' '}
+        <a href="/ayuda">
+          <b>ayuda</b>
+        </a>
+        .
       </p>
     </div>
   );
