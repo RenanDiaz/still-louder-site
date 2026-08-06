@@ -318,6 +318,31 @@ scopeado por evento**. Quedan tickets `valid` sin usar de este show; con la
 validación abierta, esos QR pasarían el gate del **próximo** evento. El cierre
 por fecha corta esa vía hasta que los tickets tengan scope por evento.
 
+### Teaser del próximo show (`/31-10`)
+
+Ya hay fecha para el próximo show — **31 de octubre de 2026** — pero todavía no
+hay diseño, paleta ni nada que vender. La dirección donde vivirá su formulario
+existe desde ya, pero **solo con un teaser estático**:
+
+- `31-10.html` + `src/teaser/` (App, `teaser.css`), entry `teaser` en
+  `vite.config.ts`. **El nombre del archivo ES el path** (`cleanUrls`): se sirve
+  en `/31-10` y en ningún otro lado, a propósito — mientras sea un teaser, el
+  show nuevo tiene **un solo enlace público**. Su slug definitivo se agrega como
+  rewrite en `vercel.json` cuando el evento tenga nombre, igual que
+  `/when-we-were-young-3` → `/entradas`.
+- **No toca el backend**: no llama a ningún endpoint, no hay evento en la BD, no
+  hay tarifas ni cupo. No consume ninguna de las 12 funciones del plan Hobby.
+- **No reusa el tema de `/entradas`**: esa es la identidad morada/rosa de WWWY3.
+  El teaser es monocromo a propósito (negro + hueso, fuentes `Anton`/`Archivo`
+  ya auto-hospedadas) para no adelantar decisiones visuales del evento nuevo.
+- La fecha vive en `NEXT_EVENT` (`src/shared/config.ts`), **aparte de `EVENT`**,
+  que sigue describiendo WWWY3 con su venta cerrada y su puerta congelada.
+- Sin `og:image`: el único arte que existe es el flyer de WWWY3 y usarlo ahí
+  anunciaría el evento equivocado.
+
+`/entradas` y `/when-we-were-young-3` **no cambian**: siguen sirviendo el
+archivo de WWWY3 para quien llegue buscando su compra.
+
 ### Para el próximo evento
 
 Mientras el sistema siga siendo de **un solo evento** (una fila en
@@ -330,6 +355,8 @@ Mientras el sistema siga siendo de **un solo evento** (una fila en
 3. Aforo: `event_config.total_capacity` y los caps de preventa (admin / SQL).
 4. Copia y arte: `entradas.html` / `ayuda.html` (título, descripción, OG),
    `src/entradas/App.tsx`, `src/ayuda/App.tsx` (hoy en pasado), `wwwy3-title.webp`.
+   El teaser de `/31-10` (`src/teaser/`) se reemplaza entero por el flujo de
+   compra real — nada de él está pensado para sobrevivir al anuncio.
 5. **Rotar `TICKET_HMAC_SECRET`** para que ningún QR viejo pueda validarse, y
    cambiar el prefijo del token en `api/_lib/hmac.ts`.
 6. Datos del evento anterior: los `orders`/`tickets` viejos quedan mezclados con

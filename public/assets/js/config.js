@@ -72,11 +72,22 @@ export const CONFIG = {
   // Shows / fechas en vivo. Las entradas se venden en la app aparte
   // (ticket-system, en entradas.stilllouder.space).
   shows: {
-    // null = no hay fecha anunciada: la sección #shows muestra el estado vacío
-    // y el CTA lleva a Instagram. Al anunciar un show, poner aquí la URL de su
-    // venta y devolverle el botón de compra a la tarjeta en index.html.
+    // Próxima fecha en modo COMING SOON: la fecha está confirmada, pero el
+    // resto se guarda a propósito (no hay diseño ni paleta todavía). Lo único
+    // público es el día y que cae en Halloween — nada de lugar, cartel, ni de
+    // lo que se estrena esa noche. Al anunciar de verdad: ampliar el copy en
+    // la tarjeta #shows de index.html y abrir la venta con `ticketsUrl`.
+    next: {
+      dateISO: '2026-10-31T20:00:00-05:00',
+      // Etiqueta visible; el <time datetime> del HTML lleva la fecha máquina.
+      dateLabel: '31 · 10 · 2026',
+      teaser: 'Noche de Halloween'
+    },
+    // null = la venta todavía no abre: el CTA de la tarjeta lleva a Instagram.
+    // Al abrir la venta, poner aquí la URL del evento en el ticket-system y
+    // devolverle el botón de compra a la tarjeta en index.html.
     ticketsUrl: null,
-    // Canal donde se anuncian las fechas (destino del CTA del estado vacío).
+    // Canal donde se anuncian las fechas (destino del CTA mientras no hay venta).
     announceUrl: 'https://www.instagram.com/still_louder/',
     // Página de ayuda del sistema de entradas: sigue en pie para consultas
     // sobre compras del último show, aunque su venta esté cerrada.
@@ -209,5 +220,7 @@ Object.freeze(CONFIG.features);
 Object.freeze(CONFIG.ui);
 Object.freeze(CONFIG.messages);
 Object.freeze(CONFIG.store);
+Object.freeze(CONFIG.shows);
+Object.freeze(CONFIG.shows.next);
 
 export default CONFIG;

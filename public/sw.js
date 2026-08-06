@@ -1,12 +1,13 @@
 // Still Louder - Skirlaz - Service Worker
-// Version 1.2.0 - PWA Implementation
+// Version 1.3.0 - PWA Implementation
 //
-// Bump de versión: la sección de entradas pasó a ser #shows (HTML + CSS nuevos).
-// El CSS se sirve stale-while-revalidate, así que sin invalidar la caché un
-// visitante recurrente vería el HTML nuevo con el CSS viejo por una carga.
+// Bump de versión: la sección #shows pasó a coming soon del 31 oct 2026 (HTML,
+// CSS y JS nuevos). El CSS/JS se sirve stale-while-revalidate, así que sin
+// invalidar la caché un visitante recurrente vería el HTML nuevo con los
+// assets viejos por una carga (tarjeta sin estilo y sin cuenta regresiva).
 
-const CACHE_VERSION = 'still-louder-v1.2.0';
-const OFFLINE_VERSION = 'still-louder-offline-v1.2.0';
+const CACHE_VERSION = 'still-louder-v1.3.0';
+const OFFLINE_VERSION = 'still-louder-offline-v1.3.0';
 
 // Cache names
 const PRECACHE_NAME = `${CACHE_VERSION}-precache`;

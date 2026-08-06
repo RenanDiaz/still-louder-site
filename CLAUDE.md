@@ -82,13 +82,20 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   password via `isSupport()`), `/regalo/<token>` (public **hidden** gift-claim
   form, reachable only via a campaign QR token; `noindex`, never linked; the
   first N claimants get a `regalo` ticket — see `docs/features/gift-qr-campaigns.md`).
+  `/31-10` (public **static teaser** for the next show — 31 Oct 2026 — with no
+  backend call at all: no event row, no tiers, no capacity, just the date and a
+  "pronto". Its file is literally `31-10.html` so, under `cleanUrls`, that path
+  is its *only* public URL while it stays a teaser; it deliberately does NOT
+  reuse the `/entradas` theme, which is WWWY3's purple identity —
+  see `src/teaser/`).
   Root `index.html` redirects to `/entradas`;
   `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
   `/ayuda` and `/regalo` reuse the public `/entradas` theme
   (`src/entradas/theme.css`), not the dark shared `styles.css` used by the staff
   surfaces.
-- **Frontend**: `src/entradas/`, `src/ayuda/`, `src/admin/`, `src/validar/`,
-  `src/support/`, `src/regalo/`, plus `src/shared/` (`api.ts`, `config.ts`, `styles.css`).
+- **Frontend**: `src/entradas/`, `src/teaser/`, `src/ayuda/`, `src/admin/`,
+  `src/validar/`, `src/support/`, `src/regalo/`, plus `src/shared/` (`api.ts`,
+  `config.ts`, `styles.css`).
 - **Backend**: `api/` serverless functions; shared server-only logic in
   `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
   QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in
