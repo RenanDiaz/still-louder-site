@@ -770,9 +770,12 @@ body {
   animation: shows-pulse 2.4s ease-in-out infinite;
 }
 
+/* La fecha es también el encabezado (h3) de la tarjeta: la coming soon no tiene
+   headline propio, así que hay que neutralizar el peso que trae el h3 del UA. */
 .shows-card__date {
   font-family: var(--font-display);
   font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-normal);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-primary);
@@ -821,15 +824,6 @@ body {
   border-radius: 50%;
   background: var(--color-accent);
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
-}
-
-.shows-card__headline {
-  font-family: var(--font-display);
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-normal);
-  letter-spacing: var(--letter-spacing-wide);
-  line-height: var(--line-height-tight);
-  margin-bottom: var(--spacing-sm);
 }
 
 .shows-card__text {

@@ -74,14 +74,14 @@ export const CONFIG = {
   shows: {
     // Próxima fecha en modo COMING SOON: la fecha está confirmada, pero el
     // resto se guarda a propósito (no hay diseño ni paleta todavía). Lo único
-    // público es el día y que cae en Halloween — nada de lugar, cartel, ni de
-    // lo que se estrena esa noche. Al anunciar de verdad: ampliar el copy en
-    // la tarjeta #shows de index.html y abrir la venta con `ticketsUrl`.
+    // público es el día — nada de lugar, cartel, ni de lo que se estrena esa
+    // noche; ni siquiera se nombra la fecha, porque mientras menos se revele
+    // más misterio. Al anunciar de verdad: ampliar el copy en la tarjeta
+    // #shows de index.html y abrir la venta con `ticketsUrl`.
     next: {
       dateISO: '2026-10-31T20:00:00-05:00',
       // Etiqueta visible; el <time datetime> del HTML lleva la fecha máquina.
-      dateLabel: '31 · 10 · 2026',
-      teaser: 'Noche de Halloween'
+      dateLabel: '31 · 10 · 2026'
     },
     // null = la venta todavía no abre: el CTA de la tarjeta lleva a Instagram.
     // Al abrir la venta, poner aquí la URL del evento en el ticket-system y

@@ -31,10 +31,12 @@ export const EVENT = {
 // sigue describiendo WWWY3 (su venta cerrada y su puerta congelada) hasta que
 // el ticket-system soporte múltiples eventos.
 //
-// Lo único público es la fecha y que cae en Halloween: nada de lugar, cartel,
-// precios ni de lo que se estrena esa noche. Al abrir la venta, esta superficie
-// se reemplaza por el flujo de compra real.
+// Lo único público es la fecha: nada de cómo se llama la noche, ni de lugar,
+// cartel, precios o de lo que se estrena. Al abrir la venta, esta superficie se
+// reemplaza por el flujo de compra real.
 export const NEXT_EVENT = {
+  // Momento del show. Hoy no lo usa el teaser (no hay cuenta regresiva: la
+  // fecha sola dice más); queda como la fuente de la fecha para el flujo real.
   dateISO: '2026-10-31T20:00:00-05:00',
   dateLabel: '31.10.2026'
 } as const;
