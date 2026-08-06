@@ -1,0 +1,203 @@
+/*
+  Teaser del show del 31 de octubre de 2026 (/31-10).
+
+  PRINCIPIO: este evento todavía NO tiene diseño ni paleta. Esta hoja es
+  deliberadamente monocroma — negro, hueso y un solo acento tenue — para no
+  adelantar ninguna decisión visual. NO importa el tema de /entradas: ese es la
+  identidad morada/rosa de WWWY3 y usarla aquí anunciaría el evento equivocado.
+  Cuando exista el arte del show, esta superficie se reemplaza entera por el
+  flujo de compra real; nada de aquí está pensado para sobrevivir a eso.
+*/
+
+/* ===================== FUENTES (AUTO-HOSPEDADAS) ===================== */
+/* La CSP del ticket-system es estricta (font-src 'self'), así que Google Fonts
+   queda bloqueado: se sirven desde /fonts, igual que en /entradas. Se reusan
+   solo las dos neutras (Anton para display, Archivo para texto) — nada de la
+   Permanent Marker, que es la voz de WWWY3. */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/anton-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/archivo-latin.woff2') format('woff2');
+}
+
+:root {
+  --tz-ink: #0b0b0c;
+  --tz-bone: #ece9e4;
+  --tz-dim: rgba(236, 233, 228, 0.55);
+  --tz-faint: rgba(236, 233, 228, 0.16);
+  --tz-font-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  --tz-font-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--tz-font-body);
+  color: var(--tz-bone);
+  background: radial-gradient(70% 50% at 50% 0%, #16161a 0%, var(--tz-ink) 70%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grano tenue: textura sin color, para que el negro no se vea plano. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===================== LAYOUT ===================== */
+.tz-page {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  text-align: center;
+  padding: 64px 22px;
+}
+
+.tz-band {
+  font-family: var(--tz-font-display);
+  font-size: 13px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--tz-dim);
+  /* El letter-spacing agrega un hueco fantasma al final: compensarlo para que
+     el bloque se lea centrado de verdad. */
+  text-indent: 0.42em;
+}
+
+.tz-date {
+  font-family: var(--tz-font-display);
+  font-size: clamp(3.1rem, 1.6rem + 9vw, 8rem);
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+}
+
+.tz-kicker {
+  font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.2rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tz-dim);
+}
+
+/* Regla fina como separador: el mínimo gesto gráfico que no compromete nada. */
+.tz-rule {
+  width: min(280px, 62%);
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--tz-faint), transparent);
+}
+
+.tz-soon {
+  font-family: var(--tz-font-display);
+  font-size: clamp(1.6rem, 1.1rem + 2.4vw, 2.8rem);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+}
+
+.tz-copy {
+  max-width: 34ch;
+  color: var(--tz-dim);
+  font-size: 0.97rem;
+}
+
+.tz-countdown {
+  font-size: 0.8rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tz-faint);
+}
+
+/* ===================== CTA ===================== */
+.tz-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 26px;
+  border: 1px solid var(--tz-bone);
+  border-radius: 2px;
+  color: var(--tz-bone);
+  background: transparent;
+  font-family: var(--tz-font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.tz-cta:hover,
+.tz-cta:focus-visible {
+  background: var(--tz-bone);
+  color: var(--tz-ink);
+}
+
+.tz-cta:focus-visible {
+  outline: 2px solid var(--tz-bone);
+  outline-offset: 3px;
+}
+
+/* ===================== PIE ===================== */
+.tz-foot {
+  font-size: 0.78rem;
+  color: var(--tz-faint);
+  max-width: 40ch;
+}
+
+.tz-foot a {
+  color: var(--tz-dim);
+  text-underline-offset: 3px;
+}
+
+.tz-foot a:hover {
+  color: var(--tz-bone);
+}
+
+/* ===================== ENTRADA ===================== */
+.tz-reveal {
+  animation: tz-fade 0.9s ease both;
+}
+
+@keyframes tz-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tz-reveal {
+    animation: none;
+  }
+}

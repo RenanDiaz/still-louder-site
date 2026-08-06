@@ -749,8 +749,9 @@ body {
   background: var(--color-bg-tertiary);
 }
 
-/* Tarjeta principal de la sección. Estado actual: --empty (sin fechas). Al
-   anunciar un show, la tarjeta del evento vive aquí con su CTA de venta. */
+/* Tarjeta principal de la sección. Estado actual: --next (fecha confirmada en
+   modo coming soon). Al abrir la venta, el CTA de Instagram se cambia por el
+   botón de compra; la tarjeta no necesita otro tratamiento. */
 .shows-card {
   max-width: 640px;
   margin: 0 auto;
@@ -760,6 +761,47 @@ body {
 
 .shows-card:hover {
   transform: none;
+}
+
+/* Coming soon: la fecha es el héroe de la tarjeta porque es lo único que
+   estamos revelando. Sin arte ni paleta propia todavía — se apoya en los
+   tokens del sitio a propósito, para no comprometer el diseño del evento. */
+.shows-card--next .shows-card__dot {
+  animation: shows-pulse 2.4s ease-in-out infinite;
+}
+
+.shows-card__date {
+  font-family: var(--font-display);
+  font-size: var(--font-size-4xl);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.shows-card__countdown {
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-accent);
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+@keyframes shows-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shows-card--next .shows-card__dot {
+    animation: none;
+  }
 }
 
 .shows-card__status {

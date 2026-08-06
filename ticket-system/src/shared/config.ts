@@ -25,6 +25,20 @@ export const EVENT = {
   eventEnd: '2026-08-02T06:00:00-05:00'
 } as const;
 
+// Próximo show, en modo TEASER (/31-10). Todavía no es un evento del sistema:
+// no tiene tarifas, ni cupo, ni fila en `event_config` — solo una fecha y una
+// página que dice "pronto". Vive aparte de EVENT a propósito, porque EVENT
+// sigue describiendo WWWY3 (su venta cerrada y su puerta congelada) hasta que
+// el ticket-system soporte múltiples eventos.
+//
+// Lo único público es la fecha y que cae en Halloween: nada de lugar, cartel,
+// precios ni de lo que se estrena esa noche. Al abrir la venta, esta superficie
+// se reemplaza por el flujo de compra real.
+export const NEXT_EVENT = {
+  dateISO: '2026-10-31T20:00:00-05:00',
+  dateLabel: '31.10.2026'
+} as const;
+
 // Canales oficiales de la banda. El Instagram es el canal principal; el enlace
 // usa ig.me/m/ para abrir un mensaje directo (DM) en vez del perfil.
 export const SOCIAL = {

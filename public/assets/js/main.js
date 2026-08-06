@@ -323,8 +323,8 @@ const initPlatformTracking = () => {
     });
   }
 
-  // Shows link tracking. Sin fecha anunciada el CTA lleva a Instagram; cuando
-  // haya show, apunta a su venta y el label debería ser el slug del evento.
+  // Shows link tracking. Mientras la venta no abra el CTA lleva a Instagram;
+  // cuando abra, apunta a su venta y el label debería ser el slug del evento.
   const showsLink = document.getElementById('shows-link');
   if (showsLink) {
     showsLink.addEventListener('click', () => {
@@ -334,6 +334,31 @@ const initPlatformTracking = () => {
       });
     });
   }
+};
+
+// ============================================
+// SHOWS COUNTDOWN
+// ============================================
+
+/**
+ * Cuenta regresiva en días hacia la próxima fecha. Es progressive enhancement:
+ * el HTML trae un texto válido de fábrica y esto solo lo reemplaza si hay
+ * fecha configurada y todavía no llega. Pasado el show no toca nada — el
+ * fallback del HTML sigue siendo cierto y la tarjeta se reescribe a mano.
+ */
+const initShowsCountdown = () => {
+  const el = document.getElementById('shows-countdown');
+  const dateISO = APP_CONFIG.shows?.next?.dateISO;
+  if (!el || !dateISO) return;
+
+  const target = new Date(dateISO);
+  if (Number.isNaN(target.getTime())) return;
+
+  const msPerDay = 86400000;
+  const days = Math.ceil((target.getTime() - Date.now()) / msPerDay);
+  if (days <= 0) return;
+
+  el.textContent = days === 1 ? 'Falta 1 día' : `Faltan ${days} días`;
 };
 
 // ============================================
@@ -472,6 +497,7 @@ const init = () => {
   // Features
   initShare();
   initPlatformTracking();
+  initShowsCountdown();
   initContactForm();
   initParallax();
   initPWAShortcuts();
