@@ -4,15 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>31.10.2026 · Still Louder</title>
-    <meta
-      name="description"
-      content="Still Louder — 31 de octubre de 2026, noche de Halloween. Las entradas se venden aquí. Todavía no."
-    />
+    <!--
+      Lo mínimo, a propósito: la fecha y la banda. Nada de cómo se llama la
+      noche, ni de que aquí se venderán las entradas — mientras menos se revele,
+      más misterio. En la página se ve tenue (teaser.css), pero acá va en claro
+      porque el preview del enlace y los buscadores leen este texto tal cual.
+    -->
+    <meta name="description" content="Still Louder — 31 de octubre de 2026." />
     <!--
       Sin paleta propia todavía: el teaser es deliberadamente monocromo, así que
       el theme-color es el negro del fondo y no compromete el color del evento.
     -->
-    <meta name="theme-color" content="#0b0b0c" />
+    <meta name="theme-color" content="#050506" />
     <link rel="canonical" href="https://entradas.stilllouder.space/31-10" />
 
     <!-- Open Graph (WhatsApp, Facebook, Instagram, Telegram) -->
@@ -26,18 +29,12 @@
     <meta property="og:locale" content="es_PA" />
     <meta property="og:url" content="https://entradas.stilllouder.space/31-10" />
     <meta property="og:title" content="31.10.2026 · Still Louder" />
-    <meta
-      property="og:description"
-      content="Noche de Halloween. Las entradas se venden aquí. Todavía no."
-    />
+    <meta property="og:description" content="31 de octubre de 2026." />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="31.10.2026 · Still Louder" />
-    <meta
-      name="twitter:description"
-      content="Noche de Halloween. Las entradas se venden aquí. Todavía no."
-    />
+    <meta name="twitter:description" content="31 de octubre de 2026." />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -48,6 +45,11 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Sin JS no hay nada que renderizar (la hoja de estilos también entra por
+         el bundle), así que la fecha queda igual de disponible en texto plano. -->
+    <noscript>
+      <p>Still Louder — <time datetime="2026-10-31">31 de octubre de 2026</time></p>
+    </noscript>
     <script type="module" src="/src/teaser/main.tsx"></script>
   </body>
 </html>

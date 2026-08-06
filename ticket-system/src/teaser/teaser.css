@@ -2,11 +2,26 @@
   Teaser del show del 31 de octubre de 2026 (/31-10).
 
   PRINCIPIO: este evento todavía NO tiene diseño ni paleta. Esta hoja es
-  deliberadamente monocroma — negro, hueso y un solo acento tenue — para no
-  adelantar ninguna decisión visual. NO importa el tema de /entradas: ese es la
-  identidad morada/rosa de WWWY3 y usarla aquí anunciaría el evento equivocado.
-  Cuando exista el arte del show, esta superficie se reemplaza entera por el
-  flujo de compra real; nada de aquí está pensado para sobrevivir a eso.
+  deliberadamente monocroma — negro y hueso, sin un solo acento de color — para
+  no adelantar ninguna decisión visual. NO importa el tema de /entradas: ese es
+  la identidad morada/rosa de WWWY3 y usarla aquí anunciaría el evento
+  equivocado. Cuando exista el arte del show, esta superficie se reemplaza
+  entera por el flujo de compra real; nada de aquí está pensado para sobrevivir
+  a eso.
+
+  IDEA: que apenas se asome. Fondo negro, y lo poco que queda emergiendo de la
+  oscuridad — atenuado por un degradado que lo deja ver sin dejarlo leer del
+  todo de una. El degradado es SOLO presentación (mask + background-clip sobre
+  texto real), nunca contenido: el DOM sigue teniendo la fecha completa para
+  buscadores y lectores de pantalla, que ignoran opacidad y máscaras.
+
+  ACCESIBILIDAD: bajar el contraste a propósito choca con WCAG, así que el
+  efecto está acotado a lo decorativo y se apaga solo cuando el sistema lo pide:
+  - lo accionable (.tz-cta) queda fuera del bloque tenue y mantiene ≥ 4.5:1;
+  - `prefers-contrast: more` y `prefers-reduced-transparency` devuelven todo a
+    hueso pleno sobre negro (~15:1) y quitan grano y máscara;
+  - `forced-colors: active` cae a los colores del sistema;
+  - `prefers-reduced-motion` elimina la aparición y el latido.
 */
 
 /* ===================== FUENTES (AUTO-HOSPEDADAS) ===================== */
@@ -30,10 +45,14 @@
 }
 
 :root {
-  --tz-ink: #0b0b0c;
+  /* Negro más profundo que el de /entradas: el fondo es casi todo lo que hay. */
+  --tz-void: #050506;
   --tz-bone: #ece9e4;
-  --tz-dim: rgba(236, 233, 228, 0.55);
-  --tz-faint: rgba(236, 233, 228, 0.16);
+  /* Tenue de verdad: es el tono del bloque que "apenas se asoma". Deliberadamente
+     por debajo de WCAG — solo para lo decorativo, nunca para un control. */
+  --tz-veil: rgba(236, 233, 228, 0.42);
+  /* Legible aunque se vea apagado: hueso al 72% sobre el negro ≈ 8:1. */
+  --tz-quiet: rgba(236, 233, 228, 0.72);
   --tz-font-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
   --tz-font-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -44,11 +63,15 @@
   padding: 0;
 }
 
+/* Negro plano con un halo apenas perceptible detrás del centro: es la "luz"
+   de la que el texto parece estar saliendo. */
 body {
   font-family: var(--tz-font-body);
   color: var(--tz-bone);
-  background: radial-gradient(70% 50% at 50% 0%, #16161a 0%, var(--tz-ink) 70%);
+  background: var(--tz-void);
+  background-image: radial-gradient(60% 42% at 50% 46%, #17171b 0%, rgba(5, 5, 6, 0) 70%);
   background-attachment: fixed;
+  background-repeat: no-repeat;
   min-height: 100vh;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -61,7 +84,7 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.055;
+  opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -74,121 +97,120 @@ body::before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 26px;
+  /* Mucho aire: el vacío alrededor es la mitad del efecto. */
+  gap: clamp(56px, 14vh, 132px);
   text-align: center;
   padding: 64px 22px;
 }
 
+/* ===================== LO QUE APENAS SE ASOMA ===================== */
+/*
+  Dos capas de atenuación sobre texto real:
+  1) la máscara radial disuelve los bordes del bloque hacia la oscuridad —
+     nunca hasta 0 en los extremos, para que ningún dígito de la fecha
+     desaparezca por completo;
+  2) .tz-date pinta sus glifos con un degradado vertical, así que las letras
+     se apagan hacia abajo, como si la parte de abajo siguiera sumergida.
+*/
+.tz-emerge {
+  color: var(--tz-veil);
+  opacity: 1;
+  -webkit-mask-image: radial-gradient(
+    100% 140% at 50% 46%,
+    rgb(0 0 0 / 100%) 0%,
+    rgb(0 0 0 / 90%) 45%,
+    rgb(0 0 0 / 68%) 80%,
+    rgb(0 0 0 / 55%) 100%
+  );
+  mask-image: radial-gradient(
+    100% 140% at 50% 46%,
+    rgb(0 0 0 / 100%) 0%,
+    rgb(0 0 0 / 90%) 45%,
+    rgb(0 0 0 / 68%) 80%,
+    rgb(0 0 0 / 55%) 100%
+  );
+  /* Aparece una vez y después respira muy despacio: refuerza el "hay algo ahí"
+     sin llegar a parpadear. Ambas se apagan con prefers-reduced-motion. */
+  animation:
+    tz-surface 2.4s ease both,
+    tz-breathe 14s 2.4s ease-in-out infinite;
+}
+
 .tz-band {
   font-family: var(--tz-font-display);
-  font-size: 13px;
-  letter-spacing: 0.42em;
+  font-size: 12px;
+  letter-spacing: 0.5em;
   text-transform: uppercase;
-  color: var(--tz-dim);
+  opacity: 0.62;
   /* El letter-spacing agrega un hueco fantasma al final: compensarlo para que
      el bloque se lea centrado de verdad. */
-  text-indent: 0.42em;
+  text-indent: 0.5em;
+  margin-bottom: clamp(18px, 4vh, 34px);
 }
 
 .tz-date {
   font-family: var(--tz-font-display);
-  font-size: clamp(3.1rem, 1.6rem + 9vw, 8rem);
-  line-height: 0.92;
+  font-size: clamp(3rem, 1.4rem + 9.5vw, 8.5rem);
+  font-weight: 400;
+  line-height: 0.94;
   letter-spacing: 0.02em;
+  /* Glifos degradados: apenas visibles arriba, disolviéndose hacia abajo. El
+     tope no llega ni a la mitad del hueso a propósito — la fecha se adivina
+     antes de leerse. La máscara del bloque encima apaga además los extremos,
+     así que ningún dígito se lee al mismo tiempo que los demás. */
+  background-image: linear-gradient(
+    to bottom,
+    rgb(236 233 228 / 60%) 0%,
+    rgb(236 233 228 / 38%) 48%,
+    rgb(236 233 228 / 9%) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* Halo difuso detrás de las letras huecas: la neblina de la que emergen. */
+  text-shadow: 0 0 52px rgb(236 233 228 / 9%);
 }
 
-.tz-kicker {
-  font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.2rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--tz-dim);
-}
-
-/* Regla fina como separador: el mínimo gesto gráfico que no compromete nada. */
-.tz-rule {
-  width: min(280px, 62%);
-  height: 1px;
-  border: 0;
-  background: linear-gradient(90deg, transparent, var(--tz-faint), transparent);
-}
-
-.tz-soon {
+/* ===================== LO ÚNICO ACCIONABLE ===================== */
+/* Se ve apagado pero es legible de verdad (≈ 8:1) y no lo toca ninguna máscara:
+   un enlace que no se puede leer no es un enlace. */
+.tz-cta {
+  color: var(--tz-quiet);
   font-family: var(--tz-font-display);
-  font-size: clamp(1.6rem, 1.1rem + 2.4vw, 2.8rem);
+  font-size: 0.82rem;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
   text-transform: uppercase;
-}
-
-.tz-copy {
-  max-width: 34ch;
-  color: var(--tz-dim);
-  font-size: 0.97rem;
-}
-
-.tz-countdown {
-  font-size: 0.8rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--tz-faint);
-}
-
-/* ===================== CTA ===================== */
-.tz-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 26px;
-  border: 1px solid var(--tz-bone);
-  border-radius: 2px;
-  color: var(--tz-bone);
-  background: transparent;
-  font-family: var(--tz-font-display);
-  font-size: 0.9rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
   text-decoration: none;
+  /* Área de toque cómoda sin dibujar un botón: la caja rompería el vacío. El
+     aire va arriba para que la línea quede pegada al texto y se lea como
+     subrayado, no como una regla suelta. */
+  padding: 20px 20px 9px;
+  /* El subrayado es lo que identifica al enlace, así que se queda por encima de
+     3:1 (≈ 4:1) aunque se vea discreto — 1.4.11 no aplica solo al texto. */
+  border-bottom: 1px solid rgb(236 233 228 / 45%);
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    color 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .tz-cta:hover,
 .tz-cta:focus-visible {
-  background: var(--tz-bone);
-  color: var(--tz-ink);
+  color: var(--tz-bone);
+  border-bottom-color: var(--tz-bone);
 }
 
 .tz-cta:focus-visible {
   outline: 2px solid var(--tz-bone);
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
 
-/* ===================== PIE ===================== */
-.tz-foot {
-  font-size: 0.78rem;
-  color: var(--tz-faint);
-  max-width: 40ch;
-}
-
-.tz-foot a {
-  color: var(--tz-dim);
-  text-underline-offset: 3px;
-}
-
-.tz-foot a:hover {
-  color: var(--tz-bone);
-}
-
-/* ===================== ENTRADA ===================== */
-.tz-reveal {
-  animation: tz-fade 0.9s ease both;
-}
-
-@keyframes tz-fade {
+/* ===================== APARICIÓN Y LATIDO ===================== */
+@keyframes tz-surface {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -196,8 +218,83 @@ body::before {
   }
 }
 
+@keyframes tz-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.78;
+  }
+}
+
+/* ===================== PREFERENCIAS DEL SISTEMA ===================== */
 @media (prefers-reduced-motion: reduce) {
-  .tz-reveal {
+  .tz-emerge {
     animation: none;
+  }
+}
+
+/*
+  Quien pide más contraste (o menos transparencia) ve la página sin el efecto:
+  hueso pleno sobre negro, sin máscara, sin degradado en los glifos y sin grano.
+  El misterio es una decisión estética; la legibilidad no se negocia.
+*/
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  body::before {
+    display: none;
+  }
+
+  .tz-emerge {
+    color: var(--tz-bone);
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: none;
+  }
+
+  .tz-band {
+    opacity: 1;
+  }
+
+  .tz-date {
+    background-image: none;
+    color: var(--tz-bone);
+    -webkit-text-fill-color: var(--tz-bone);
+    text-shadow: none;
+  }
+
+  .tz-cta {
+    color: var(--tz-bone);
+    border-bottom-color: var(--tz-bone);
+  }
+}
+
+/* Modo de contraste forzado (Windows): todo a los colores del sistema. Sin este
+   bloque, el `color: transparent` de .tz-date dejaría la fecha invisible. */
+@media (forced-colors: active) {
+  body::before {
+    display: none;
+  }
+
+  .tz-emerge {
+    color: CanvasText;
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: none;
+  }
+
+  .tz-band {
+    opacity: 1;
+  }
+
+  .tz-date {
+    background-image: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    text-shadow: none;
+  }
+
+  .tz-cta {
+    color: LinkText;
   }
 }

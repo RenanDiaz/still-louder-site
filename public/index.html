@@ -626,9 +626,11 @@
       <!-- Shows Section -->
       <!--
         Fechas en vivo. Estado actual: COMING SOON — hay fecha (31 oct 2026)
-        pero el anuncio real todavía no sale. Lo ÚNICO público es el día y que
-        cae en Halloween: nada de lugar, cartel, ni de lo que se estrena esa
-        noche (aún no hay diseño ni paleta para este evento).
+        pero el anuncio real todavía no sale. Lo ÚNICO público es el día: nada
+        de lugar, cartel, ni de lo que se estrena esa noche (aún no hay diseño
+        ni paleta para este evento). Mientras menos se revele, mejor: la fecha
+        sola es el gancho, así que la tarjeta no lleva headline aparte y el
+        .shows-card__date es su encabezado (h3).
         Al anunciar de verdad: ampliar el copy de .shows-card--next y, cuando
         abra la venta, cambiar el CTA por el botón de compra apuntando a
         CONFIG.shows.ticketsUrl (assets/js/config.js).
@@ -646,10 +648,9 @@
               Próxima fecha
             </p>
 
-            <p class="shows-card__date">
+            <h3 class="shows-card__date">
               <time datetime="2026-10-31">31 · 10 · 2026</time>
-            </p>
-            <h3 class="shows-card__headline">Noche de Halloween</h3>
+            </h3>
 
             <!--
               Cuenta regresiva en días. El texto del servidor es el fallback:

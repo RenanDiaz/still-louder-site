@@ -6,7 +6,7 @@
 // invalidar la caché un visitante recurrente vería el HTML nuevo con los
 // assets viejos por una carga (tarjeta sin estilo y sin cuenta regresiva).
 
-const CACHE_VERSION = 'still-louder-v1.3.0';
+const CACHE_VERSION = 'still-louder-v1.3.1';
 const OFFLINE_VERSION = 'still-louder-offline-v1.3.0';
 
 // Cache names
