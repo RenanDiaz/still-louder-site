@@ -203,6 +203,9 @@ vercel --prod
 The ticket system is deployed as a **separate** Vercel project — see
 [`ticket-system/README.md`](ticket-system/README.md).
 
+Both apps can also deploy to **Cloudflare Workers** (`wrangler.jsonc` in the
+root and in `ticket-system/`) — see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+
 ---
 
 ## Contributing

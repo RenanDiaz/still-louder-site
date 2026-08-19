@@ -57,7 +57,7 @@ before touching this app.
 cd ticket-system
 npm install
 npm run dev        # frontend only, http://localhost:3100
-npm run typecheck  # tsc for BOTH src and api (tsconfig.json + tsconfig.api.json)
+npm run typecheck  # tsc for src, api AND the Cloudflare worker (tsconfig.json + tsconfig.api.json + tsconfig.cloudflare.json)
 npm run build      # production build to ticket-system/dist/
 ```
 
@@ -486,6 +486,22 @@ vercel --prod
 
 - No environment variables required for basic functionality
 - Google Analytics ID is hardcoded in `index.html` and `config.js`
+
+### Cloudflare Workers (alternative deploy)
+
+Both apps can also deploy to **Cloudflare Workers** — see `DEPLOY_CLOUDFLARE.md`
+for the full guide. Key rules when touching either app:
+
+- The main site is an assets-only Worker (`wrangler.jsonc` at the root). Its
+  security/caching headers are **duplicated**: `vercel.json` (Vercel) and
+  `public/assets/_headers` (Cloudflare, copied by Vite to `dist/_headers`).
+  Change both when changing headers.
+- The ticket system Worker (`ticket-system/wrangler.jsonc`) reuses the Vercel
+  `api/` handlers through the adapter in `ticket-system/cloudflare/`. There is
+  **no filesystem routing** on Cloudflare: any new file under
+  `ticket-system/api/` must also be registered in the router in
+  `ticket-system/cloudflare/worker.ts`. Its headers/rewrites are likewise
+  duplicated in `ticket-system/public/_headers` and `_redirects`.
 
 ---
 

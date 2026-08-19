@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.api.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.api.json --noEmit && tsc -p tsconfig.cloudflare.json --noEmit",
+    "preview:cloudflare": "npm run build && wrangler dev",
+    "deploy:cloudflare": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
@@ -18,6 +20,7 @@
     "resend": "^4.0.1"
   },
   "devDependencies": {
+    "@types/node": "^20.17.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
@@ -25,7 +28,8 @@
     "@vitejs/plugin-react": "^4.3.3",
     "html5-qrcode": "^2.3.8",
     "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "wrangler": "^4.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
