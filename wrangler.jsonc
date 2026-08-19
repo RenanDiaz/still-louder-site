@@ -1,0 +1,27 @@
+// Cloudflare Workers config for the MAIN SITE (stilllouder.space).
+// Static-assets-only Worker: no server code, `dist/` is served directly.
+// The ticket system deploys as its OWN Worker from ticket-system/wrangler.jsonc.
+//
+// Deploy:   npm run deploy:cloudflare      (build + wrangler deploy)
+// Preview:  npm run preview:cloudflare     (build + wrangler dev)
+// Full guide: DEPLOY_CLOUDFLARE.md
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "still-louder-site",
+  "compatibility_date": "2025-08-01",
+
+  "assets": {
+    "directory": "./dist",
+    // cleanUrls + trailingSlash:false equivalent: /foo serves foo.html,
+    // /foo/ redirects to /foo.
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+
+  // Custom domain — uncomment once the DNS zone stilllouder.space is on this
+  // Cloudflare account (until then, test on the *.workers.dev URL):
+  // "routes": [
+  //   { "pattern": "stilllouder.space", "custom_domain": true },
+  //   { "pattern": "www.stilllouder.space", "custom_domain": true }
+  // ]
+}

@@ -1,0 +1,21 @@
+{
+  // Typechecks the Cloudflare Worker entry TOGETHER with the api/ handlers it
+  // wraps. Same dialect as tsconfig.api.json; the Workers runtime types are
+  // structural stand-ins (Request/Response/URL come from @types/node's fetch
+  // globals, which match the Workers runtime for everything the adapter uses).
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["cloudflare", "api"]
+}

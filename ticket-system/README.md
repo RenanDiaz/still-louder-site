@@ -200,6 +200,10 @@ ejecuta `/api/admin/orders/cleanup`.
 > suben a **Vercel Pro**, pueden volver a una frecuencia horaria (`"0 * * * *"`).
 > El JSON no admite comentarios, por eso esta nota vive aquí y no en `vercel.json`.
 
+> **Cloudflare:** la app también puede deployarse como Worker de Cloudflare sin
+> reescribir la API (adaptador en `cloudflare/`, config en `wrangler.jsonc`).
+> Guía completa: [`DEPLOY_CLOUDFLARE.md`](../DEPLOY_CLOUDFLARE.md) en la raíz.
+
 > Alternativa: integrarlo en el proyecto existente bajo `/entradas` y `/validar`.
 > Se eligió el proyecto aparte por la configuración inusual de `publicDir` del
 > sitio actual; migrar es posible moviendo `api/` a la raíz y añadiendo las

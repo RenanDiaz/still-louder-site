@@ -1,0 +1,55 @@
+// Cloudflare Workers config for the TICKET SYSTEM (entradas.stilllouder.space).
+// One Worker serves both halves of the app:
+//   - static assets: the Vite multi-page build in dist/
+//   - /api/*: the existing Vercel-style handlers, adapted by cloudflare/worker.ts
+//
+// Deploy:   npm run deploy:cloudflare      (build + wrangler deploy)
+// Preview:  npm run preview:cloudflare     (build + wrangler dev)
+// Secrets:  every env var in api/_lib/env.ts must be set with
+//           `wrangler secret put <NAME>` — see DEPLOY_CLOUDFLARE.md (repo root).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "still-louder-entradas",
+  "main": "cloudflare/worker.ts",
+  // With nodejs_compat and a compatibility date >= 2025-04-01, node:crypto /
+  // Buffer work and process.env is populated from vars + secrets, so the
+  // api/ code reads its configuration unchanged.
+  "compatibility_date": "2025-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // The bundler would otherwise pick qrcode's "browser" build, which lacks
+  // toBuffer() (it renders via <canvas>). Force the Node build — its pngjs /
+  // node:zlib / node:stream dependencies all exist under nodejs_compat.
+  "alias": {
+    "qrcode": "qrcode/lib/index.js"
+  },
+
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // cleanUrls + trailingSlash:false equivalent (entradas.html -> /entradas).
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none",
+    // Only API requests invoke the Worker; every other path is served as a
+    // static asset directly (honoring dist/_headers and dist/_redirects).
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Mirror of vercel.json "crons": daily cleanup of expired pending orders.
+  // (Cloudflare has no hourly-cron restriction; tighten the schedule here if
+  // desired — the endpoint is idempotent housekeeping.)
+  "triggers": {
+    "crons": ["0 6 * * *"]
+  },
+
+  "observability": {
+    "enabled": true
+  }
+
+  // Custom domain — uncomment once the DNS zone stilllouder.space is on this
+  // Cloudflare account (until then, test on the *.workers.dev URL). Remember
+  // that PUBLIC_BASE_URL / YAPPY_BTN_DOMAIN must match the serving domain.
+  // "routes": [
+  //   { "pattern": "entradas.stilllouder.space", "custom_domain": true }
+  // ]
+}

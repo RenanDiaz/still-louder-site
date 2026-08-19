@@ -1,0 +1,7 @@
+# Cloudflare `_redirects` — mirror of the non-API rewrites in
+# ticket-system/vercel.json (the /api/admin/:path* rewrite is handled by the
+# Worker router in cloudflare/worker.ts instead). Status 200 = rewrite, the
+# URL stays as typed. Only Cloudflare reads this file.
+
+/when-we-were-young-3 /entradas 200
+/regalo/* /regalo 200

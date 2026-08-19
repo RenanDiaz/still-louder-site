@@ -1,0 +1,51 @@
+# Cloudflare `_headers` — mirror of the header rules in vercel.json for the
+# Cloudflare Workers deploy (wrangler.jsonc). Only Cloudflare reads this file;
+# on Vercel it is served as an inert static file and the rules in vercel.json
+# apply instead. KEEP BOTH FILES IN SYNC when changing headers.
+#
+# This file lives in public/assets/ because that directory is Vite's publicDir:
+# its contents are copied verbatim to the ROOT of dist/, which is where
+# Cloudflare expects _headers.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://i.imgur.com https://i.ytimg.com data: blob:; connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://docs.google.com; media-src 'self'; frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-DNS-Prefetch-Control: on
+
+# Hashed Vite build output — cacheable forever.
+/assets/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/webmanifest/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Audio: a week + stale-while-revalidate (same as vercel.json), not immutable.
+/assets/mp3/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+# Unhashed images copied from publicDir (favicons live at the root and are
+# covered by the extension rules on Vercel; here we cover the images/ tree).
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML always revalidates. With html_handling, pages are served WITHOUT .html,
+# so the rules target the clean URLs (add one per page).
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/al-vacio-pre-release
+  Cache-Control: public, max-age=0, must-revalidate

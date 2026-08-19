@@ -4,6 +4,9 @@
 # Ignore Vercel build output
 .vercel
 
+# Ignore Cloudflare Wrangler local state
+.wrangler/
+
 # Ignore local environment files
 .env
 
