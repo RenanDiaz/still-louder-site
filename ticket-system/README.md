@@ -18,6 +18,9 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 | `/admin`    | Admin        | Reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV. |
 | `/validar`  | Staff/puerta | Escáner de QR con resultado verde/rojo + sonido.                |
 | `/support`  | Soporte      | **Solo lectura**: buscar órdenes por email/teléfono/nombre/# de orden, ver su estado y sus entradas, y reenviar el correo con el QR. Sin acceso a mutaciones (pagar, cancelar, anular, cortesías, Etapa 2) ni a las estadísticas de ventas. |
+| `/ayuda`    | Público      | FAQ + canales oficiales de contacto. Estático: sin backend y sin datos del usuario. El reenvío del QR **no** vive aquí a propósito — lo hace el staff desde `/support` cuando el comprador escribe. |
+| `/regalo/<token>` | Público (oculto) | Formulario de reclamo de regalo, alcanzable **solo** con el token de una campaña QR. `noindex`, nunca enlazado. Ver `docs/features/gift-qr-campaigns.md`. |
+| `/31-10`    | Público      | Teaser **estático** del próximo show (31 oct 2026): solo la fecha, sin backend. Ver "Teaser del próximo show". |
 
 ## Arquitectura
 
@@ -25,8 +28,8 @@ El sistema es **agnóstico al método de pago**. Lo que dispara la emisión de l
 entrada (crear tickets + enviar correo) es **una orden pasando a `paid`**, sin
 importar el origen del pago. Toda esa lógica vive en `api/_lib/issue.ts` y es la
 única rutina que emite. Efectivo y CuantoApp la invocan vía el botón "marcar
-pagado" del admin; Yappy (fase 2) la invocará desde su webhook. **No acoplar la
-emisión a ningún proveedor.**
+pagado" del admin; Yappy la invoca desde su IPN autenticada
+(`api/yappy/ipn.ts`). **No acoplar la emisión a ningún proveedor.**
 
 ```
 ticket-system/
@@ -34,33 +37,57 @@ ticket-system/
 │   ├── _lib/                 # lógica compartida (NUNCA llega al cliente)
 │   │   ├── env.ts            # acceso validado a variables de entorno
 │   │   ├── supabase.ts       # cliente service-role (bypass RLS)
-│   │   ├── auth.ts           # gates admin/staff (comparación timing-safe)
+│   │   ├── auth.ts           # gates admin/staff/soporte (comparación timing-safe)
+│   │   ├── http.ts           # helpers de respuesta (sendJson/sendHtml, withErrorHandling)
 │   │   ├── hmac.ts           # firma/verificación del token del QR
 │   │   ├── qr.ts             # render del QR (PNG / data URL)
 │   │   ├── email.ts          # envío con Resend
 │   │   ├── pricing.ts        # precios por tier + ventana de reserva (server-side)
+│   │   ├── event.ts          # fechas de cierre: SALES_END / EVENT_END (autoridad)
 │   │   ├── issue.ts          # rutina de emisión (idempotente, agnóstica al pago)
-│   │   └── yappy.ts          # adaptador Botón de Pago V2 (llamados server-side + hash IPN)
+│   │   ├── refund.ts         # reembolso: reversa Yappy + RPC refund_order
+│   │   ├── receipt.ts        # HTML imprimible del comprobante de reembolso
+│   │   ├── google-wallet.ts  # JWT RS256 del pase + Passes Class (opt-in)
+│   │   ├── types.ts          # tipos compartidos del backend
+│   │   └── yappy.ts          # Botón de Pago V2 + API Comercial (reversas) + hash IPN
 │   ├── orders.ts             # POST  /api/orders                (público)
 │   ├── orders/[id]/status.ts # GET   /api/orders/:id/status      (público, polling)
 │   ├── presale/status.ts     # GET   /api/presale/status         (público)
+│   ├── gifts.ts              # GET/POST /api/gifts               (campañas de regalo)
 │   ├── tickets/validate.ts   # POST  /api/tickets/validate       (staff)
 │   ├── tickets/qr.ts         # GET   /api/tickets/qr?t=<token>   (imagen del QR)
+│   ├── wallet/google/[ticketId].ts # GET /api/wallet/google/:id   (302 al saveUrl)
 │   ├── admin.ts              # TODAS las rutas /api/admin/* en una sola función (rewrite en vercel.json)
 │   ├── yappy/config.ts       # GET   /api/yappy/config           (público, sin secretos)
 │   ├── yappy/create-order.ts # POST  /api/yappy/create-order     (público, scoped a la orden)
 │   └── yappy/ipn.ts          # GET   /api/yappy/ipn              (confirmación firmada de Yappy)
+├── cloudflare/               # deploy alternativo en Workers (ver DEPLOY_CLOUDFLARE.md)
+│   ├── worker.ts             # router de /api/* — REGISTRAR aquí cada archivo nuevo de api/
+│   └── vercel-adapter.ts     # shim req/res para correr los handlers de api/ en Workers
 ├── src/                      # frontend React
 │   ├── shared/               # api.ts, config.ts, styles.css
-│   ├── entradas/             # flujo de compra (+ YappyButton.tsx)
+│   ├── entradas/             # flujo de compra (+ YappyButton.tsx, theme.css)
+│   ├── teaser/               # teaser estático de /31-10
+│   ├── ayuda/                # FAQ + contacto (público)
+│   ├── regalo/               # reclamo de regalo (público, oculto)
 │   ├── admin/                # panel
+│   ├── support/              # soporte (solo lectura)
 │   └── validar/              # escáner de puerta
-├── supabase/migrations/0001_init.sql   # schema + RPCs atómicas
-├── supabase/migrations/0002_yappy_order_ref.sql  # order_ref corto p/ Yappy
-├── supabase/migrations/0003_admin_panel.sql      # tier 'cortesia' + índice de uso
-├── supabase/migrations/0004_courtesy_presale_quota.sql  # cortesías restan cupo de preventa
-├── entradas.html · admin.html · validar.html · index.html
-├── vite.config.ts · vercel.json · .env.example
+├── supabase/migrations/
+│   ├── 0001_init.sql                    # schema + RPCs atómicas
+│   ├── 0002_yappy_order_ref.sql         # order_ref corto p/ Yappy
+│   ├── 0003_admin_panel.sql             # tier 'cortesia' + índice de uso
+│   ├── 0004_courtesy_presale_quota.sql  # cortesías restan cupo de preventa
+│   ├── 0005_price_breakdown.sql         # net_cents / fee_cents / total_cents
+│   ├── 0006_refunds.sql                 # estado 'refunded' + RPC refund_order
+│   ├── 0007_dynamic_stage2_cap.sql      # presale_stage2_cap configurable
+│   ├── 0008_gift_campaigns.sql          # gift_campaign/gift_claim + RPC claim_gift
+│   ├── 0009_fix_claim_gift_ambiguous_status.sql
+│   └── 0010_total_capacity.sql          # aforo total del evento
+├── index.html · entradas.html · 31-10.html · ayuda.html · regalo.html
+├── admin.html · support.html · validar.html
+├── vite.config.ts · vercel.json · wrangler.jsonc · .env.example
+└── tsconfig.json · tsconfig.api.json · tsconfig.cloudflare.json
 ```
 
 ## Puesta en marcha
@@ -77,7 +104,8 @@ supabase db push   # o pega supabase/migrations/0001_init.sql en el SQL Editor
 La migración crea `orders`, `event_config`, `tickets`, los índices, activa RLS
 (sin policies → solo el service-role accede) y define las **RPCs atómicas**:
 `create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,
-`cleanup_expired_orders`, `mark_order_emailed`. La migración `0003` añade el
+`cleanup_expired_orders`, `mark_order_emailed` (más `refund_order` en la `0006`
+y `claim_gift` en la `0008`). La migración `0003` añade el
 tier `cortesia` y el método de pago `courtesy` (entradas de regalo, $0) más un
 índice parcial sobre `tickets.used_at` para el check-in en vivo. La migración
 `0004` hace que las cortesías pagadas **resten cupo de preventa** (e.g. quedan
@@ -158,6 +186,10 @@ GOOGLE_WALLET_ISSUER_ID
 GOOGLE_WALLET_SA_EMAIL        # client_email del JSON de la cuenta de servicio
 GOOGLE_WALLET_SA_PRIVATE_KEY  # private_key del JSON (conservar los \n escapados)
 GOOGLE_WALLET_CLASS_SUFFIX=wwwy3
+# Yappy API Comercial — solo para reversas/reembolsos (vacías = solo reembolso
+# manual). Detalle y cómo obtenerlas: sección "Reembolsos".
+YAPPY_API_KEY, YAPPY_API_SECRET_KEY, YAPPY_API_SEED
+YAPPY_API_CHANNEL, YAPPY_API_BASE      # el base YA incluye /v1
 ```
 
 ### 3. Desarrollo local
@@ -172,7 +204,7 @@ Para correr las funciones `/api` localmente usa `vercel dev` (Vercel CLI), que
 sirve frontend + funciones juntas y carga las variables del proyecto.
 
 ```bash
-npm run typecheck  # tsc para src y api
+npm run typecheck  # tsc para src, api y el Worker de Cloudflare
 npm run build      # build de producción a dist/
 ```
 

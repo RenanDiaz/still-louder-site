@@ -7,7 +7,7 @@ separados de Vercel:
 | App | Worker | Config | Dominio de producción |
 |---|---|---|---|
 | Main site | `still-louder-site` (solo assets estáticos) | `wrangler.jsonc` (raíz) | `stilllouder.space` |
-| Ticket system | `still-louder-entradas` (assets + API) | `ticket-system/wrangler.jsonc` | `entradas.stilllouder.space` |
+| Ticket system | `still-louder-tickets` (assets + API) | `ticket-system/wrangler.jsonc` | `entradas.stilllouder.space` |
 
 La configuración de Vercel queda intacta: `vercel.json` sigue aplicando en
 Vercel y los archivos de Cloudflare (`wrangler.jsonc`, `_headers`,
@@ -78,10 +78,13 @@ npx wrangler secret put CRON_SECRET            # sin esto el cron diario NO corr
 npx wrangler secret put PUBLIC_BASE_URL        # debe ser el dominio que sirve el Worker
 npx wrangler secret put YAPPY_BTN_ENV
 npx wrangler secret put YAPPY_BTN_DOMAIN
+npx wrangler secret put YAPPY_BTN_CDN_URL        # override del CDN del web component
 npx wrangler secret put EMAIL_FROM
 npx wrangler secret put EMAIL_REPLY_TO
 npx wrangler secret put ORDER_NOTIFICATION_EMAIL
 npx wrangler secret put SUPPORT_PASSWORD
+npx wrangler secret put CUANTOAPP_PAYMENT_URL    # sin esto la opción CuantoApp queda sin link
+npx wrangler secret put CUANTOAPP_PAYMENT_URL_1  # ... _2 .. _10: un link por cantidad
 npx wrangler secret put YAPPY_API_KEY
 npx wrangler secret put YAPPY_API_SECRET_KEY
 npx wrangler secret put YAPPY_API_SEED
@@ -103,7 +106,7 @@ Para desarrollo local, `wrangler dev` lee un archivo `ticket-system/.dev.vars`
 |---|---|
 | Rewrite `/api/admin/:path*` → `?path=` | Router en `cloudflare/worker.ts` (pasa `path` como param) |
 | Rewrites `/when-we-were-young-3`, `/regalo/:token` | `public/_redirects` (rewrites 200) |
-| Headers (CSP, `X-Robots-Tag` de `/regalo`) | `public/_headers` (assets) + adaptador (`/api/*`: `no-store`, `nosniff`) |
+| Headers (CSP, `X-Robots-Tag` de `/regalo`) | `public/_headers` (assets) + adaptador (`/api/*`: `no-store` + CSP/HSTS/`X-Frame-Options`/`nosniff`) |
 | Cron diario `orders/cleanup` | `triggers.crons` + handler `scheduled()` (manda `Authorization: Bearer CRON_SECRET`, mismo contrato que Vercel Cron) |
 | `cleanUrls` | `assets.html_handling: "auto-trailing-slash"` |
 | Límite de 12 funciones (Hobby) | No aplica: es un solo Worker |
@@ -142,6 +145,6 @@ YAPPY_BTN_SECRET_KEY=<base64>
 CRON_SECRET=cron-local
 EOF
 npm run preview:cloudflare
-# El cron se prueba con: npx wrangler dev --test-scheduled
-# y luego: curl "http://localhost:8787/__scheduled?cron=0+6+*+*+*"
+# El cron se prueba, con `wrangler dev` ya corriendo, con:
+#   curl "http://127.0.0.1:8787/cdn-cgi/local/scheduled"
 ```

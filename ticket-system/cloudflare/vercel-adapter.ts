@@ -22,6 +22,24 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type VercelStyleHandler = (req: any, res: any) => Promise<void> | void;
 
+// On Vercel these come from the `/(.*)` header block in vercel.json, which also
+// covers /api/*. On Cloudflare that block lives in public/_headers, which only
+// applies to STATIC assets — API responses come from this adapter, so they must
+// be set here or /api/* would answer without them. Only the document-level
+// directives are needed: the one HTML response an API route can return is the
+// admin refund receipt (no inline <script>, so script-src 'self' is fine).
+// KEEP IN SYNC with vercel.json + public/_headers.
+const API_SECURITY_HEADERS: Record<string, string> = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'strict-transport-security': 'max-age=63072000; includeSubDomains; preload',
+  'content-security-policy':
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; " +
+    "form-action 'self'; object-src 'none'"
+};
+
 interface ShimResponse {
   statusCode: number;
   headersSent: boolean;
@@ -172,7 +190,9 @@ export async function runVercelHandler(
   if (!resHeaders.has('cache-control')) {
     resHeaders.set('cache-control', 'no-store');
   }
-  resHeaders.set('x-content-type-options', 'nosniff');
+  for (const [name, value] of Object.entries(API_SECURITY_HEADERS)) {
+    resHeaders.set(name, value);
+  }
 
   return new Response(responseBody, { status: statusCode, headers: resHeaders });
 }
