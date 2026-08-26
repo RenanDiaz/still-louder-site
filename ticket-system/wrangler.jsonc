@@ -9,7 +9,7 @@
 //           `wrangler secret put <NAME>` — see DEPLOY_CLOUDFLARE.md (repo root).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "still-louder-entradas",
+  "name": "still-louder-tickets",
   "main": "cloudflare/worker.ts",
   // With nodejs_compat and a compatibility date >= 2025-04-01, node:crypto /
   // Buffer work and process.env is populated from vars + secrets, so the
