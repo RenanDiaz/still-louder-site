@@ -47,7 +47,7 @@ export const CONFIG = {
     },
     facebook: {
       name: 'Facebook',
-      url: 'https://www.facebook.com/stilllouder/',
+      url: 'https://www.facebook.com/share/1FRfEeLhhp/?mibextid=wwXIfr',
       handle: 'stilllouder'
     },
     youtube: {

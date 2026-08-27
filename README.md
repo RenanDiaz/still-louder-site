@@ -237,7 +237,7 @@ For deeper architecture and contribution notes, see
 ## Connect with Still Louder
 
 - Instagram: [@still_louder](https://www.instagram.com/still_louder/)
-- Facebook: [stilllouder](https://www.facebook.com/stilllouder/)
+- Facebook: [stilllouder](https://www.facebook.com/share/1FRfEeLhhp/?mibextid=wwXIfr)
 - YouTube: [@StillLouder](https://www.youtube.com/@StillLouder)
 
 ---
