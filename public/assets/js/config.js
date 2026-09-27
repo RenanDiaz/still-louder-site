@@ -69,24 +69,36 @@ export const CONFIG = {
     platform: 'Cuanto'
   },
 
-  // Shows / fechas en vivo. Las entradas se venden en la app aparte
-  // (ticket-system, en entradas.stilllouder.space).
+  // Shows / fechas en vivo. Cada fecha próxima tiene su tarjeta en #shows de
+  // index.html (el HTML es la fuente del copy; aquí viven las URLs y fechas).
+  // Orden cronológico: la primera es la "próxima fecha".
   shows: {
-    // Próxima fecha en modo COMING SOON: la fecha está confirmada, pero el
-    // resto se guarda a propósito (no hay diseño ni paleta todavía). Lo único
-    // público es el día — nada de lugar, cartel, ni de lo que se estrena esa
-    // noche; ni siquiera se nombra la fecha, porque mientras menos se revele
-    // más misterio. Al anunciar de verdad: ampliar el copy en la tarjeta
-    // #shows de index.html y abrir la venta con `ticketsUrl`.
-    next: {
-      dateISO: '2026-10-31T20:00:00-05:00',
-      // Etiqueta visible; el <time datetime> del HTML lleva la fecha máquina.
-      dateLabel: '31 · 10 · 2026'
+    upcoming: {
+      // 11 oct: teloneros de Stratovarius en su debut en Panamá. La venta NO es
+      // nuestra — la lleva Ticketplus (productora: The Eclectic Agency /
+      // CK Concerts), así que el CTA sale del sitio.
+      stratovarius: {
+        name: 'Stratovarius en Panamá',
+        dateISO: '2026-10-11T20:00:00-05:00',
+        dateLabel: '11 · 10 · 2026',
+        venue: 'Aurora at Soho',
+        city: 'Ciudad de Panamá',
+        ticketsVendor: 'Ticketplus',
+        ticketsUrl: 'https://ventas.ticketpluspty.com/event/stratovarius-xg5o64'
+      },
+      // 31 oct: fecha propia en modo COMING SOON. La fecha está confirmada,
+      // pero el resto se guarda a propósito (no hay diseño ni paleta todavía):
+      // nada de lugar, cartel, ni de lo que se estrena esa noche. Al anunciar
+      // de verdad: ampliar el copy de su tarjeta en index.html y abrir la
+      // venta con `ticketsUrl` (URL del evento en el ticket-system, ver
+      // docs/features/entradas-31-10.md).
+      oct31: {
+        dateISO: '2026-10-31T20:00:00-05:00',
+        dateLabel: '31 · 10 · 2026',
+        // null = la venta todavía no abre: el CTA de la tarjeta lleva a Instagram.
+        ticketsUrl: null
+      }
     },
-    // null = la venta todavía no abre: el CTA de la tarjeta lleva a Instagram.
-    // Al abrir la venta, poner aquí la URL del evento en el ticket-system y
-    // devolverle el botón de compra a la tarjeta en index.html.
-    ticketsUrl: null,
     // Canal donde se anuncian las fechas (destino del CTA mientras no hay venta).
     announceUrl: 'https://www.instagram.com/still_louder/',
     // Página de ayuda del sistema de entradas: sigue en pie para consultas
@@ -221,6 +233,8 @@ Object.freeze(CONFIG.ui);
 Object.freeze(CONFIG.messages);
 Object.freeze(CONFIG.store);
 Object.freeze(CONFIG.shows);
-Object.freeze(CONFIG.shows.next);
+Object.freeze(CONFIG.shows.upcoming);
+Object.freeze(CONFIG.shows.upcoming.stratovarius);
+Object.freeze(CONFIG.shows.upcoming.oct31);
 
 export default CONFIG;
