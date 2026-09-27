@@ -749,18 +749,89 @@ body {
   background: var(--color-bg-tertiary);
 }
 
-/* Tarjeta principal de la sección. Estado actual: --next (fecha confirmada en
-   modo coming soon). Al abrir la venta, el CTA de Instagram se cambia por el
-   botón de compra; la tarjeta no necesita otro tratamiento. */
-.shows-card {
+/* Fechas próximas, una tarjeta por show, apiladas en orden cronológico. */
+.shows-upcoming {
+  display: grid;
+  gap: var(--spacing-xl);
   max-width: 640px;
   margin: 0 auto;
+}
+
+/* Tarjeta de fecha. Variantes:
+   --featured: show anunciado con flyer (poster + cuerpo). En desktop el
+     poster va a la izquierda y el cuerpo alineado a la izquierda.
+   --next: fecha propia en modo coming soon (solo la fecha, centrada). Al
+     abrir la venta, el CTA de Instagram se cambia por el botón de compra; la
+     tarjeta no necesita otro tratamiento. */
+.shows-card {
   padding: var(--spacing-3xl);
   text-align: center;
 }
 
 .shows-card:hover {
   transform: none;
+}
+
+.shows-card--featured {
+  display: grid;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
+}
+
+.shows-card__poster {
+  max-width: 320px;
+  margin: 0 auto;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.shows-card__poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.shows-card__title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.shows-card__role {
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Fecha en tamaño secundario: cuando la tarjeta ya tiene título, la fecha
+   acompaña en vez de encabezar. */
+.shows-card__date--sm {
+  font-size: var(--font-size-3xl);
+  margin-bottom: 0;
+}
+
+.shows-card__meta {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.shows-card__meta li + li::before {
+  content: '·';
+  margin-right: var(--spacing-md);
+  color: var(--color-text-muted);
 }
 
 /* Coming soon: la fecha es el héroe de la tarjeta porque es lo único que
@@ -883,6 +954,32 @@ body {
 .shows-past__venue {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+@media (min-width: 769px) {
+  .shows-upcoming {
+    max-width: 900px;
+  }
+
+  .shows-card--featured {
+    grid-template-columns: 300px 1fr;
+    align-items: center;
+    text-align: left;
+  }
+
+  .shows-card--featured .shows-card__poster {
+    margin: 0;
+  }
+
+  .shows-card--featured .shows-card__meta {
+    justify-content: flex-start;
+  }
+
+  .shows-card--next {
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {

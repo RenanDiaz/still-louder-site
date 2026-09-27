@@ -261,6 +261,43 @@
       }
     </script>
 
+    <!-- JSON-LD Structured Data - MusicEvent (11 oct 2026, teloneros de Stratovarius) -->
+    <!-- El 31 oct no lleva schema todavía: sin lugar ni oferta no hay evento válido que declarar. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "MusicEvent",
+        "name": "Stratovarius en Panamá — Banda nacional: Still Louder",
+        "startDate": "2026-10-11T20:00:00-05:00",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "image": "https://stilllouder.space/images/shows/stratovarius-panama-2026-10-11.jpg",
+        "location": {
+          "@type": "MusicVenue",
+          "name": "Aurora at Soho",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Ciudad de Panamá",
+            "addressCountry": "PA"
+          }
+        },
+        "performer": [
+          { "@type": "MusicGroup", "name": "Stratovarius" },
+          { "@id": "https://stilllouder.space/#band" }
+        ],
+        "organizer": {
+          "@type": "Organization",
+          "name": "The Eclectic Agency"
+        },
+        "offers": {
+          "@type": "Offer",
+          "url": "https://ventas.ticketpluspty.com/event/stratovarius-xg5o64",
+          "availability": "https://schema.org/InStock",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
     <!-- JSON-LD Structured Data - WebSite -->
     <script type="application/ld+json">
       {
@@ -625,15 +662,23 @@
 
       <!-- Shows Section -->
       <!--
-        Fechas en vivo. Estado actual: COMING SOON — hay fecha (31 oct 2026)
-        pero el anuncio real todavía no sale. Lo ÚNICO público es el día: nada
-        de lugar, cartel, ni de lo que se estrena esa noche (aún no hay diseño
-        ni paleta para este evento). Mientras menos se revele, mejor: la fecha
-        sola es el gancho, así que la tarjeta no lleva headline aparte y el
-        .shows-card__date es su encabezado (h3).
-        Al anunciar de verdad: ampliar el copy de .shows-card--next y, cuando
-        abra la venta, cambiar el CTA por el botón de compra apuntando a
-        CONFIG.shows.ticketsUrl (assets/js/config.js).
+        Fechas en vivo, en orden cronológico. Cada tarjeta es un <article>
+        .shows-card; la primera es la "próxima fecha".
+
+        · 11 oct 2026 — teloneros de Stratovarius (Aurora at Soho). Show
+          anunciado con flyer, hora y venta EXTERNA por Ticketplus: el CTA sale
+          del sitio (data-shows-link="stratovarius_tickets" para analytics).
+        · 31 oct 2026 — fecha propia en modo COMING SOON. Lo ÚNICO público es
+          el día: nada de lugar, cartel, ni de lo que se estrena esa noche (aún
+          no hay diseño ni paleta). La fecha sola es el gancho, así que la
+          tarjeta no lleva headline y el .shows-card__date es su encabezado.
+          Al anunciar de verdad: ampliar el copy y, cuando abra la venta,
+          cambiar el CTA por el botón de compra apuntando a
+          CONFIG.shows.upcoming.oct31.ticketsUrl (assets/js/config.js).
+
+        Cuenta regresiva: cada .shows-card__countdown con data-countdown la
+        rellena initShowsCountdown() (assets/js/main.js); el texto del HTML es
+        el fallback si el JS no corre.
       -->
       <section class="section section-shows" id="shows">
         <div class="section-container">
@@ -642,55 +687,137 @@
             <p class="section-subtitle reveal-up">Dónde nos vas a escuchar en vivo</p>
           </header>
 
-          <div class="shows-card shows-card--next glass-card reveal-up">
-            <p class="shows-card__status">
-              <span class="shows-card__dot" aria-hidden="true"></span>
-              Próxima fecha
-            </p>
+          <div class="shows-upcoming">
+            <article class="shows-card shows-card--featured glass-card reveal-up">
+              <div class="shows-card__poster">
+                <picture>
+                  <source
+                    srcset="assets/images/shows/stratovarius-panama-2026-10-11.avif"
+                    type="image/avif"
+                  />
+                  <source
+                    srcset="assets/images/shows/stratovarius-panama-2026-10-11.webp"
+                    type="image/webp"
+                  />
+                  <img
+                    src="assets/images/shows/stratovarius-panama-2026-10-11.jpg"
+                    alt="Flyer: Stratovarius en Panamá, banda nacional Still Louder. 11 de octubre, Aurora at Soho, 8:00 p.m. Boletos a la venta en Ticketplus."
+                    width="720"
+                    height="900"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
+              </div>
 
-            <h3 class="shows-card__date">
-              <time datetime="2026-10-31">31 · 10 · 2026</time>
-            </h3>
+              <div class="shows-card__body">
+                <p class="shows-card__status">
+                  <span class="shows-card__dot" aria-hidden="true"></span>
+                  Próxima fecha
+                </p>
 
-            <!--
-              Cuenta regresiva en días. El texto del servidor es el fallback:
-              si el JS no corre, la tarjeta sigue teniendo sentido.
-              La rellena initShowsCountdown() en assets/js/main.js.
-            -->
-            <p class="shows-card__countdown" id="shows-countdown">Sábado 31 de octubre</p>
+                <h3 class="shows-card__title">Stratovarius en Panamá</h3>
+                <p class="shows-card__role">Still Louder · banda nacional invitada</p>
 
-            <p class="shows-card__text">
-              Aparta la noche. Todavía no soltamos el lugar, ni el cartel, ni lo que va a pasar en
-              esa tarima — pero tenemos más de una razón para celebrar.
-            </p>
+                <p class="shows-card__date shows-card__date--sm">
+                  <time datetime="2026-10-11T20:00:00-05:00">11 · 10 · 2026</time>
+                </p>
+                <p class="shows-card__countdown" data-countdown="2026-10-11T20:00:00-05:00">
+                  Domingo 11 de octubre
+                </p>
 
-            <a
-              href="https://www.instagram.com/still_louder/"
-              class="btn btn-shows"
-              id="shows-link"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Seguir a Still Louder en Instagram para enterarte primero de los detalles del show del 31 de octubre (se abre en nueva ventana)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-                focusable="false"
+                <ul class="shows-card__meta">
+                  <li>Aurora at Soho · Ciudad de Panamá</li>
+                  <li>8:00 p.m.</li>
+                </ul>
+
+                <p class="shows-card__text">
+                  Abrimos la noche del debut de Stratovarius en Panamá. Una sola fecha, una sola
+                  tarima: vengan temprano.
+                </p>
+
+                <a
+                  href="https://ventas.ticketpluspty.com/event/stratovarius-xg5o64"
+                  class="btn btn-shows"
+                  data-shows-link="stratovarius_tickets"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Comprar boletos para Stratovarius en Panamá en Ticketplus (se abre en nueva ventana)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"
+                    />
+                    <line x1="13" y1="7" x2="13" y2="17" stroke-dasharray="2 2" />
+                  </svg>
+                  Comprar en Ticketplus
+                </a>
+                <p class="shows-card__note">
+                  La venta de este show la lleva Ticketplus (producción de The Eclectic Agency y CK
+                  Concerts), no la banda.
+                </p>
+              </div>
+            </article>
+
+            <article class="shows-card shows-card--next glass-card reveal-up">
+              <p class="shows-card__status">
+                <span class="shows-card__dot" aria-hidden="true"></span>
+                Fecha propia
+              </p>
+
+              <h3 class="shows-card__date">
+                <time datetime="2026-10-31T20:00:00-05:00">31 · 10 · 2026</time>
+              </h3>
+
+              <p class="shows-card__countdown" data-countdown="2026-10-31T20:00:00-05:00">
+                Sábado 31 de octubre
+              </p>
+
+              <p class="shows-card__text">
+                Aparta la noche. Todavía no soltamos el lugar, ni el cartel, ni lo que va a pasar en
+                esa tarima — pero tenemos más de una razón para celebrar.
+              </p>
+
+              <a
+                href="https://www.instagram.com/still_louder/"
+                class="btn btn-shows"
+                data-shows-link="oct31_announce_instagram"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Seguir a Still Louder en Instagram para enterarte primero de los detalles del show del 31 de octubre (se abre en nueva ventana)"
               >
-                <path
-                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
-                />
-              </svg>
-              Enterarme primero
-            </a>
-            <p class="shows-card__note">
-              Los detalles y las entradas se anuncian primero en Instagram — y las vendemos
-              directamente con la banda, sin intermediarios.
-            </p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+                  />
+                </svg>
+                Enterarme primero
+              </a>
+              <p class="shows-card__note">
+                Los detalles y las entradas se anuncian primero en Instagram — y las vendemos
+                directamente con la banda, sin intermediarios.
+              </p>
+            </article>
           </div>
 
           <div class="shows-past reveal-up">
@@ -796,9 +923,12 @@
               <summary class="faq-item__q">¿Cómo compro entradas para sus shows?</summary>
               <div class="faq-item__a">
                 <p>
-                  Nuestra próxima fecha es el <strong>31 de octubre de 2026</strong>, pero la venta
-                  todavía no abre — revisa la sección <a href="#shows">Shows</a> para el estado
-                  actual. Cuando abra, las entradas se venden en línea directamente con la banda en
+                  Depende del show. El <strong>11 de octubre de 2026</strong> abrimos para
+                  Stratovarius en Aurora at Soho: esos boletos los vende
+                  <strong>Ticketplus</strong> (el enlace está en la sección
+                  <a href="#shows">Shows</a>). Nuestra fecha propia es el
+                  <strong>31 de octubre de 2026</strong> y su venta todavía no abre. Cuando abra,
+                  las entradas se venden en línea directamente con la banda en
                   <a
                     href="https://entradas.stilllouder.space/"
                     target="_blank"

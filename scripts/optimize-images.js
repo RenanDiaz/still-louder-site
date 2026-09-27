@@ -203,6 +203,21 @@ async function main() {
     }
   }
 
+  // Process show flyers (#shows cards). Flyers arrive as 1080x1350 JPGs from the
+  // promoter; the card renders them at ~300px wide, so the committed `<name>.jpg` is
+  // already resized to 720px and doubles as the <img> fallback (same pattern as the
+  // album cover) — here we only emit the webp/avif siblings.
+  console.log('\n=== Optimizing Show Flyers ===\n');
+  const showsDir = path.join(publicDir, 'assets', 'images', 'shows');
+  const flyers = [{ file: 'stratovarius-panama-2026-10-11.jpg', maxWidth: 720 }];
+  for (const { file, maxWidth } of flyers) {
+    const imgPath = path.join(showsDir, file);
+    const exists = await fs.access(imgPath).then(() => true).catch(() => false);
+    if (exists) {
+      await optimizeImage(imgPath, { maxWidth, skipOptimizedJpg: true });
+    }
+  }
+
   // Optimize QR codes
   await optimizeQRCodes();
 
