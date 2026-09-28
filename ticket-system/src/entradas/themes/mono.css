@@ -1,0 +1,32 @@
+/*
+  Tema `mono` de /entradas (events.theme = 'mono'): negro + hueso, derivado del
+  teaser del 31-10. Solo sobreescribe tokens de theme.css (que es la identidad
+  morada/rosa de WWWY3, tema `wwwy3`) — la estructura, los parches y la
+  legibilidad del formulario son las mismas. Es también el tema por defecto de
+  cualquier evento sin arte propio ('default' cae aquí).
+*/
+html[data-theme='mono'],
+html[data-theme='default'] {
+  --purple-deep: #050506;
+  --purple: #1a1a1d;
+  --purple-lt: #6e6a62;
+  --lilac-haze: #bdb6a8;
+  --pink: #b3261e; /* acento: rojo sangre, un solo toque de color */
+  --pink-soft: #e8e2d4;
+  --ink: #111113;
+  --paper: #ece9e4; /* hueso */
+  --paper-edge: #c9c3b6;
+  --paper-2: #e2ded6;
+  /* Sin la Permanent Marker (voz de WWWY3): display neutro. */
+  --font-title: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  --font-accent: 'Archivo', system-ui, sans-serif;
+}
+
+html[data-theme='mono']:not([data-view='teaser']) body,
+html[data-theme='default']:not([data-view='teaser']) body {
+  background:
+    radial-gradient(60% 42% at 50% 30%, rgba(236, 233, 228, 0.07), transparent 70%),
+    radial-gradient(60% 40% at 50% 100%, rgba(179, 38, 30, 0.12), transparent 70%),
+    linear-gradient(170deg, var(--purple) 0%, var(--purple-deep) 100%);
+  background-attachment: fixed;
+}

@@ -1,45 +1,11 @@
 // Client-side display config. NO secrets here — this is bundled into the
 // browser. Prices shown here are for display only; the server is authoritative.
 
-export const EVENT = {
-  name: 'When We Were Young 3',
-  shortName: 'WWWY3',
-  band: 'Still Louder',
-  venue: 'Hops',
-  // ISO dates (local Panama time, UTC-5).
-  // La preventa abre a la medianoche del 15 de junio: el countdown apunta aquí y
-  // el formulario de compra permanece oculto hasta esta hora (cliente y servidor).
-  presaleStart: '2026-06-15T00:00:00-05:00',
-  // Presale closes at the start of the event day; from then on only the
-  // general/"día del evento" price applies. Mirrored server-side in
-  // api/_lib/pricing.ts (PRESALE_END_ISO) — the server is authoritative.
-  presaleEnd: '2026-08-01T00:00:00-05:00',
-  eventDate: '2026-08-01T20:00:00-05:00',
-  // Cierre de la venta (fin de la noche del show): desde aquí /entradas deja de
-  // mostrar el formulario y solo queda el aviso de "el show ya pasó". Espejo de
-  // SALES_END_ISO en api/_lib/event.ts — el servidor manda: rechaza cualquier
-  // orden con `sales_closed` aunque un cliente viejo siga mostrando el form.
-  salesEnd: '2026-08-02T02:00:00-05:00',
-  // Fin del evento: la puerta (/validar) deja de aceptar QR. Espejo de
-  // EVENT_END_ISO en api/_lib/event.ts.
-  eventEnd: '2026-08-02T06:00:00-05:00'
-} as const;
+// Los datos de cada evento (nombre, lugar, fechas, estado, tema y precios) ya
+// NO viven aquí: los sirve `GET /api/presale/status?event=<slug>` desde la tabla
+// `events` (migración 0011). El cliente solo dibuja; el servidor decide.
 
-// Próximo show, en modo TEASER (/31-10). Todavía no es un evento del sistema:
-// no tiene tarifas, ni cupo, ni fila en `event_config` — solo una fecha y una
-// página que dice "pronto". Vive aparte de EVENT a propósito, porque EVENT
-// sigue describiendo WWWY3 (su venta cerrada y su puerta congelada) hasta que
-// el ticket-system soporte múltiples eventos.
-//
-// Lo único público es la fecha: nada de cómo se llama la noche, ni de lugar,
-// cartel, precios o de lo que se estrena. Al abrir la venta, esta superficie se
-// reemplaza por el flujo de compra real.
-export const NEXT_EVENT = {
-  // Momento del show. Hoy no lo usa el teaser (no hay cuenta regresiva: la
-  // fecha sola dice más); queda como la fuente de la fecha para el flujo real.
-  dateISO: '2026-10-31T20:00:00-05:00',
-  dateLabel: '31.10.2026'
-} as const;
+export const BAND_NAME = 'Still Louder';
 
 // Canales oficiales de la banda. El Instagram es el canal principal; el enlace
 // usa ig.me/m/ para abrir un mensaje directo (DM) en vez del perfil.
@@ -48,15 +14,10 @@ export const SOCIAL = {
   instagramDm: 'https://ig.me/m/still_louder'
 } as const;
 
-export const TIERS = {
-  preventa: { label: 'Preventa', priceLabel: '$6', priceCents: 600 },
-  general: { label: 'General', priceLabel: '$8', priceCents: 800 }
-} as const;
-
-export type TierKey = keyof typeof TIERS;
+export type TierKey = 'preventa' | 'general';
 
 // Display labels for EVERY tier that can appear on a ticket, including the
-// admin-only 'cortesia' (which must never show up in the purchase flow's TIERS).
+// admin-only 'cortesia'/'regalo' (which never show up in the purchase flow).
 export const TIER_LABELS: Record<string, string> = {
   preventa: 'Preventa',
   general: 'General',
@@ -92,8 +53,8 @@ export interface PriceBreakdown {
 // El recargo es POR TRANSACCIÓN: el fijo se aplica una sola vez sobre el neto
 // total, no por entrada. precioFinal = (neto + fijo) / (1 − pct), redondeado
 // hacia arriba al centavo (igual que el servidor) para que el neto ≥ base.
-export function priceBreakdown(tier: TierKey, quantity: number, method: PaymentMethodKey): PriceBreakdown {
-  const netCents = TIERS[tier].priceCents * quantity;
+export function priceBreakdown(unitPriceCents: number, quantity: number, method: PaymentMethodKey): PriceBreakdown {
+  const netCents = unitPriceCents * quantity;
   if (netCents <= 0) return { netCents: 0, feeCents: 0, totalCents: 0 };
   const fee = PAYMENT_FEES[method];
   let totalCents = Math.ceil((netCents + fee.fixedCents) / (1 - fee.pct));
@@ -105,4 +66,35 @@ export function priceBreakdown(tier: TierKey, quantity: number, method: PaymentM
 
 export function formatMoney(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
+}
+
+/** "$6" / "$6.50" — precio de tarifa sin centavos cuando es entero. */
+export function formatPriceLabel(cents: number): string {
+  return cents % 100 === 0 ? `$${cents / 100}` : formatMoney(cents);
+}
+
+const PANAMA = 'America/Panama';
+
+/** "31 de octubre" en hora de Panamá. */
+export function formatEventDay(iso: string): string {
+  return new Intl.DateTimeFormat('es-PA', { day: 'numeric', month: 'long', timeZone: PANAMA }).format(new Date(iso));
+}
+
+/** "8:00 p. m." en hora de Panamá. */
+export function formatEventTime(iso: string): string {
+  return new Intl.DateTimeFormat('es-PA', { hour: 'numeric', minute: '2-digit', timeZone: PANAMA }).format(
+    new Date(iso)
+  );
+}
+
+/** "31.10.2026" (formato del teaser). */
+export function formatDotDate(iso: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: PANAMA
+  }).formatToParts(new Date(iso));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${get('day')}.${get('month')}.${get('year')}`;
 }

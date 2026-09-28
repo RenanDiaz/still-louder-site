@@ -41,15 +41,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <!-- Fuentes auto-hospedadas vía @font-face en teaser.css (CSP: font-src 'self'). -->
+    <!-- Fuentes auto-hospedadas vía @font-face (CSP: font-src 'self'). -->
   </head>
+  <!--
+    Esta página es la MISMA app de /entradas (src/entradas/main.tsx): el evento
+    se resuelve por el path (slug '31-10') y su `status` decide la vista —
+    'teaser' dibuja la pantalla mínima de abajo, 'on_sale' el flujo de compra.
+    El archivo existe solo para que el preview del enlace (meta de arriba) sea
+    el del show y no el genérico de /entradas; actualizar estas meta cuando el
+    evento tenga nombre/arte (D1/D11 en docs/features/entradas-31-10.md).
+  -->
   <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <filter id="tk-rough">
+        <feTurbulence type="fractalNoise" baseFrequency="0.014 0.018" numOctaves="3" seed="7" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="8" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
     <div id="root"></div>
     <!-- Sin JS no hay nada que renderizar (la hoja de estilos también entra por
          el bundle), así que la fecha queda igual de disponible en texto plano. -->
     <noscript>
       <p>Still Louder — <time datetime="2026-10-31">31 de octubre de 2026</time></p>
     </noscript>
-    <script type="module" src="/src/teaser/main.tsx"></script>
+    <script type="module" src="/src/entradas/main.tsx"></script>
   </body>
 </html>

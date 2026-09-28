@@ -21,6 +21,12 @@ al pasar a `paid`, precios server-side con recargo por método, QR firmado,
 cupo race-safe, Yappy V2, Google Wallet, cortesías, regalos, reembolsos,
 `/support`, `/ayuda`.
 
+> **Actualización 28 sep:** multi-evento está implementado y la venta abre el
+> **1 de octubre** (no el 11, como recomendaba D7). La migración `0011` ya crea
+> el evento `31-10` en `teaser` con `presale_start = 2026-10-01T00:00-05:00`;
+> lo que falta son los valores de D1–D6, D8–D13 (editar desde la pestaña
+> Eventos) y el checklist de operativa de abajo.
+
 ## Decisiones pendientes (llenar antes de implementar)
 
 Cada fila trae una **recomendación** para no bloquear; si se acepta tal cual,

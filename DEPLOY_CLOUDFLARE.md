@@ -99,7 +99,6 @@ npx wrangler secret put YAPPY_API_BASE
 npx wrangler secret put GOOGLE_WALLET_ISSUER_ID
 npx wrangler secret put GOOGLE_WALLET_SA_EMAIL
 npx wrangler secret put GOOGLE_WALLET_SA_PRIVATE_KEY
-npx wrangler secret put GOOGLE_WALLET_CLASS_SUFFIX
 ```
 
 Para desarrollo local, `wrangler dev` lee un archivo `ticket-system/.dev.vars`

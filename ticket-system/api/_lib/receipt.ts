@@ -1,3 +1,4 @@
+import { formatEventDay, type EventRow } from './events.js';
 import type { Order } from './types.js';
 
 const TIER_LABEL: Record<string, string> = {
@@ -53,7 +54,8 @@ function receiptFolio(order: Order): string {
  *
  * The order MUST be in status 'refunded'; callers guard this before rendering.
  */
-export function buildRefundReceiptHtml(order: Order): string {
+export function buildRefundReceiptHtml(order: Order, event: EventRow): string {
+  const eventLine = [event.name, event.venue, formatEventDay(event)].filter(Boolean).join(' · ');
   const tierLabel = TIER_LABEL[order.tier] ?? order.tier;
   const methodLabel = METHOD_LABEL[order.payment_method] ?? order.payment_method;
   const folio = receiptFolio(order);
@@ -234,7 +236,7 @@ export function buildRefundReceiptHtml(order: Order): string {
   </div>
   <div class="sheet">
     <div class="header">
-      <div class="brand">Still Louder · WWWY3</div>
+      <div class="brand">Still Louder · ${escapeHtml(event.short_name)}</div>
       <h1>Comprobante de reembolso</h1>
     </div>
     <div class="accent"></div>
@@ -250,7 +252,7 @@ export function buildRefundReceiptHtml(order: Order): string {
         ${row('Comprador', escapeHtml(order.buyer_name))}
         ${row('Correo', escapeHtml(order.buyer_email))}
         ${phoneRow}
-        ${row('Evento', 'When We Were Young 3 · Hops · 1 de agosto')}
+        ${row('Evento', escapeHtml(eventLine))}
         ${row('Tipo', escapeHtml(tierLabel))}
         ${row('Cantidad', `${order.quantity} ${order.quantity === 1 ? 'entrada' : 'entradas'} (anuladas)`)}
         ${row('Método de pago', escapeHtml(methodLabel))}

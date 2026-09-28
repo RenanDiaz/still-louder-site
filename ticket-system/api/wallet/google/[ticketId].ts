@@ -24,6 +24,7 @@ interface TicketRow {
   tier: string;
   status: string;
   orders: { id: string; buyer_name: string } | null;
+  events: { code: string } | null;
 }
 
 export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
@@ -35,7 +36,7 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
 
   const { data, error } = await getSupabase()
     .from('tickets')
-    .select('id, tier, status, orders!inner(id, buyer_name)')
+    .select('id, tier, status, orders!inner(id, buyer_name), events!inner(code)')
     .eq('id', ticketId)
     .maybeSingle<TicketRow>();
   if (error) throw new Error(`wallet ticket lookup failed: ${error.message}`);
@@ -43,8 +44,9 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   // Revoked tickets won't pass the gate, so don't hand out a Wallet pass for one.
   if (data.status === 'void') return sendJson(res, 410, { error: 'ticket_void' });
 
+  if (!data.events) return sendJson(res, 404, { error: 'ticket_not_found' });
   const saveUrl = buildWalletSaveUrl({
-    token: makeToken(data.id),
+    token: makeToken(data.events.code, data.id),
     buyerName: data.orders?.buyer_name ?? '',
     tier: data.tier,
     ticketNumber: (data.orders?.id ?? data.id).slice(0, 8).toUpperCase()

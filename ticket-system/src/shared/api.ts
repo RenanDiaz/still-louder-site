@@ -29,9 +29,38 @@ function authHeader(password: string): Record<string, string> {
   return { Authorization: `Bearer ${password}` };
 }
 
+// Appends ?event=<id> (plus any extra params) for the event-scoped admin routes.
+function withEvent(path: string, eventId: string, params: Record<string, string | undefined> = {}): string {
+  const qs = new URLSearchParams({ event: eventId });
+  for (const [key, value] of Object.entries(params)) if (value) qs.set(key, value);
+  return `${path}?${qs}`;
+}
+
 // --- Public ------------------------------------------------------------------
 
-export interface PresaleStatusResponse {
+export type EventStatus = 'draft' | 'teaser' | 'on_sale' | 'archived';
+
+// Public view of an event (from the `events` row). The client draws from it;
+// the server stays authoritative on what can be sold.
+export interface PublicEvent {
+  slug: string;
+  code: string;
+  name: string;
+  shortName: string;
+  venue: string | null;
+  venueAddress: string | null;
+  startsAt: string;
+  presaleStart: string;
+  presaleEnd: string;
+  salesEnd: string;
+  eventEnd: string;
+  status: EventStatus;
+  theme: string;
+  ogImageUrl: string | null;
+  tiers: { preventa: number; general: number };
+}
+
+export interface PresaleNumbers {
   available: number;
   capacity: number;
   stage2Active: boolean;
@@ -42,11 +71,20 @@ export interface PresaleStatusResponse {
   eventSoldOut: boolean;
 }
 
-export function getPresaleStatus(): Promise<PresaleStatusResponse> {
-  return request<PresaleStatusResponse>('/api/presale/status');
+export interface PresaleStatusResponse {
+  event: PublicEvent;
+  // null while the event is a teaser (nothing on sale, no numbers revealed).
+  presale: PresaleNumbers | null;
+}
+
+/** Event (by slug, or the current one when omitted) + its presale numbers. */
+export function getPresaleStatus(slug?: string | null): Promise<PresaleStatusResponse> {
+  const suffix = slug ? `?event=${encodeURIComponent(slug)}` : '';
+  return request<PresaleStatusResponse>(`/api/presale/status${suffix}`);
 }
 
 export interface CreateOrderInput {
+  event: string; // slug
   buyer_name: string;
   buyer_email: string;
   buyer_phone?: string;
@@ -63,6 +101,7 @@ export interface PriceBreakdown {
 
 export interface CreateOrderResponse {
   orderId: string;
+  event: string;
   tier: string;
   quantity: number;
   totalCents: number;
@@ -107,6 +146,7 @@ export function createYappyPayment(orderId: string): Promise<YappyPaymentSession
 
 export interface OrderStatusResponse {
   orderId: string;
+  event: { slug: string | null };
   status: 'pending' | 'paid' | 'cancelled' | 'refunded';
   paidAt: string | null;
   reservationExpiresAt: string | null;
@@ -123,6 +163,14 @@ export function getOrderStatus(orderId: string): Promise<OrderStatusResponse> {
 
 export interface GiftCampaignStatusResponse {
   status: 'active' | 'exhausted' | 'closed';
+  event: {
+    slug: string;
+    name: string;
+    shortName: string;
+    venue: string | null;
+    startsAt: string;
+    theme: string;
+  };
 }
 
 export function fetchGiftCampaign(token: string): Promise<GiftCampaignStatusResponse> {
@@ -155,6 +203,9 @@ export function claimGift(input: ClaimGiftInput): Promise<ClaimGiftResponse> {
 
 export interface AdminOrder {
   id: string;
+  event_id: string;
+  // Joined event summary (present on list/detail responses).
+  events?: { slug: string; code: string; name: string; short_name: string } | null;
   buyer_name: string;
   buyer_email: string;
   buyer_phone: string | null;
@@ -207,13 +258,10 @@ export interface AdminOrdersResponse {
 
 export function fetchAdminOrders(
   password: string,
+  eventId: string,
   params: { q?: string; status?: string } = {}
 ): Promise<AdminOrdersResponse> {
-  const qs = new URLSearchParams();
-  if (params.q) qs.set('q', params.q);
-  if (params.status) qs.set('status', params.status);
-  const suffix = qs.toString() ? `?${qs}` : '';
-  return request<AdminOrdersResponse>(`/api/admin/orders${suffix}`, {
+  return request<AdminOrdersResponse>(withEvent('/api/admin/orders', eventId, params), {
     headers: authHeader(password)
   });
 }
@@ -232,10 +280,11 @@ export function markOrderPaid(
 
 export function toggleStage2(
   password: string,
+  eventId: string,
   active: boolean,
   cap?: number
 ): Promise<{ stage2Active: boolean; stage2Cap: number }> {
-  return request('/api/admin/presale/stage2', {
+  return request(withEvent('/api/admin/presale/stage2', eventId), {
     method: 'POST',
     headers: authHeader(password),
     body: JSON.stringify(cap === undefined ? { active } : { active, cap })
@@ -250,9 +299,10 @@ export function cleanupExpired(password: string): Promise<{ cancelled: number }>
 }
 
 export function ensureWalletClass(
-  password: string
+  password: string,
+  eventId: string
 ): Promise<{ classId: string; created: boolean }> {
-  return request('/api/admin/wallet/google/ensure-class', {
+  return request(withEvent('/api/admin/wallet/google/ensure-class', eventId), {
     method: 'POST',
     headers: authHeader(password)
   });
@@ -335,9 +385,10 @@ export interface CreateCourtesyInput {
 
 export function createCourtesyOrder(
   password: string,
+  eventId: string,
   input: CreateCourtesyInput
 ): Promise<{ orderId: string; ticketCount: number; emailed: boolean }> {
-  return request('/api/admin/courtesy', {
+  return request(withEvent('/api/admin/courtesy', eventId), {
     method: 'POST',
     headers: authHeader(password),
     body: JSON.stringify(input)
@@ -373,17 +424,18 @@ export interface GiftCampaignCreated {
 
 export function createGiftCampaign(
   password: string,
+  eventId: string,
   maxGifts: number
 ): Promise<GiftCampaignCreated> {
-  return request<GiftCampaignCreated>('/api/admin/gifts', {
+  return request<GiftCampaignCreated>(withEvent('/api/admin/gifts', eventId), {
     method: 'POST',
     headers: authHeader(password),
     body: JSON.stringify({ max_gifts: maxGifts })
   });
 }
 
-export function listGiftCampaigns(password: string): Promise<{ campaigns: GiftCampaign[] }> {
-  return request<{ campaigns: GiftCampaign[] }>('/api/admin/gifts', {
+export function listGiftCampaigns(password: string, eventId: string): Promise<{ campaigns: GiftCampaign[] }> {
+  return request<{ campaigns: GiftCampaign[] }>(withEvent('/api/admin/gifts', eventId), {
     headers: authHeader(password)
   });
 }
@@ -437,14 +489,10 @@ export interface AdminTicketsResponse {
 
 export function fetchAdminTickets(
   password: string,
+  eventId: string,
   params: { q?: string; status?: string; tier?: string } = {}
 ): Promise<AdminTicketsResponse> {
-  const qs = new URLSearchParams();
-  if (params.q) qs.set('q', params.q);
-  if (params.status) qs.set('status', params.status);
-  if (params.tier) qs.set('tier', params.tier);
-  const suffix = qs.toString() ? `?${qs}` : '';
-  return request<AdminTicketsResponse>(`/api/admin/tickets${suffix}`, {
+  return request<AdminTicketsResponse>(withEvent('/api/admin/tickets', eventId, params), {
     headers: authHeader(password)
   });
 }
@@ -466,6 +514,80 @@ export function unrevokeTicket(
   return request(`/api/admin/tickets/${ticketId}/unrevoke`, {
     method: 'POST',
     headers: authHeader(password)
+  });
+}
+
+// --- Admin: events ------------------------------------------------------------
+
+export interface AdminEvent {
+  id: string;
+  slug: string;
+  code: string;
+  name: string;
+  short_name: string;
+  venue: string | null;
+  venue_address: string | null;
+  starts_at: string;
+  presale_start: string;
+  presale_end: string;
+  sales_end: string;
+  event_end: string;
+  presale_stage1_cap: number;
+  presale_stage2_cap: number;
+  presale_stage2_active: boolean;
+  total_capacity: number;
+  status: EventStatus;
+  theme: string;
+  og_image_url: string | null;
+  tiers: { preventa: number; general: number };
+  paidTickets?: number;
+}
+
+export interface EventInput {
+  slug?: string;
+  code?: string;
+  name?: string;
+  short_name?: string;
+  venue?: string;
+  venue_address?: string;
+  starts_at?: string;
+  presale_start?: string;
+  presale_end?: string;
+  sales_end?: string;
+  event_end?: string;
+  presale_stage1_cap?: number;
+  presale_stage2_cap?: number;
+  total_capacity?: number;
+  theme?: string;
+  og_image_url?: string;
+  tiers?: { preventa?: number; general?: number };
+}
+
+export function listEvents(password: string): Promise<{ events: AdminEvent[] }> {
+  return request<{ events: AdminEvent[] }>('/api/admin/events', { headers: authHeader(password) });
+}
+
+export function createEvent(password: string, input: EventInput): Promise<{ event: AdminEvent }> {
+  return request<{ event: AdminEvent }>('/api/admin/events', {
+    method: 'POST',
+    headers: authHeader(password),
+    body: JSON.stringify(input)
+  });
+}
+
+export function updateEvent(password: string, id: string, input: EventInput): Promise<{ event: AdminEvent }> {
+  return request<{ event: AdminEvent }>(`/api/admin/events/${id}`, {
+    method: 'PATCH',
+    headers: authHeader(password),
+    body: JSON.stringify(input)
+  });
+}
+
+export function setEventStatus(password: string, id: string, status: EventStatus): Promise<{ event: AdminEvent }> {
+  return request<{ event: AdminEvent }>(`/api/admin/events/${id}/status`, {
+    method: 'POST',
+    headers: authHeader(password),
+    body: JSON.stringify({ status })
   });
 }
 
@@ -512,15 +634,17 @@ export function fetchSupportOrder(
 
 // --- Staff (gate) ------------------------------------------------------------
 
-// 'forged' lo decide el endpoint por firma inválida; 'event_closed' cuando el
-// evento ya terminó y la puerta está congelada (ver api/_lib/event.ts).
+// 'forged' lo decide el endpoint por firma inválida; 'wrong_event' cuando el QR
+// es de otro evento; 'event_closed' cuando el evento ya terminó y la puerta
+// está congelada. Los tres se deciden sin tocar las entradas.
 export type ValidateOutcome =
   | 'valid'
   | 'already_used'
   | 'void'
   | 'not_found'
   | 'forged'
-  | 'event_closed';
+  | 'event_closed'
+  | 'wrong_event';
 
 export interface ValidateResponse {
   result: ValidateOutcome;
@@ -528,16 +652,31 @@ export interface ValidateResponse {
   usedAt: string | null;
   usedBy: string | null;
   buyerName: string | null;
+  // Only for 'wrong_event': the name of the event the QR belongs to.
+  qrEventName?: string;
 }
 
 export function validateTicket(
   password: string,
   token: string,
-  station: string
+  station: string,
+  event: string
 ): Promise<ValidateResponse> {
   return request<ValidateResponse>('/api/tickets/validate', {
     method: 'POST',
     headers: authHeader(password),
-    body: JSON.stringify({ token, station })
+    body: JSON.stringify({ token, station, event })
   });
+}
+
+export interface GateEvent {
+  slug: string;
+  name: string;
+  shortName: string;
+  startsAt: string;
+}
+
+/** Events a gate station can scan for (teaser/on_sale, not yet over). */
+export function listGateEvents(password: string): Promise<{ events: GateEvent[] }> {
+  return request<{ events: GateEvent[] }>('/api/tickets/validate', { headers: authHeader(password) });
 }

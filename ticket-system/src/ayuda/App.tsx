@@ -1,19 +1,18 @@
-import type { ReactNode } from 'react';
-import { EVENT, SOCIAL } from '../shared/config';
+import { useEffect, useState, type ReactNode } from 'react';
+import { getPresaleStatus, type PublicEvent } from '../shared/api';
+import { BAND_NAME, SOCIAL, formatEventDay, formatEventTime } from '../shared/config';
 
 // Cara pública de soporte al cliente (/ayuda): preguntas frecuentes + canales
-// oficiales. Es 100% estática (sin backend ni datos de usuario): el autoservicio
-// de reenvío de entradas NO vive aquí — quien pierde su correo escribe por los
-// canales y el staff lo reenvía desde el backoffice (/support). Reutiliza el
-// tema público de /entradas para no romper la identidad entre comprar y pedir
-// ayuda.
+// oficiales. Sin datos de usuario: el autoservicio de reenvío de entradas NO
+// vive aquí — quien pierde su correo escribe por los canales y el staff lo
+// reenvía desde el backoffice (/support). Reutiliza el tema público de
+// /entradas (y el tema del evento) para no romper la identidad entre comprar y
+// pedir ayuda.
 //
-// POST-EVENTO: el show ya pasó, así que la copia está en pasado y las preguntas
-// de venta (cómo comprar, métodos de pago) se reemplazaron por el aviso de
-// cierre. Lo que queda son las consultas que siguen llegando después del show:
-// cobros, entradas que no llegaron, reembolsos. Al anunciar el próximo evento
-// hay que reescribir estos textos (y las fechas de `api/_lib/event.ts`) —
-// mientras el sistema sea de un solo evento, esta copia es manual.
+// La copia sale del evento ACTUAL (el mismo que muestra /entradas, vía
+// GET /api/presale/status): en venta → cómo comprar; teaser → la venta aún no
+// abre; pasado/archivado → consultas post-show. Una línea cubre las compras de
+// shows anteriores. Si el endpoint falla, se muestra la versión sin evento.
 
 const IG = (
   <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
@@ -21,91 +20,182 @@ const IG = (
   </a>
 );
 
+type Phase = 'teaser' | 'selling' | 'past' | 'unknown';
+
+function phaseOf(event: PublicEvent | null): Phase {
+  if (!event) return 'unknown';
+  if (event.status === 'teaser') return 'teaser';
+  if (event.status === 'archived' || Date.now() >= new Date(event.salesEnd).getTime()) return 'past';
+  return 'selling';
+}
+
+function whenWhere(event: PublicEvent): ReactNode {
+  return (
+    <>
+      <b>
+        {formatEventDay(event.startsAt)} a las {formatEventTime(event.startsAt)}
+      </b>
+      {event.venue ? <> en {event.venue}</> : null}
+    </>
+  );
+}
+
 interface Faq {
   q: string;
   a: ReactNode;
 }
 
-const FAQS: Faq[] = [
-  {
-    q: '¿Puedo comprar entradas todavía?',
-    a: (
-      <p>
-        No. <b>{EVENT.name}</b> fue el <b>1 de agosto en {EVENT.venue}</b> y la venta está cerrada.
-        Cuando anunciemos la próxima fecha, las entradas se venderán otra vez aquí mismo, en{' '}
-        <b>entradas.still-louder.com</b>, directamente con la banda. Para enterarte primero,
-        síguenos en Instagram {IG}.
-      </p>
-    )
-  },
-  {
-    q: '¿Cuándo y dónde fue el evento?',
-    a: (
-      <p>
-        <b>{EVENT.name}</b> fue el <b>1 de agosto a las 8:00 PM</b> en {EVENT.venue}: una noche de
-        covers de las bandas que nos inspiraron, por {EVENT.band}.
-      </p>
-    )
-  },
-  {
-    q: 'Compré entradas y no las usé. ¿Sirven para el próximo show?',
-    a: (
-      <p>
-        No. Cada entrada es válida solo para el evento para el que se compró, así que los códigos QR
-        de {EVENT.shortName} ya no admiten a nadie. El próximo show tendrá su propia venta y sus
-        propias entradas.
-      </p>
-    )
-  },
-  {
-    q: '¿Hay reembolsos o cambios?',
-    a: (
-      <p>
-        No. Todas las compras son finales: no hacemos reembolsos ni cambios, y eso sigue aplicando
-        ahora que el evento pasó. Si hubo algún problema con tu orden, escríbenos por {IG} y vemos
-        cómo ayudarte.
-      </p>
-    )
-  },
-  {
-    q: 'Nunca me llegó el correo con mis entradas. ¿Qué hago?',
-    a: (
-      <>
+function buildFaqs(event: PublicEvent | null, phase: Phase): Faq[] {
+  const emailSubject = event ? `Tu entrada para ${event.shortName} — Still Louder` : 'Tu entrada para … — Still Louder';
+  const faqs: Faq[] = [];
+
+  if (event && phase === 'selling') {
+    faqs.push(
+      {
+        q: '¿Cómo compro entradas?',
+        a: (
+          <p>
+            Aquí mismo, en{' '}
+            <a href="/entradas">
+              <b>entradas.still-louder.com</b>
+            </a>
+            , directamente con la banda. Pagas con Yappy, tarjeta (CuantoApp) o efectivo y tu entrada
+            con código QR llega a tu correo al confirmarse el pago.
+          </p>
+        )
+      },
+      {
+        q: '¿Cuándo y dónde es el show?',
+        a: (
+          <p>
+            <b>{event.name}</b> es el {whenWhere(event)}.
+          </p>
+        )
+      },
+      {
+        q: '¿Cómo llega mi entrada?',
+        a: (
+          <p>
+            Por correo, con un código QR por cada entrada. Preséntalo en la puerta desde el teléfono o
+            impreso: cada código es válido para <b>una sola admisión</b>. Con efectivo o tarjeta, la
+            entrada se envía cuando confirmamos el pago (reservamos tu cupo 48 horas).
+          </p>
+        )
+      }
+    );
+  } else if (event && phase === 'teaser') {
+    faqs.push({
+      q: '¿Ya puedo comprar entradas?',
+      a: (
         <p>
-          Primero revisa las carpetas de spam y promociones; busca el correo{' '}
-          <i>«Tu entrada para WWWY3 — Still Louder»</i>.
+          Todavía no: la venta abre pronto y será aquí mismo, en <b>entradas.still-louder.com</b>,
+          directamente con la banda. Para enterarte primero, síguenos en Instagram {IG}.
         </p>
-        <p>
-          Si sigue sin aparecer y quieres el comprobante de tu compra, escríbenos por Instagram {IG}{' '}
-          con el <b>nombre y correo que usaste</b> al comprar (y tu número de orden si lo tienes) y
-          te lo reenviamos.
-        </p>
-      </>
-    )
-  },
-  {
-    q: 'Tengo una duda sobre un cobro. ¿Con quién hablo?',
-    a: (
-      <p>
-        Con nosotros directamente, por {IG}. Cuéntanos el <b>nombre y correo</b> con los que
-        compraste, el método de pago que usaste y el monto, y lo revisamos contra nuestros
-        registros. No vendimos por intermediarios: cualquier cobro legítimo salió de nuestra propia
-        venta o de la pasarela de pago que elegiste (Yappy o CuantoApp).
-      </p>
-    )
-  },
-  {
-    q: 'Perdí mi número de orden, ¿es un problema?',
-    a: (
-      <p>
-        No. Nos basta con el nombre y el correo que usaste al comprar: escríbenos por {IG} y te
-        ubicamos en nuestros registros.
-      </p>
-    )
+      )
+    });
+  } else if (event && phase === 'past') {
+    faqs.push(
+      {
+        q: '¿Puedo comprar entradas todavía?',
+        a: (
+          <p>
+            No. <b>{event.name}</b> fue el {whenWhere(event)} y la venta está cerrada. Cuando
+            anunciemos la próxima fecha, las entradas se venderán otra vez aquí mismo, directamente
+            con la banda. Para enterarte primero, síguenos en Instagram {IG}.
+          </p>
+        )
+      },
+      {
+        q: 'Compré entradas y no las usé. ¿Sirven para el próximo show?',
+        a: (
+          <p>
+            No. Cada entrada es válida solo para el evento para el que se compró, así que los códigos
+            QR de {event.shortName} ya no admiten a nadie. El próximo show tendrá su propia venta y
+            sus propias entradas.
+          </p>
+        )
+      }
+    );
   }
-];
+
+  faqs.push(
+    {
+      q: '¿Hay reembolsos o cambios?',
+      a: (
+        <p>
+          No. Todas las compras son finales: no hacemos reembolsos ni cambios. Una vez comprada, la
+          entrada es tuya — úsala, regálala o transfiérela. Si hubo algún problema con tu orden,
+          escríbenos por {IG} y vemos cómo ayudarte.
+        </p>
+      )
+    },
+    {
+      q: 'Nunca me llegó el correo con mis entradas. ¿Qué hago?',
+      a: (
+        <>
+          <p>
+            Primero revisa las carpetas de spam y promociones; busca el correo{' '}
+            <i>«{emailSubject}»</i>.
+          </p>
+          <p>
+            Si sigue sin aparecer, escríbenos por Instagram {IG} con el{' '}
+            <b>nombre y correo que usaste</b> al comprar (y tu número de orden si lo tienes) y te lo
+            reenviamos.
+          </p>
+        </>
+      )
+    },
+    {
+      q: 'Tengo una duda sobre un cobro. ¿Con quién hablo?',
+      a: (
+        <p>
+          Con nosotros directamente, por {IG}. Cuéntanos el <b>nombre y correo</b> con los que
+          compraste, el método de pago que usaste y el monto, y lo revisamos contra nuestros
+          registros. No vendemos por intermediarios: cualquier cobro legítimo sale de nuestra propia
+          venta o de la pasarela de pago que elegiste (Yappy o CuantoApp).
+        </p>
+      )
+    },
+    {
+      q: 'Perdí mi número de orden, ¿es un problema?',
+      a: (
+        <p>
+          No. Nos basta con el nombre y el correo que usaste al comprar: escríbenos por {IG} y te
+          ubicamos en nuestros registros.
+        </p>
+      )
+    },
+    {
+      q: 'Tengo una consulta sobre una compra de un show anterior.',
+      a: (
+        <p>
+          También te ayudamos: escríbenos por {IG} con el nombre y correo de la compra y el show al
+          que era. Tenemos el registro de todas las órdenes.
+        </p>
+      )
+    }
+  );
+  return faqs;
+}
 
 export default function App() {
+  const [event, setEvent] = useState<PublicEvent | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    getPresaleStatus()
+      .then((r) => setEvent(r.event))
+      .catch(() => setEvent(null))
+      .finally(() => setLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (event) document.documentElement.dataset.theme = event.theme;
+  }, [event]);
+
+  const phase = phaseOf(event);
+  const faqs = buildFaqs(event, phase);
+
   return (
     <div className="tk-page">
       <div className="tk-wrap">
@@ -117,22 +207,26 @@ export default function App() {
               <span className="l1">CENTRO DE</span>
               <span className="l2">AYUDA</span>
             </h1>
-            <div className="tk-byline">{EVENT.shortName} · by {EVENT.band}</div>
+            <div className="tk-byline">
+              {event && phase !== 'teaser' ? `${event.shortName} · ` : ''}by {BAND_NAME}
+            </div>
           </div>
         </div>
 
-        <div className="tk-closed-notice tk-reveal" role="status">
-          <strong>⚡ El show ya pasó</strong>
-          <p>
-            {EVENT.name} fue el <b>1 de agosto en {EVENT.venue}</b> y la venta está cerrada. Esta
-            página queda para consultas sobre compras de ese evento.
-          </p>
-        </div>
+        {event && phase === 'past' && (
+          <div className="tk-closed-notice tk-reveal" role="status">
+            <strong>⚡ El show ya pasó</strong>
+            <p>
+              {event.name} fue el {whenWhere(event)} y la venta está cerrada. Esta página queda para
+              consultas sobre compras de ese evento y de shows anteriores.
+            </p>
+          </div>
+        )}
 
         <p className="tk-meta tk-reveal">Preguntas frecuentes</p>
 
-        <div className="help-faq tk-reveal">
-          {FAQS.map((faq) => (
+        <div className="help-faq tk-reveal" aria-busy={!loaded}>
+          {faqs.map((faq) => (
             <details key={faq.q} className="help-faq__item">
               <summary className="help-faq__q">{faq.q}</summary>
               <div className="help-faq__a">{faq.a}</div>
@@ -144,17 +238,15 @@ export default function App() {
           <h2 id="help-contact-title" className="help-contact__title">
             ¿Aún tienes dudas?
           </h2>
-          <p>
-            Escríbenos por nuestro canal oficial y te ayudamos con tu compra o tus entradas:
-          </p>
+          <p>Escríbenos por nuestro canal oficial y te ayudamos con tu compra o tus entradas:</p>
           <p className="help-contact__channel">
             <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
               Instagram <b>{SOCIAL.instagramHandle}</b>
             </a>
           </p>
           <p className="help-contact__note">
-            Ahí también anunciamos la próxima fecha. Cuando haya venta, es siempre directa con la
-            banda: no vendemos por intermediarios.
+            Ahí también anunciamos las próximas fechas. La venta es siempre directa con la banda: no
+            vendemos por intermediarios.
           </p>
         </section>
 

@@ -1,7 +1,9 @@
-# WWWY3 — Sistema de Entradas (Still Louder)
+# Sistema de Entradas (Still Louder)
 
-Venta, emisión y validación de entradas para **When We Were Young 3** (Hops, 1 de
-agosto). Construido como app autónoma (React + TypeScript + Vite) con backend en
+Venta, emisión y validación de entradas para los shows de Still Louder. Nació
+para **When We Were Young 3** (Hops, 1 de agosto de 2026) y desde la migración
+`0011` es **multi-evento**: cada show es una fila de `events` (ver "Eventos").
+Construido como app autónoma (React + TypeScript + Vite) con backend en
 **Vercel Serverless Functions** y base de datos **Supabase (Postgres)**. Esta es
 la entrega **M1** (vendible sin Yappy) más la integración del **Botón de Pago
 Yappy V2** (ver "Yappy — Botón de Pago V2").
@@ -14,13 +16,13 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 
 | Ruta        | Quién        | Qué hace                                                        |
 | ----------- | ------------ | --------------------------------------------------------------- |
-| `/entradas` | Público      | Compra: formulario → crea orden → instrucciones de pago.        |
-| `/admin`    | Admin        | Reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV. |
+| `/entradas` | Público      | Compra de **cualquier evento**: el slug sale del path (`/31-10`, `/when-we-were-young-3` por rewrite) o de `?evento=<slug>`; sin slug = el evento "actual". El `status` del evento decide la vista (teaser / cuenta regresiva / formulario / agotado / "ya pasó"). |
+| `/admin`    | Admin        | Selector de evento + pestaña **Eventos** (crear/editar/transición de estado). Todo lo demás, scopeado al evento elegido: reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV. |
 | `/validar`  | Staff/puerta | Escáner de QR con resultado verde/rojo + sonido.                |
 | `/support`  | Soporte      | **Solo lectura**: buscar órdenes por email/teléfono/nombre/# de orden, ver su estado y sus entradas, y reenviar el correo con el QR. Sin acceso a mutaciones (pagar, cancelar, anular, cortesías, Etapa 2) ni a las estadísticas de ventas. |
-| `/ayuda`    | Público      | FAQ + canales oficiales de contacto. Estático: sin backend y sin datos del usuario. El reenvío del QR **no** vive aquí a propósito — lo hace el staff desde `/support` cuando el comprador escribe. |
+| `/ayuda`    | Público      | FAQ + canales oficiales de contacto; la copia sale del evento actual (`/api/presale/status`). Sin datos del usuario. El reenvío del QR **no** vive aquí a propósito — lo hace el staff desde `/support` cuando el comprador escribe. |
 | `/regalo/<token>` | Público (oculto) | Formulario de reclamo de regalo, alcanzable **solo** con el token de una campaña QR. `noindex`, nunca enlazado. Ver `docs/features/gift-qr-campaigns.md`. |
-| `/31-10`    | Público      | Teaser **estático** del próximo show (31 oct 2026): solo la fecha, sin backend. Ver "Teaser del próximo show". |
+| `/31-10`    | Público      | Show del 31 oct 2026: la **misma app** de `/entradas` (slug `31-10`). En `teaser` muestra solo la fecha; en `on_sale`, el flujo de compra. `31-10.html` existe solo para que el preview del enlace tenga sus propias meta. |
 
 ## Arquitectura
 
@@ -42,8 +44,8 @@ ticket-system/
 │   │   ├── hmac.ts           # firma/verificación del token del QR
 │   │   ├── qr.ts             # render del QR (PNG / data URL)
 │   │   ├── email.ts          # envío con Resend
-│   │   ├── pricing.ts        # precios por tier + ventana de reserva (server-side)
-│   │   ├── event.ts          # fechas de cierre: SALES_END / EVENT_END (autoridad)
+│   │   ├── pricing.ts        # recargo por método + ventana de reserva (server-side)
+│   │   ├── events.ts         # eventos: lookup, evento actual, precios, reglas de fecha/estado
 │   │   ├── issue.ts          # rutina de emisión (idempotente, agnóstica al pago)
 │   │   ├── refund.ts         # reembolso: reversa Yappy + RPC refund_order
 │   │   ├── receipt.ts        # HTML imprimible del comprobante de reembolso
@@ -66,11 +68,10 @@ ticket-system/
 │   └── vercel-adapter.ts     # shim req/res para correr los handlers de api/ en Workers
 ├── src/                      # frontend React
 │   ├── shared/               # api.ts, config.ts, styles.css
-│   ├── entradas/             # flujo de compra (+ YappyButton.tsx, theme.css)
-│   ├── teaser/               # teaser estático de /31-10
+│   ├── entradas/             # compra/teaser de cualquier evento (+ Teaser.tsx, theme.css, themes/)
 │   ├── ayuda/                # FAQ + contacto (público)
 │   ├── regalo/               # reclamo de regalo (público, oculto)
-│   ├── admin/                # panel
+│   ├── admin/                # panel (+ EventosTab.tsx)
 │   ├── support/              # soporte (solo lectura)
 │   └── validar/              # escáner de puerta
 ├── supabase/migrations/
@@ -83,7 +84,8 @@ ticket-system/
 │   ├── 0007_dynamic_stage2_cap.sql      # presale_stage2_cap configurable
 │   ├── 0008_gift_campaigns.sql          # gift_campaign/gift_claim + RPC claim_gift
 │   ├── 0009_fix_claim_gift_ambiguous_status.sql
-│   └── 0010_total_capacity.sql          # aforo total del evento
+│   ├── 0010_total_capacity.sql          # aforo total del evento
+│   └── 0011_events.sql                  # multi-evento: events + event_tier, event_id en todo
 ├── index.html · entradas.html · 31-10.html · ayuda.html · regalo.html
 ├── admin.html · support.html · validar.html
 ├── vite.config.ts · vercel.json · wrangler.jsonc · .env.example
@@ -121,13 +123,26 @@ suma **todas** las tarifas (pagadas + pendientes con reserva vigente).
 agotados". `presale_status` devuelve además `total_available` /
 `event_sold_out`, que alimentan el contador público «quedan N boletos». Las
 cortesías y regalos no pasan por `create_order` (el admin nunca se bloquea),
-pero sí consumen aforo al contarse como pagadas. Para cambiar el tope:
-`update event_config set total_capacity = <N> where id = 1;`.
+pero sí consumen aforo al contarse como pagadas.
+
+La migración `0011` hace el sistema **multi-evento** (spec
+`docs/features/multi-evento.md`): crea `events` (fechas, caps, aforo, estado,
+tema, copy) y `event_tier` (precio por tarifa), agrega `event_id NOT NULL` a
+`orders`, `tickets` y `gift_campaign` (backfill a WWWY3), reescribe
+`create_order(p_event_id, …)` y `presale_status(p_event_id)` con el `for update`
+sobre la fila del evento, hace que `mark_order_paid` copie el `event_id` a los
+tickets y que `claim_gift` saque el evento de la campaña, y **elimina
+`event_config`**. También siembra el show del 31-10 en `teaser` (datos
+provisionales, ver "Eventos"). Aforo, caps y precios se editan desde la pestaña
+Eventos del admin.
 
 ## Panel de admin
 
-Cuatro pestañas, todas contra rutas `/api/admin/*` (una sola función serverless,
-ver nota abajo):
+Un **selector de evento** arriba (recordado en el dispositivo) y seis pestañas,
+todas contra rutas `/api/admin/*` (una sola función serverless, ver nota abajo).
+Las cinco primeras están scopeadas al evento elegido: cada llamada lleva
+`?event=<id>` y el servidor responde `400 event_required` sin él (nunca "todos
+los eventos" por accidente):
 
 - **Resumen:** stats de preventa (+ toggle Etapa 2 y limpieza de vencidas),
   ventas (incl. ingresos por método de pago) y entradas emitidas/usadas/anuladas
@@ -144,6 +159,9 @@ ver nota abajo):
   puede anular ni restaurar. Export CSV.
 - **Check-in:** asistencia en vivo (auto-refresh cada 10 s): adentro/por llegar
   por tipo, barra de progreso y últimas validaciones con estación.
+- **Regalos:** campañas de QR oculto del evento (ver `gift-qr-campaigns.md`).
+- **Eventos:** tabla de todos los shows (estado, precios, vendidas/aforo) +
+  formulario crear/editar + botones de transición de estado. Ver "Eventos".
 
 > **Límite de funciones (Vercel Hobby):** el plan Hobby permite **máx. 12
 > funciones serverless** por deploy y el proyecto está cerca del tope. Por eso
@@ -185,7 +203,7 @@ YAPPY_BTN_CDN_URL             # opcional: override del CDN del web component
 GOOGLE_WALLET_ISSUER_ID
 GOOGLE_WALLET_SA_EMAIL        # client_email del JSON de la cuenta de servicio
 GOOGLE_WALLET_SA_PRIVATE_KEY  # private_key del JSON (conservar los \n escapados)
-GOOGLE_WALLET_CLASS_SUFFIX=wwwy3
+# (la Passes Class es por evento: `${ISSUER_ID}.${código del evento en minúsculas}`)
 # Yappy API Comercial — solo para reversas/reembolsos (vacías = solo reembolso
 # manual). Detalle y cómo obtenerlas: sección "Reembolsos".
 YAPPY_API_KEY, YAPPY_API_SECRET_KEY, YAPPY_API_SEED
@@ -243,12 +261,21 @@ ejecuta `/api/admin/orders/cleanup`.
 
 ## El QR firmado
 
-Payload: `WWWY3.<ticket_id>.<sig>` con `sig = HMAC_SHA256(ticket_id, TICKET_HMAC_SECRET)`
-truncado a 16 bytes (32 hex). En la puerta:
+Payload: `<CODE>.<ticket_id>.<sig>` (`CODE` = `events.code`, p. ej. `WWWY3`,
+`SL3110`) con `sig = HMAC_SHA256(CODE + '.' + ticket_id, TICKET_HMAC_SECRET)`
+truncado a 16 bytes (32 hex). La firma cubre el código, así que un QR declara su
+evento **antes de tocar la BD** y no se puede reetiquetar; el secreto **no** se
+rota por evento. En la puerta (la estación elige su evento):
 
 1. Se **recalcula el HMAC** y se compara (timing-safe). Firma inválida → rechazo
    inmediato **sin tocar la base** (`result: 'forged'`).
-2. Solo si la firma es válida se ejecuta el `UPDATE` atómico que reclama el ticket.
+2. Si el código del QR no es el del evento de la estación → `wrong_event` (con
+   el nombre del evento del QR), sin consumir nada.
+3. Evento terminado (`event_end`) → `event_closed`.
+4. Solo entonces el `UPDATE` atómico que reclama el ticket.
+
+Los tokens emitidos antes de `0011` (firmados solo con el `ticket_id`) ya no
+verifican; reenviar el correo desde `/admin` o `/support` los regenera.
 
 El secreto vive solo en el servidor; es imposible fabricar entradas válidas sin él.
 
@@ -286,10 +313,12 @@ HMAC, no Google Wallet.
    servicio y descargar su llave **JSON**.
 2. En la **Pay & Wallet Console**: crear el Issuer y agregar el `client_email`
    de la cuenta de servicio como usuario (Developer/Admin).
-3. Configurar `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL`,
-   `GOOGLE_WALLET_SA_PRIVATE_KEY` y `GOOGLE_WALLET_CLASS_SUFFIX` (ver
-   `.env.example`).
-4. Pulsar **"Clase de Google Wallet"** en el panel admin (o `POST` al endpoint).
+3. Configurar `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL` y
+   `GOOGLE_WALLET_SA_PRIVATE_KEY` (ver `.env.example`).
+4. Con el evento elegido en el panel, pulsar **"Clase de Google Wallet"**
+   (Resumen) → `POST /api/admin/wallet/google/ensure-class?event=<id>`. **Una
+   clase por evento** (`${ISSUER_ID}.${código en minúsculas}`): repetirlo para
+   cada show nuevo.
 
 **Demo mode:** mientras el Issuer esté en demo, el pase solo se guarda con
 cuentas de prueba (Admin/Developer o test accounts de la consola) y sale con
@@ -312,12 +341,12 @@ Apple Developer de pago).
 - **Admin/staff protegidos:** cada endpoint verifica el password (comparación
   constante) y devuelve 401 sin él.
 - **Tope de preventa race-safe:** `create_order` toma `... for update` sobre la
-  fila única de `event_config`, serializando los chequeos de cupo. No se vende de
+  fila del evento en `events`, serializando los chequeos de cupo de ese evento. No se vende de
   más con Etapa 2 inactiva (`presale_stage1_cap`) ni activa
   (`presale_stage1_cap + presale_stage2_cap`), contando pagadas + pendientes
   vigentes + cortesías pagadas.
 - **Etapa 2 inmediata y configurable:** la capacidad se recalcula en vivo desde
-  `event_config`; al activarla el admin elige cuántas entradas extra liberar
+  la fila del evento; al activarla el admin elige cuántas entradas extra liberar
   (input en el panel → `presale_stage2_cap`, default 25) y el toggle las abre al
   instante.
 - **Pending vencida libera cupo:** el conteo de cupo (`presale_status` y
@@ -333,75 +362,53 @@ Apple Developer de pago).
   este correo" en el footer; sin configurarla, el footer solo menciona los
   canales oficiales (@still_louder).
 
-## Estado post-evento (archivado) y cómo reusarlo
+## Eventos (multi-evento)
 
-El show del 1 de agosto **ya pasó**, así que el sistema está en modo *archivo*:
-la venta y la puerta están cerradas por fecha, pero **nada se borró ni se
-escondió** — `/admin`, `/support` y los datos siguen exactamente igual.
+Cada show es una fila de `events` + sus precios en `event_tier`; toda orden,
+entrada y campaña de regalo pertenece a exactamente un evento. Nada del evento
+vive en código: el cliente lo lee de `GET /api/presale/status?event=<slug>` y el
+servidor decide con esa misma fila (`api/_lib/events.ts`).
 
-Las dos fechas que apagan el evento viven en **`api/_lib/event.ts`** (servidor,
-autoridad) con espejo en `src/shared/config.ts` (`EVENT.salesEnd` /
-`EVENT.eventEnd`), mismo patrón que los precios:
+| Estado     | Qué ve el público en su página                                      |
+| ---------- | ------------------------------------------------------------------- |
+| `draft`    | Nada (404). Solo existe en el admin.                                 |
+| `teaser`   | Banda + fecha + "Avísame" (pantalla mínima, tema monocromo). Órdenes → `409 sales_closed`. |
+| `on_sale`  | Antes de `presale_start`: cuenta regresiva (el formulario se abre solo a la hora, sin redeploy). En ventana: formulario; tras `presale_end`, solo `general`. Aforo lleno → "agotado". |
+| `archived` | "El show ya pasó". Venta y regalos cerrados. |
 
-| Fecha       | Qué cierra                                                                              |
-| ----------- | --------------------------------------------------------------------------------------- |
-| `SALES_END` | `POST /api/orders` → `409 sales_closed`; `/api/gifts` (regalos) → cerrado. `/entradas` reemplaza el formulario y el countdown por el aviso "el show ya pasó". |
-| `EVENT_END` | `POST /api/tickets/validate` → `200 { result: 'event_closed' }`, **antes de tocar la BD**. `/validar` muestra "PUERTA CERRADA". |
+Transiciones: `draft → teaser → on_sale → archived`, y `on_sale → teaser`
+para pausar. `archived` es terminal. La puerta deja de validar en `event_end`
+sea cual sea el estado. **Evento "actual"** (lo que muestra `/entradas` a
+secas y la copia de `/ayuda`): el `on_sale` más próximo que no haya terminado;
+si no hay, el `teaser` más próximo; si tampoco, el último `archived`.
 
-**Por qué la puerta se cierra y no solo la venta:** el payload del QR es
-`WWWY3.<ticket_id>.<sig>`, firmado con un `TICKET_HMAC_SECRET` que **no está
-scopeado por evento**. Quedan tickets `valid` sin usar de este show; con la
-validación abierta, esos QR pasarían el gate del **próximo** evento. El cierre
-por fecha corta esa vía hasta que los tickets tengan scope por evento.
+Temas: `events.theme` → `html[data-theme]`. `wwwy3` = identidad morada/rosa
+original (con el arte `wwwy3-title.webp`); `mono` (y `default`) = negro + hueso
+(`src/entradas/themes/mono.css`), con el nombre del evento como título. El
+correo y el pase de Wallet usan la misma paleta.
 
-### Teaser del próximo show (`/31-10`)
+### Crear un evento nuevo
 
-Ya hay fecha para el próximo show — **31 de octubre de 2026** — pero todavía no
-hay diseño, paleta ni nada que vender. La dirección donde vivirá su formulario
-existe desde ya, pero **solo con un teaser estático**:
+1. `/admin` → pestaña **Eventos** → **+ Nuevo evento**: nombre, nombre corto
+   (asunto del correo, títulos), slug (URL), código del QR (3–8 A-Z/0-9),
+   lugar, fechas en hora de Panamá, precios, cupos de preventa (etapa 1/2),
+   aforo y tema. Nace en `draft`.
+2. **Publicar teaser** cuando quieras que la URL exista.
+3. Revisar: `/entradas?evento=<slug>` (o su ruta propia). Para una ruta bonita
+   (`/<slug>`), agregar el rewrite a `vercel.json` **y** `public/_redirects`
+   (o un `<slug>.html` que cargue `src/entradas/main.tsx`, como `31-10.html`,
+   si el preview del enlace debe tener sus propias meta).
+4. Google Wallet: con el evento seleccionado, **"Clase de Google Wallet"**.
+5. CuantoApp: los links `CUANTOAPP_PAYMENT_URL_1..10` son globales — si los
+   precios cambian, actualizar los productos en CuantoApp.
+6. **Abrir venta** (`on_sale`). El código y el slug se bloquean en cuanto hay
+   entradas emitidas.
+7. Al terminar el show: **Archivar**.
 
-- `31-10.html` + `src/teaser/` (App, `teaser.css`), entry `teaser` en
-  `vite.config.ts`. **El nombre del archivo ES el path** (`cleanUrls`): se sirve
-  en `/31-10` y en ningún otro lado, a propósito — mientras sea un teaser, el
-  show nuevo tiene **un solo enlace público**. Su slug definitivo se agrega como
-  rewrite en `vercel.json` cuando el evento tenga nombre, igual que
-  `/when-we-were-young-3` → `/entradas`.
-- **No toca el backend**: no llama a ningún endpoint, no hay evento en la BD, no
-  hay tarifas ni cupo. No consume ninguna de las 12 funciones del plan Hobby.
-- **No reusa el tema de `/entradas`**: esa es la identidad morada/rosa de WWWY3.
-  El teaser es monocromo a propósito (negro + hueso, fuentes `Anton`/`Archivo`
-  ya auto-hospedadas) para no adelantar decisiones visuales del evento nuevo.
-- La fecha vive en `NEXT_EVENT` (`src/shared/config.ts`), **aparte de `EVENT`**,
-  que sigue describiendo WWWY3 con su venta cerrada y su puerta congelada.
-- Sin `og:image`: el único arte que existe es el flyer de WWWY3 y usarlo ahí
-  anunciaría el evento equivocado.
-
-`/entradas` y `/when-we-were-young-3` **no cambian**: siguen sirviendo el
-archivo de WWWY3 para quien llegue buscando su compra.
-
-### Para el próximo evento
-
-Mientras el sistema siga siendo de **un solo evento** (una fila en
-`event_config`, tarifas y fechas en código), reusarlo es una edición manual:
-
-1. Fechas: `api/_lib/pricing.ts` (`PRESALE_START_ISO`, `PRESALE_END_ISO`),
-   `api/_lib/event.ts` (`SALES_END_ISO`, `EVENT_END_ISO`) y su espejo en
-   `src/shared/config.ts` (`EVENT`).
-2. Precios/tarifas: `TIER_PRICE_CENTS` (`pricing.ts`) + `TIERS` (`config.ts`).
-3. Aforo: `event_config.total_capacity` y los caps de preventa (admin / SQL).
-4. Copia y arte: `entradas.html` / `ayuda.html` (título, descripción, OG),
-   `src/entradas/App.tsx`, `src/ayuda/App.tsx` (hoy en pasado), `wwwy3-title.webp`.
-   El teaser de `/31-10` (`src/teaser/`) se reemplaza entero por el flujo de
-   compra real — nada de él está pensado para sobrevivir al anuncio.
-5. **Rotar `TICKET_HMAC_SECRET`** para que ningún QR viejo pueda validarse, y
-   cambiar el prefijo del token en `api/_lib/hmac.ts`.
-6. Datos del evento anterior: los `orders`/`tickets` viejos quedan mezclados con
-   los nuevos en los reportes de `/admin` — hoy no hay columna de evento.
-
-Los puntos 5 y 6 son exactamente los que **una tabla `events` resolvería de
-raíz** (FK en `orders`/`tickets`, config servida desde la BD, prefijo de QR y
-reportes con scope por evento). Es el siguiente trabajo pendiente si el
-ticketing se va a usar de forma recurrente; hasta entonces, seguir la lista.
+El show del 31-10 ya viene sembrado por la migración en `teaser` (slug `31-10`,
+código `SL3110`, venta desde el 1 oct 00:00) con **nombre, lugar, precios y
+caps provisionales** — editarlos antes de abrir la venta (ver
+`docs/features/entradas-31-10.md`).
 
 ## Notas operativas
 

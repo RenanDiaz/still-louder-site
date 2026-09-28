@@ -1,33 +1,113 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { validateTicket, type ValidateResponse } from '../shared/api';
+import {
+  listGateEvents,
+  validateTicket,
+  type GateEvent,
+  type ValidateResponse
+} from '../shared/api';
 import { TIER_LABELS } from '../shared/config';
 import { playAccept, playReject } from './sound';
 
-const PW_KEY = 'wwwy3_staff_pw';
-const STATION_KEY = 'wwwy3_station';
+const PW_KEY = 'sl_staff_pw';
+const STATION_KEY = 'sl_station';
+const EVENT_KEY = 'sl_gate_event';
 
 export default function App() {
   const [password, setPassword] = useState(() => sessionStorage.getItem(PW_KEY) ?? '');
   const [station, setStation] = useState(() => sessionStorage.getItem(STATION_KEY) ?? 'puerta-1');
-  const [authed, setAuthed] = useState(false);
+  const [events, setEvents] = useState<GateEvent[] | null>(null);
+  const [event, setEvent] = useState<GateEvent | null>(null);
 
-  if (!authed) {
+  if (!events) {
     return (
       <Gate
         password={password}
         setPassword={setPassword}
         station={station}
         setStation={setStation}
-        onSuccess={() => {
+        onSuccess={(list) => {
           sessionStorage.setItem(PW_KEY, password);
           sessionStorage.setItem(STATION_KEY, station);
-          setAuthed(true);
+          setEvents(list);
         }}
       />
     );
   }
-  return <Scanner password={password} station={station} />;
+  if (!event) {
+    return (
+      <EventPicker
+        events={events}
+        onPick={(picked) => {
+          sessionStorage.setItem(EVENT_KEY, picked.slug);
+          setEvent(picked);
+        }}
+      />
+    );
+  }
+  return (
+    <Scanner
+      password={password}
+      station={station}
+      event={event}
+      onChangeEvent={() => setEvent(null)}
+    />
+  );
+}
+
+// The staffer picks which event this station admits. Default: the one used
+// last on this device, else the soonest (the server lists soonest first). A QR
+// from any other event is rejected as 'wrong_event' without being consumed.
+function EventPicker({ events, onPick }: { events: GateEvent[]; onPick: (e: GateEvent) => void }) {
+  const remembered = sessionStorage.getItem(EVENT_KEY);
+  const [slug, setSlug] = useState(
+    () => events.find((e) => e.slug === remembered)?.slug ?? events[0]?.slug ?? ''
+  );
+
+  if (events.length === 0) {
+    return (
+      <div className="container" style={{ maxWidth: 400 }}>
+        <div className="card">
+          <h1 style={{ marginTop: 0 }}>Sin eventos activos</h1>
+          <p className="muted">
+            No hay ningún evento en venta o por comenzar. Pide al admin que revise el estado del
+            evento en el panel.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container" style={{ maxWidth: 400 }}>
+      <form
+        className="card"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const picked = events.find((ev) => ev.slug === slug);
+          if (picked) onPick(picked);
+        }}
+      >
+        <h1 style={{ marginTop: 0 }}>¿Qué evento validas?</h1>
+        <label htmlFor="event">Evento</label>
+        <select id="event" value={slug} onChange={(e) => setSlug(e.target.value)}>
+          {events.map((ev) => (
+            <option key={ev.slug} value={ev.slug}>
+              {ev.name} ·{' '}
+              {new Date(ev.startsAt).toLocaleDateString('es-PA', {
+                day: 'numeric',
+                month: 'short',
+                timeZone: 'America/Panama'
+              })}
+            </option>
+          ))}
+        </select>
+        <button type="submit" style={{ width: '100%' }}>
+          Abrir lector
+        </button>
+      </form>
+    </div>
+  );
 }
 
 function Gate({
@@ -41,7 +121,7 @@ function Gate({
   setPassword: (v: string) => void;
   station: string;
   setStation: (v: string) => void;
-  onSuccess: () => void;
+  onSuccess: (events: GateEvent[]) => void;
 }) {
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
@@ -50,11 +130,11 @@ function Gate({
     e.preventDefault();
     setChecking(true);
     setError('');
-    // Probe with an obviously-forged token: a wrong password returns 401,
-    // a correct one returns 200 with result 'forged'. Either way no DB write.
+    // The staff-gated event list doubles as the login check: a wrong password
+    // returns 401. No ticket is touched.
     try {
-      await validateTicket(password, 'PROBE', station);
-      onSuccess();
+      const { events } = await listGateEvents(password);
+      onSuccess(events);
     } catch (err) {
       const status = (err as Error & { status?: number }).status;
       if (status === 401) setError('Contraseña incorrecta.');
@@ -88,11 +168,19 @@ function Gate({
 }
 
 type GateState =
-  | { kind: 'scanning' }
-  | { kind: 'checking' }
-  | { kind: 'result'; response: ValidateResponse };
+  { kind: 'scanning' } | { kind: 'checking' } | { kind: 'result'; response: ValidateResponse };
 
-function Scanner({ password, station }: { password: string; station: string }) {
+function Scanner({
+  password,
+  station,
+  event,
+  onChangeEvent
+}: {
+  password: string;
+  station: string;
+  event: GateEvent;
+  onChangeEvent: () => void;
+}) {
   // The camera is only live while `active`. When the tab is backgrounded we
   // drop to stand-by so the phone stops draining battery; the staffer reopens
   // the reader with a tap. Unmounting ScannerActive stops the camera cleanly.
@@ -107,23 +195,56 @@ function Scanner({ password, station }: { password: string; station: string }) {
   }, []);
 
   if (!active) {
-    return <Standby station={station} onResume={() => setActive(true)} />;
+    return (
+      <Standby
+        station={station}
+        event={event}
+        onResume={() => setActive(true)}
+        onChangeEvent={onChangeEvent}
+      />
+    );
   }
   return (
-    <ScannerActive password={password} station={station} onStandby={() => setActive(false)} />
+    <ScannerActive
+      password={password}
+      station={station}
+      event={event}
+      onStandby={() => setActive(false)}
+    />
   );
 }
 
-function Standby({ station, onResume }: { station: string; onResume: () => void }) {
+function Standby({
+  station,
+  event,
+  onResume,
+  onChangeEvent
+}: {
+  station: string;
+  event: GateEvent;
+  onResume: () => void;
+  onChangeEvent: () => void;
+}) {
   return (
     <div className="container" style={{ maxWidth: 400, textAlign: 'center' }}>
       <div className="card">
         <h1 style={{ marginTop: 0 }}>En espera — {station}</h1>
         <p className="muted">
+          Evento: <b>{event.name}</b>
+        </p>
+        <p className="muted">
           La cámara está apagada para ahorrar batería. Abre el lector cuando llegue alguien.
         </p>
         <button type="button" onClick={onResume} style={{ width: '100%' }}>
           Abrir lector de QR
+        </button>
+        <button
+          type="button"
+          className="secondary"
+          onClick={onChangeEvent}
+          style={{ width: '100%', marginTop: 8 }}
+        >
+          Cambiar de evento
         </button>
       </div>
     </div>
@@ -133,10 +254,12 @@ function Standby({ station, onResume }: { station: string; onResume: () => void 
 function ScannerActive({
   password,
   station,
+  event,
   onStandby
 }: {
   password: string;
   station: string;
+  event: GateEvent;
   onStandby: () => void;
 }) {
   const [state, setState] = useState<GateState>({ kind: 'scanning' });
@@ -157,7 +280,7 @@ function ScannerActive({
       }
       setState({ kind: 'checking' });
       try {
-        const response = await validateTicket(password, decodedText, station);
+        const response = await validateTicket(password, decodedText, station, event.slug);
         if (response.result === 'valid') playAccept();
         else playReject();
         setState({ kind: 'result', response });
@@ -179,7 +302,7 @@ function ScannerActive({
         lockRef.current = false;
       }, 2500);
     },
-    [password, station]
+    [password, station, event.slug]
   );
 
   useEffect(() => {
@@ -211,6 +334,9 @@ function ScannerActive({
   return (
     <div className="container">
       <h1>Escanea la entrada — {station}</h1>
+      <p className="muted" style={{ marginTop: -8 }}>
+        Evento: <b>{event.name}</b>
+      </p>
       <div id="reader" />
       {state.kind === 'checking' && <p className="muted">Verificando…</p>}
       {state.kind === 'result' && <ResultOverlay response={state.response} />}
@@ -244,9 +370,16 @@ function ResultOverlay({ response }: { response: ValidateResponse }) {
   } else if (response.result === 'forged') {
     title = '✗ FALSA';
     detail = 'Firma inválida';
+  } else if (response.result === 'wrong_event') {
+    // QR auténtico pero de OTRO evento: no se consumió nada. Nombrar el evento
+    // del QR para que el staff pueda orientar a la persona.
+    title = '✗ OTRO EVENTO';
+    detail = response.qrEventName
+      ? `Esta entrada es para: ${response.qrEventName}`
+      : 'Esta entrada es de otro evento';
   } else if (response.result === 'event_closed') {
-    // El evento terminó: el backend no valida más QR (api/_lib/event.ts). No es
-    // un rechazo del boleto — la puerta está cerrada.
+    // El evento terminó: el backend no valida más QR (event_end). No es un
+    // rechazo del boleto — la puerta está cerrada.
     title = '✗ PUERTA CERRADA';
     detail = 'El evento ya terminó';
   } else {

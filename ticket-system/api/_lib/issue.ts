@@ -1,6 +1,7 @@
 import { getSupabase } from './supabase.js';
 import { makeToken } from './hmac.js';
 import { sendTicketEmail } from './email.js';
+import { getEventById, type EventRow } from './events.js';
 import type { Order, Ticket } from './types.js';
 
 export class IssueError extends Error {
@@ -10,6 +11,14 @@ export class IssueError extends Error {
   ) {
     super(message);
   }
+}
+
+// Every order belongs to exactly one event (NOT NULL FK since 0011): its code
+// prefixes the QR and its name/venue/date go into the email.
+async function requireEvent(eventId: string): Promise<EventRow> {
+  const event = await getEventById(eventId);
+  if (!event) throw new IssueError('db_error', `Event ${eventId} not found for order`);
+  return event;
 }
 
 export interface IssueResult {
@@ -57,12 +66,13 @@ export async function issueOrder(orderId: string, paymentRef?: string | null): P
 
   if (ticketsError) throw new IssueError('db_error', ticketsError.message);
 
+  const event = await requireEvent(order.event_id);
   const ticketRows = (tickets ?? []) as Pick<Ticket, 'id'>[];
-  const tokens = ticketRows.map((t) => makeToken(t.id));
+  const tokens = ticketRows.map((t) => makeToken(event.code, t.id));
 
   let emailed = false;
   if (!order.emailed_at && tokens.length > 0) {
-    await sendTicketEmail(order, tokens);
+    await sendTicketEmail(order, event, tokens);
     await supabase.rpc('mark_order_emailed', { p_order_id: orderId });
     emailed = true;
   }
@@ -99,12 +109,13 @@ export async function resendOrderEmail(orderId: string): Promise<{ order: Order;
     .order('created_at', { ascending: true });
   if (ticketsError) throw new IssueError('db_error', ticketsError.message);
 
-  const tokens = ((tickets ?? []) as Pick<Ticket, 'id'>[]).map((t) => makeToken(t.id));
+  const event = await requireEvent(order.event_id);
+  const tokens = ((tickets ?? []) as Pick<Ticket, 'id'>[]).map((t) => makeToken(event.code, t.id));
   if (tokens.length === 0) {
     throw new IssueError('no_valid_tickets', 'All tickets for this order are void');
   }
 
-  await sendTicketEmail(order, tokens);
+  await sendTicketEmail(order, event, tokens);
   await supabase.rpc('mark_order_emailed', { p_order_id: orderId });
   return { order, ticketCount: tokens.length };
 }

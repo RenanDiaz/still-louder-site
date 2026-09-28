@@ -14,7 +14,7 @@ import { TIER_LABELS } from '../shared/config';
 // this too (isSupport gate in api/admin.ts). Auth uses SUPPORT_PASSWORD (or the
 // admin password) and is kept only in sessionStorage.
 
-const STORAGE_KEY = 'wwwy3_support_pw';
+const STORAGE_KEY = 'sl_support_pw';
 
 const METHOD_LABELS: Record<string, string> = {
   yappy: 'Yappy',
@@ -164,7 +164,7 @@ function Support({ password, onLogout }: { password: string; onLogout: () => voi
   return (
     <div className="container" style={{ maxWidth: 760 }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Soporte WWWY3</h1>
+        <h1>Soporte · entradas</h1>
         <button className="secondary" onClick={onLogout}>
           Salir
         </button>
@@ -280,6 +280,11 @@ function OrderCard({ order, password }: { order: AdminOrder; password: string })
 
       <table style={{ marginBottom: 12 }}>
         <tbody>
+          {/* La búsqueda cruza todos los eventos: cada orden dice de cuál es. */}
+          <tr>
+            <th>Evento</th>
+            <td>{order.events?.name ?? '—'}</td>
+          </tr>
           <tr>
             <th>Creada</th>
             <td>{fmtDateTime(order.created_at)}</td>

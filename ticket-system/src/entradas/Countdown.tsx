@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { EVENT } from '../shared/config';
 
 function diffParts(target: number, now: number) {
   const ms = Math.max(target - now, 0);
@@ -10,7 +9,7 @@ function diffParts(target: number, now: number) {
   return { ms, days, hours, minutes, seconds };
 }
 
-export function Countdown() {
+export function Countdown({ presaleStart: presaleStartIso, startsAt }: { presaleStart: string; startsAt: string }) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -18,8 +17,8 @@ export function Countdown() {
     return () => clearInterval(id);
   }, []);
 
-  const presaleStart = new Date(EVENT.presaleStart).getTime();
-  const eventDate = new Date(EVENT.eventDate).getTime();
+  const presaleStart = new Date(presaleStartIso).getTime();
+  const eventDate = new Date(startsAt).getTime();
 
   // Before presale opens we count down to that; afterwards, to the show.
   const beforePresale = now < presaleStart;

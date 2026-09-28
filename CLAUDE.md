@@ -82,23 +82,29 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   password via `isSupport()`), `/regalo/<token>` (public **hidden** gift-claim
   form, reachable only via a campaign QR token; `noindex`, never linked; the
   first N claimants get a `regalo` ticket — see `docs/features/gift-qr-campaigns.md`).
-  `/31-10` (public **static teaser** for the next show — 31 Oct 2026 — with no
-  backend call at all: no event row, no tiers, no capacity, just the date and a
-  "pronto". Its file is literally `31-10.html` so, under `cleanUrls`, that path
-  is its *only* public URL while it stays a teaser; it deliberately does NOT
-  reuse the `/entradas` theme, which is WWWY3's purple identity —
-  see `src/teaser/`).
+  `/31-10` (the 31 Oct 2026 show: `31-10.html` loads the SAME app as
+  `/entradas` — it exists only so the link preview has the show's own meta;
+  the event row's `status` decides teaser vs. purchase flow).
   Root `index.html` redirects to `/entradas`;
   `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
+  **Multi-event** (migration 0011, spec `docs/features/multi-evento.md`): every
+  show is a row in `events` (+ prices in `event_tier`) and every order, ticket
+  and gift campaign has a NOT NULL `event_id`. `/entradas` resolves the event
+  from the path slug or `?evento=<slug>` (none = the server's "current" event)
+  and reads it from `GET /api/presale/status?event=<slug>`; status
+  `draft → teaser → on_sale → archived` picks the view. Nothing about an event
+  lives in client code anymore. Admin routes that touch per-event data take
+  `?event=<id>` (400 `event_required` without it); new events are created from
+  the admin **Eventos** tab.
   `/ayuda` and `/regalo` reuse the public `/entradas` theme
   (`src/entradas/theme.css`), not the dark shared `styles.css` used by the staff
   surfaces.
-- **Frontend**: `src/entradas/`, `src/teaser/`, `src/ayuda/`, `src/admin/`,
+- **Frontend**: `src/entradas/` (incl. `Teaser.tsx`, `themes/`), `src/ayuda/`, `src/admin/`,
   `src/validar/`, `src/support/`, `src/regalo/`, plus `src/shared/` (`api.ts`,
   `config.ts`, `styles.css`).
 - **Backend**: `api/` serverless functions; shared server-only logic in
   `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
-  QR rendering, email, pricing, issuance, Yappy adapter). **Nothing in
+  QR rendering, email, pricing, events, issuance, Yappy adapter). **Nothing in
   `api/_lib/` may ever be imported by client code.** Vercel Hobby caps a
   deployment at **12 serverless functions**, so ALL `/api/admin/*` routes share
   one function (`api/admin.ts`) reached via a `vercel.json` rewrite
@@ -108,7 +114,8 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 - **Database**: `supabase/migrations/` — schema with RLS enabled and no
   policies (only the service-role key can access) plus atomic RPCs
   (`create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,
-  `cleanup_expired_orders`, `mark_order_emailed`, `claim_gift`). Gift campaigns
+  `cleanup_expired_orders`, `mark_order_emailed`, `claim_gift`;
+  `create_order`/`presale_status` take `p_event_id` since 0011). Gift campaigns
   add the `gift_campaign`/`gift_claim` tables and a `regalo` tier / `gift`
   payment method (0008); `claim_gift` reserves a slot race-safely (same `FOR
   UPDATE` + conditional-`UPDATE` pattern as `create_order`) and `regalo`/`gift`
@@ -122,16 +129,19 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   admin "mark paid" button; Yappy triggers it from the authenticated IPN
   (`api/yappy/ipn.ts`). Never couple issuance to a specific payment provider,
   and never make it non-idempotent.
-- **Server-authoritative pricing**: prices and reservation windows are derived
-  server-side in `api/_lib/pricing.ts` from (tier, quantity). The client never
-  sends amounts. Presale cutoff date is duplicated client/server on purpose —
-  the server copy wins.
-- **Signed QR**: ticket QR payload is `WWWY3.<ticket_id>.<sig>` (truncated
-  HMAC-SHA256 with server-only `TICKET_HMAC_SECRET`). Validation recalculates
-  the HMAC (timing-safe) **before** any DB query; claiming a ticket is a single
-  atomic conditional `UPDATE`, so a QR is accepted exactly once.
-- **Race-safe capacity**: presale quota checks serialize via
-  `SELECT ... FOR UPDATE` on the single `event_config` row; expired pending
+- **Server-authoritative pricing**: the unit price comes from `event_tier`
+  (per event) and totals/fees/reservation windows are derived server-side in
+  `api/_lib/pricing.ts`. The client never sends amounts; it only shows the
+  event's prices for display. Event dates/status are checked server-side in
+  `api/_lib/events.ts`.
+- **Signed QR**: ticket QR payload is `<CODE>.<ticket_id>.<sig>` where CODE is
+  the event's `events.code` and sig is a truncated HMAC-SHA256 over
+  `CODE.ticket_id` with server-only `TICKET_HMAC_SECRET` (never rotated per
+  event). Validation recalculates the HMAC (timing-safe) and rejects a QR of
+  another event (`wrong_event`) **before** any ticket query; claiming a ticket
+  is a single atomic conditional `UPDATE`, so a QR is accepted exactly once.
+- **Race-safe capacity**: presale/total capacity checks serialize via
+  `SELECT ... FOR UPDATE` on the event's `events` row (per event); expired pending
   reservations free their quota by timestamp instantly. The daily cleanup cron
   (`vercel.json` → `/api/admin/orders/cleanup`, daily because Vercel Hobby
   forbids hourly crons) is housekeeping only.

@@ -119,9 +119,6 @@ export const env = {
   // them back into a real PEM before signing.
   get googleWalletSaPrivateKey() {
     return optional('GOOGLE_WALLET_SA_PRIVATE_KEY');
-  },
-  // Suffix of the event's Passes Class id; classId = `${issuerId}.${suffix}`.
-  get googleWalletClassSuffix() {
-    return optional('GOOGLE_WALLET_CLASS_SUFFIX', 'wwwy3');
   }
+  // (The Passes Class id is per event: `${issuerId}.${events.code lowercased}`.)
 };
