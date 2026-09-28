@@ -259,7 +259,6 @@
     </script>
 
     <!-- JSON-LD Structured Data - MusicEvent (11 oct 2026, teloneros de Stratovarius) -->
-    <!-- El 31 oct no lleva schema todavía: sin lugar ni oferta no hay evento válido que declarar. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -292,6 +291,54 @@
           "availability": "https://schema.org/InStock",
           "priceCurrency": "USD"
         }
+      }
+    </script>
+
+    <!-- JSON-LD Structured Data - MusicEvent (31 oct 2026, fecha propia; venta en el ticket-system) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "MusicEvent",
+        "name": "Still Louder's Halloween Party ft. Fábula Sarcástica & Elefreak",
+        "startDate": "2026-10-31T20:00:00-05:00",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "location": {
+          "@type": "MusicVenue",
+          "name": "Hops Food & Drinks",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "David",
+            "addressRegion": "Chiriquí",
+            "addressCountry": "PA"
+          }
+        },
+        "performer": [
+          { "@id": "https://still-louder.com/#band" },
+          { "@type": "MusicGroup", "name": "Fábula Sarcástica" },
+          { "@type": "MusicGroup", "name": "Elefreak" }
+        ],
+        "organizer": { "@id": "https://still-louder.com/#band" },
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Preventa",
+            "price": "10.00",
+            "priceCurrency": "USD",
+            "validFrom": "2026-10-01T00:00:00-05:00",
+            "url": "https://entradas.still-louder.com/31-10",
+            "availability": "https://schema.org/InStock"
+          },
+          {
+            "@type": "Offer",
+            "name": "General",
+            "price": "12.00",
+            "priceCurrency": "USD",
+            "validFrom": "2026-10-01T00:00:00-05:00",
+            "url": "https://entradas.still-louder.com/31-10",
+            "availability": "https://schema.org/InStock"
+          }
+        ]
       }
     </script>
 
@@ -771,48 +818,61 @@
             <article class="shows-card shows-card--next glass-card reveal-up">
               <p class="shows-card__status">
                 <span class="shows-card__dot" aria-hidden="true"></span>
-                Fecha propia
+                Fecha propia · preventa desde el 1 oct
               </p>
 
-              <h3 class="shows-card__date">
-                <time datetime="2026-10-31T20:00:00-05:00">31 · 10 · 2026</time>
-              </h3>
+              <h3 class="shows-card__title">Still Louder&rsquo;s Halloween Party</h3>
+              <p class="shows-card__role">ft. Fábula Sarcástica &amp; Elefreak</p>
 
+              <p class="shows-card__date shows-card__date--sm">
+                <time datetime="2026-10-31T20:00:00-05:00">31 · 10 · 2026</time>
+              </p>
               <p class="shows-card__countdown" data-countdown="2026-10-31T20:00:00-05:00">
                 Sábado 31 de octubre
               </p>
 
+              <ul class="shows-card__meta">
+                <li>Hops Food &amp; Drinks · David, Chiriquí</li>
+                <li>8:00 p.m.</li>
+              </ul>
+
               <p class="shows-card__text">
-                Aparta la noche. Todavía no soltamos el lugar, ni el cartel, ni lo que va a pasar en
-                esa tarima — pero tenemos más de una razón para celebrar.
+                Nuestra noche de Halloween, con Fábula Sarcástica y Elefreak como invitados
+                especiales. Preventa de <strong>$10</strong> para las primeras 100 entradas desde el
+                1 de octubre; después, <strong>$12</strong>.
               </p>
 
               <a
-                href="https://www.instagram.com/still_louder/"
+                href="https://entradas.still-louder.com/31-10"
                 class="btn btn-shows"
-                data-shows-link="oct31_announce_instagram"
+                data-shows-link="oct31_tickets"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Seguir a Still Louder en Instagram para enterarte primero de los detalles del show del 31 de octubre (se abre en nueva ventana)"
+                aria-label="Entradas para Still Louder's Halloween Party, 31 de octubre en Hops Food &amp; Drinks (se abre en nueva ventana)"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
                   height="20"
                   viewBox="0 0 24 24"
-                  fill="currentColor"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                   aria-hidden="true"
                   focusable="false"
                 >
                   <path
-                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+                    d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"
                   />
+                  <line x1="13" y1="7" x2="13" y2="17" stroke-dasharray="2 2" />
                 </svg>
-                Enterarme primero
+                Entradas
               </a>
               <p class="shows-card__note">
-                Los detalles y las entradas se anuncian primero en Instagram — y las vendemos
-                directamente con la banda, sin intermediarios.
+                Venta directa con la banda en entradas.still-louder.com — sin intermediarios. Pagas
+                con Yappy, tarjeta o efectivo y el QR te llega por correo.
               </p>
             </article>
           </div>
@@ -924,14 +984,16 @@
                   Stratovarius en Aurora at Soho: esos boletos los vende
                   <strong>Ticketplus</strong> (el enlace está en la sección
                   <a href="#shows">Shows</a>). Nuestra fecha propia es el
-                  <strong>31 de octubre de 2026</strong> y su venta todavía no abre. Cuando abra,
-                  las entradas se venden en línea directamente con la banda en
+                  <strong>31 de octubre de 2026</strong> — Still Louder&rsquo;s Halloween Party en
+                  Hops Food &amp; Drinks, David — y sus entradas se venden en línea directamente con
+                  la banda en
                   <a
-                    href="https://entradas.still-louder.com/"
+                    href="https://entradas.still-louder.com/31-10"
                     target="_blank"
                     rel="noopener noreferrer"
                     >entradas.still-louder.com</a
-                  >: nunca por intermediarios. Si tienes una consulta sobre una compra anterior,
+                  >, nunca por intermediarios: preventa de $10 desde el 1 de octubre (primeras 100
+                  entradas) y $12 después. Si tienes una consulta sobre una compra anterior,
                   escríbenos o revisa la
                   <a
                     href="https://entradas.still-louder.com/ayuda"

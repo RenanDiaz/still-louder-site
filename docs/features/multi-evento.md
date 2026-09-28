@@ -20,9 +20,11 @@ Implementado según este spec, con estas desviaciones deliberadas:
 | — | Una orden a una tarifa con precio 0 → `409 tier_unavailable`; pasar a `on_sale` exige precios > 0 | Evita órdenes de $0 por un evento mal configurado. |
 | — | `GOOGLE_WALLET_CLASS_SUFFIX` retirado: clase = `${issuer}.${code.toLowerCase()}` | La de WWWY3 sigue siendo `…wwwy3` (el default anterior). |
 
-La migración siembra el show del 31-10 (`slug=31-10`, `code=SL3110`, `teaser`,
-`presale_start` = 1 oct 00:00): Hops Food & Drinks, aforo 230, preventa $10 ×
-100, general $12. Nombre y código provisionales.
+La migración siembra el show del 31-10 (`slug=31-10`, `code=SL3110`,
+**`on_sale`**, `presale_start` = 1 oct 00:00): Still Louder's Halloween Party ft.
+Fábula Sarcástica & Elefreak, Hops Food & Drinks (David), aforo 230, preventa
+$10 × 100, general $12. Se agregó la columna `events.tagline` (línea de
+invitados bajo el nombre).
 
 ## Contexto y problema
 

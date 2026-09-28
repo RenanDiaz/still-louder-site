@@ -24,10 +24,13 @@ cupo race-safe, Yappy V2, Google Wallet, cortesías, regalos, reembolsos,
 > **Actualización 28 sep:** multi-evento está implementado y la venta abre el
 > **1 de octubre** (no el 11, como recomendaba D7). La migración `0011` ya crea
 > el evento `31-10` en `teaser` con `presale_start = 2026-10-01T00:00-05:00`;
-> D3–D6 ya están confirmados y sembrados en la migración (abajo). Falta D1
-> (nombre/código), D8–D13 y el checklist de operativa.
+> D1 y D3–D6 están confirmados y sembrados en la migración, con el evento ya
+> en `on_sale` (cuenta regresiva hasta el 1 oct 00:00). Faltan D8–D13 (sobre
+> todo el flyer para el OG, D11) y el checklist de operativa.
 >
-> **Confirmado:** lugar **Hops Food & Drinks** (mismo que WWWY3), aforo **230**
+> **Confirmado:** nombre **Still Louder's Halloween Party**, invitados
+> **Fábula Sarcástica & Elefreak** (`tagline`), código QR `SL3110`; lugar
+> **Hops Food & Drinks, David, Chiriquí** (mismo que WWWY3), aforo **230**
 > (mismo que WWWY3), **preventa $10 para las primeras 100** entradas (etapa 1 =
 > 100, etapa 2 = 0) y **general $12** para el resto. Las cortesías siguen
 > restando del cupo de preventa (política de 0004); los regalos no.

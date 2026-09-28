@@ -47,6 +47,7 @@ export interface PublicEvent {
   code: string;
   name: string;
   shortName: string;
+  tagline: string | null;
   venue: string | null;
   venueAddress: string | null;
   startsAt: string;
@@ -525,6 +526,7 @@ export interface AdminEvent {
   code: string;
   name: string;
   short_name: string;
+  tagline: string | null;
   venue: string | null;
   venue_address: string | null;
   starts_at: string;
@@ -548,6 +550,7 @@ export interface EventInput {
   code?: string;
   name?: string;
   short_name?: string;
+  tagline?: string;
   venue?: string;
   venue_address?: string;
   starts_at?: string;

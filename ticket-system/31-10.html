@@ -3,38 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>31.10.2026 · Still Louder</title>
+    <title>Still Louder&#39;s Halloween Party · 31 de octubre</title>
     <!--
-      Lo mínimo, a propósito: la fecha y la banda. Nada de cómo se llama la
-      noche, ni de que aquí se venderán las entradas — mientras menos se revele,
-      más misterio. En la página se ve tenue (teaser.css), pero acá va en claro
-      porque el preview del enlace y los buscadores leen este texto tal cual.
+      Meta del show del 31-10 (lugar y cartel ya son públicos). La página es la
+      misma app de /entradas: el estado del evento decide si se ve el teaser o
+      la venta. og:image pendiente del flyer oficial (1200x630): al tenerlo,
+      subirlo a public/, agregar og:image(+width/height) y twitter:image, y
+      cargar su URL en "Imagen OG" del evento en el admin (la usa Wallet).
     -->
-    <meta name="description" content="Still Louder — 31 de octubre de 2026." />
-    <!--
-      Sin paleta propia todavía: el teaser es deliberadamente monocromo, así que
-      el theme-color es el negro del fondo y no compromete el color del evento.
-    -->
+    <meta name="description" content="Still Louder's Halloween Party ft. Fábula Sarcástica &amp; Elefreak. Sábado 31 de octubre, 8:00 p. m., en Hops Food &amp; Drinks (David, Chiriquí). Preventa $10 desde el 1 de octubre, directo con la banda." />
     <meta name="theme-color" content="#050506" />
     <link rel="canonical" href="https://entradas.still-louder.com/31-10" />
 
     <!-- Open Graph (WhatsApp, Facebook, Instagram, Telegram) -->
-    <!--
-      SIN og:image a propósito: el único arte que existe es el flyer de WWWY3 y
-      usarlo aquí anunciaría el evento equivocado. Al haber diseño, agregar la
-      imagen (1200x630) junto a og:image:width/height y twitter:image.
-    -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Still Louder" />
     <meta property="og:locale" content="es_PA" />
     <meta property="og:url" content="https://entradas.still-louder.com/31-10" />
-    <meta property="og:title" content="31.10.2026 · Still Louder" />
-    <meta property="og:description" content="31 de octubre de 2026." />
+    <meta property="og:title" content="Still Louder&#39;s Halloween Party · 31 de octubre" />
+    <meta property="og:description" content="Still Louder's Halloween Party ft. Fábula Sarcástica &amp; Elefreak. Sábado 31 de octubre, 8:00 p. m., en Hops Food &amp; Drinks (David, Chiriquí). Preventa $10 desde el 1 de octubre, directo con la banda." />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="31.10.2026 · Still Louder" />
-    <meta name="twitter:description" content="31 de octubre de 2026." />
+    <meta name="twitter:title" content="Still Louder&#39;s Halloween Party · 31 de octubre" />
+    <meta name="twitter:description" content="Still Louder's Halloween Party ft. Fábula Sarcástica &amp; Elefreak. Sábado 31 de octubre, 8:00 p. m., en Hops Food &amp; Drinks (David, Chiriquí). Preventa $10 desde el 1 de octubre, directo con la banda." />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -62,7 +54,7 @@
     <!-- Sin JS no hay nada que renderizar (la hoja de estilos también entra por
          el bundle), así que la fecha queda igual de disponible en texto plano. -->
     <noscript>
-      <p>Still Louder — <time datetime="2026-10-31">31 de octubre de 2026</time></p>
+      <p>Still Louder&#39;s Halloween Party — <time datetime="2026-10-31">31 de octubre de 2026</time>, Hops Food &amp; Drinks (David, Chiriquí).</p>
     </noscript>
     <script type="module" src="/src/entradas/main.tsx"></script>
   </body>

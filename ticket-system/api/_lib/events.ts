@@ -25,6 +25,7 @@ export interface EventRow {
   code: string;
   name: string;
   short_name: string;
+  tagline: string | null;
   venue: string | null;
   venue_address: string | null;
   starts_at: string;
@@ -160,6 +161,7 @@ export function publicEvent(ev: EventRow, tiers: TierPrices) {
     code: ev.code,
     name: ev.name,
     shortName: ev.short_name,
+    tagline: ev.tagline,
     venue: ev.venue,
     venueAddress: ev.venue_address,
     startsAt: ev.starts_at,

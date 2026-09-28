@@ -405,11 +405,12 @@ correo y el pase de Wallet usan la misma paleta.
    entradas emitidas.
 7. Al terminar el show: **Archivar**.
 
-El show del 31-10 ya viene sembrado por la migración en `teaser` (slug `31-10`,
-código `SL3110`, venta desde el 1 oct 00:00): Hops Food & Drinks, aforo 230,
-preventa $10 para las primeras 100 y general $12. **Nombre y código son
-provisionales** — editarlos antes de abrir la venta (ver
-`docs/features/entradas-31-10.md`).
+El show del 31-10 ya viene sembrado por la migración **en `on_sale`**: *Still
+Louder's Halloween Party* ft. Fábula Sarcástica & Elefreak (slug `31-10`,
+código `SL3110`), Hops Food & Drinks (David, Chiriquí), aforo 230, preventa $10
+para las primeras 100 y general $12. Hasta el 1 oct 00:00 `/31-10` muestra la
+cuenta regresiva y el servidor rechaza órdenes (`sales_not_open`); a esa hora
+el formulario se abre solo. Ver `docs/features/entradas-31-10.md`.
 
 ## Notas operativas
 

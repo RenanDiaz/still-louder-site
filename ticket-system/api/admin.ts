@@ -848,6 +848,7 @@ interface EventBody {
   code?: unknown;
   name?: unknown;
   short_name?: unknown;
+  tagline?: unknown;
   venue?: unknown;
   venue_address?: unknown;
   starts_at?: unknown;
@@ -873,6 +874,7 @@ type EventFields = Partial<
     | 'code'
     | 'name'
     | 'short_name'
+    | 'tagline'
     | 'venue'
     | 'venue_address'
     | (typeof EVENT_DATE_FIELDS)[number]
@@ -915,6 +917,7 @@ function parseEventBody(
     if (shortName.length < 2 || shortName.length > 24) return { error: 'invalid_short_name' };
     fields.short_name = shortName;
   }
+  if (body.tagline !== undefined) fields.tagline = str(body.tagline).slice(0, 160) || null;
   if (body.venue !== undefined) fields.venue = str(body.venue).slice(0, 120) || null;
   if (body.venue_address !== undefined) fields.venue_address = str(body.venue_address).slice(0, 240) || null;
   for (const key of EVENT_DATE_FIELDS) {

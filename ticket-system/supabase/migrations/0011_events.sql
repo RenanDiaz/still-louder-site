@@ -32,6 +32,7 @@ create table if not exists events (
                           check (code ~ '^[A-Z0-9]{3,8}$'),
   name                  text not null,
   short_name            text not null,
+  tagline               text,               -- línea bajo el nombre: 'ft. Banda A & Banda B'
   venue                 text,
   venue_address         text,
   starts_at             timestamptz not null,
@@ -80,7 +81,7 @@ insert into events (
 )
 select
   'when-we-were-young-3', 'WWWY3', 'When We Were Young 3', 'WWWY3', 'Hops',
-  'Hops, Ciudad de Panamá, Panamá',
+  'Hops Food & Drinks, David, Chiriquí, Panamá',
   '2026-08-01T20:00:00-05:00', '2026-06-15T00:00:00-05:00',
   '2026-08-01T00:00:00-05:00', '2026-08-02T02:00:00-05:00',
   '2026-08-02T06:00:00-05:00',
@@ -97,26 +98,29 @@ cross join (values ('preventa', 600), ('general', 800)) as t(tier, price_cents)
 where e.code = 'WWWY3'
 on conflict do nothing;
 
--- Show del 31 de octubre: sembrado en 'teaser' para que /31-10 siga mostrando
--- el teaser tras el deploy. Datos confirmados: Hops Food & Drinks (mismo lugar
--- y aforo que WWWY3, 230), preventa $10 para las primeras 100 entradas (etapa 1
--- = 100, etapa 2 = 0) y general $12, venta desde el 1 oct 00:00. El NOMBRE y el
--- código siguen siendo provisionales: se editan desde la pestaña Eventos antes
--- de abrir la venta (el código solo mientras no haya entradas emitidas).
+-- Show del 31 de octubre: Still Louder's Halloween Party ft. Fábula Sarcástica
+-- & Elefreak, en Hops Food & Drinks (David, Chiriquí — mismo lugar y aforo que
+-- WWWY3, 230). Preventa $10 para las primeras 100 entradas (etapa 1 = 100,
+-- etapa 2 = 0), general $12. Nace ya en 'on_sale': lugar y cartel son
+-- públicos, así que /31-10 muestra nombre, lugar, precios y la cuenta regresiva,
+-- y el formulario se abre solo el 1 oct a las 00:00 (antes, el servidor rechaza
+-- órdenes con 409 sales_not_open). Para esconderlo: "Pausar (volver a teaser)"
+-- en la pestaña Eventos del admin.
 insert into events (
-  slug, code, name, short_name, venue, venue_address,
+  slug, code, name, short_name, tagline, venue, venue_address,
   starts_at, presale_start, presale_end, sales_end, event_end,
   presale_stage1_cap, presale_stage2_cap, presale_stage2_active, total_capacity,
   status, theme
 )
 values (
-  '31-10', 'SL3110', 'Still Louder · 31 de octubre', '31-10',
-  'Hops Food & Drinks', 'Hops Food & Drinks, Ciudad de Panamá, Panamá',
+  '31-10', 'SL3110', 'Still Louder''s Halloween Party', 'Halloween Party',
+  'ft. Fábula Sarcástica & Elefreak',
+  'Hops Food & Drinks', 'Hops Food & Drinks, David, Chiriquí, Panamá',
   '2026-10-31T20:00:00-05:00', '2026-10-01T00:00:00-05:00',
   '2026-10-31T00:00:00-05:00', '2026-11-01T02:00:00-05:00',
   '2026-11-01T06:00:00-05:00',
   100, 0, false, 230,
-  'teaser', 'mono'
+  'on_sale', 'mono'
 )
 on conflict (slug) do nothing;
 

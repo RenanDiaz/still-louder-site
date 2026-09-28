@@ -581,7 +581,7 @@ function EventHero({ event }: { event: PublicEvent }) {
         <h1 className="tk-title">
           <span className="l1">{event.name}</span>
         </h1>
-        <div className="tk-byline">by {BAND_NAME}</div>
+        <div className="tk-byline">{event.tagline ?? `by ${BAND_NAME}`}</div>
       </div>
     </div>
   );

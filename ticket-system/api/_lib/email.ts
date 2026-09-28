@@ -250,7 +250,12 @@ export async function sendTicketEmail(order: Order, event: EventRow, tokens: str
                     Detalles de tu orden
                   </div>
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                    ${detailRow('Evento', eventName)}
+                    ${detailRow(
+                      'Evento',
+                      event.tagline
+                        ? `${eventName}<br /><span style="font-weight:normal;font-size:14px;">${escapeHtml(event.tagline)}</span>`
+                        : eventName
+                    )}
                     ${event.venue ? detailRow('Lugar', escapeHtml(event.venue)) : ''}
                     ${detailRow('Fecha', escapeHtml(formatEventDateTime(event)))}
                     ${detailRow('Tipo', escapeHtml(tierLabel))}

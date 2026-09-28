@@ -93,6 +93,7 @@ function fmtPanama(iso: string): string {
 interface FormState {
   name: string;
   short_name: string;
+  tagline: string;
   slug: string;
   code: string;
   venue: string;
@@ -114,6 +115,7 @@ interface FormState {
 const EMPTY_FORM: FormState = {
   name: '',
   short_name: '',
+  tagline: '',
   slug: '',
   code: '',
   venue: '',
@@ -136,6 +138,7 @@ function formFromEvent(e: AdminEvent): FormState {
   return {
     name: e.name,
     short_name: e.short_name,
+    tagline: e.tagline ?? '',
     slug: e.slug,
     code: e.code,
     venue: e.venue ?? '',
@@ -160,6 +163,7 @@ function inputFromForm(f: FormState): EventInput {
   return {
     name: f.name,
     short_name: f.short_name,
+    tagline: f.tagline,
     slug: f.slug,
     code: f.code.toUpperCase(),
     venue: f.venue,
@@ -361,6 +365,7 @@ function EventForm({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0 16px' }}>
         {field('name', 'Nombre', { required: true, minLength: 2 })}
         {field('short_name', 'Nombre corto (correo, títulos)', { required: true, minLength: 2, maxLength: 24 })}
+        {field('tagline', 'Invitados / subtítulo (opcional)', { placeholder: 'ft. Banda A & Banda B' })}
         {field('slug', 'Slug (URL)', {
           required: true,
           pattern: '[a-z0-9]+(-[a-z0-9]+)*',
