@@ -98,26 +98,32 @@ where e.code = 'WWWY3'
 on conflict do nothing;
 
 -- Show del 31 de octubre: sembrado en 'teaser' para que /31-10 siga mostrando
--- el teaser tras el deploy (el archivo estático 31-10.html se elimina). Nombre,
--- lugar, código, precios y caps son PROVISIONALES: se editan desde la pestaña
--- Eventos del admin antes de pasarlo a 'on_sale' (el código solo se puede
--- cambiar mientras no haya entradas emitidas).
+-- el teaser tras el deploy. Datos confirmados: Hops Food & Drinks (mismo lugar
+-- y aforo que WWWY3, 230), preventa $10 para las primeras 100 entradas (etapa 1
+-- = 100, etapa 2 = 0) y general $12, venta desde el 1 oct 00:00. El NOMBRE y el
+-- código siguen siendo provisionales: se editan desde la pestaña Eventos antes
+-- de abrir la venta (el código solo mientras no haya entradas emitidas).
 insert into events (
   slug, code, name, short_name, venue, venue_address,
-  starts_at, presale_start, presale_end, sales_end, event_end, status, theme
+  starts_at, presale_start, presale_end, sales_end, event_end,
+  presale_stage1_cap, presale_stage2_cap, presale_stage2_active, total_capacity,
+  status, theme
 )
 values (
-  '31-10', 'SL3110', 'Still Louder · 31 de octubre', '31-10', null, null,
+  '31-10', 'SL3110', 'Still Louder · 31 de octubre', '31-10',
+  'Hops Food & Drinks', 'Hops Food & Drinks, Ciudad de Panamá, Panamá',
   '2026-10-31T20:00:00-05:00', '2026-10-01T00:00:00-05:00',
   '2026-10-31T00:00:00-05:00', '2026-11-01T02:00:00-05:00',
-  '2026-11-01T06:00:00-05:00', 'teaser', 'mono'
+  '2026-11-01T06:00:00-05:00',
+  100, 0, false, 230,
+  'teaser', 'mono'
 )
 on conflict (slug) do nothing;
 
 insert into event_tier (event_id, tier, price_cents)
 select e.id, t.tier, t.price_cents
 from events e
-cross join (values ('preventa', 600), ('general', 800)) as t(tier, price_cents)
+cross join (values ('preventa', 1000), ('general', 1200)) as t(tier, price_cents)
 where e.slug = '31-10'
 on conflict do nothing;
 

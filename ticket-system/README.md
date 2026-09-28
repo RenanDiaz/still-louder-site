@@ -406,8 +406,9 @@ correo y el pase de Wallet usan la misma paleta.
 7. Al terminar el show: **Archivar**.
 
 El show del 31-10 ya viene sembrado por la migración en `teaser` (slug `31-10`,
-código `SL3110`, venta desde el 1 oct 00:00) con **nombre, lugar, precios y
-caps provisionales** — editarlos antes de abrir la venta (ver
+código `SL3110`, venta desde el 1 oct 00:00): Hops Food & Drinks, aforo 230,
+preventa $10 para las primeras 100 y general $12. **Nombre y código son
+provisionales** — editarlos antes de abrir la venta (ver
 `docs/features/entradas-31-10.md`).
 
 ## Notas operativas

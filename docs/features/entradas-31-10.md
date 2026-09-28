@@ -24,8 +24,30 @@ cupo race-safe, Yappy V2, Google Wallet, cortesías, regalos, reembolsos,
 > **Actualización 28 sep:** multi-evento está implementado y la venta abre el
 > **1 de octubre** (no el 11, como recomendaba D7). La migración `0011` ya crea
 > el evento `31-10` en `teaser` con `presale_start = 2026-10-01T00:00-05:00`;
-> lo que falta son los valores de D1–D6, D8–D13 (editar desde la pestaña
-> Eventos) y el checklist de operativa de abajo.
+> D3–D6 ya están confirmados y sembrados en la migración (abajo). Falta D1
+> (nombre/código), D8–D13 y el checklist de operativa.
+>
+> **Confirmado:** lugar **Hops Food & Drinks** (mismo que WWWY3), aforo **230**
+> (mismo que WWWY3), **preventa $10 para las primeras 100** entradas (etapa 1 =
+> 100, etapa 2 = 0) y **general $12** para el resto. Las cortesías siguen
+> restando del cupo de preventa (política de 0004); los regalos no.
+>
+> Links de CuantoApp (`CUANTOAPP_PAYMENT_URL_1..10`) con el gross-up de
+> 4.9% + $0.35 por transacción — el monto exacto que `/entradas` le muestra al
+> comprador:
+>
+> | Cantidad | Preventa ($10 c/u) | General ($12 c/u) |
+> |---|---|---|
+> | 1 | $10.89 | $12.99 |
+> | 2 | $21.40 | $25.61 |
+> | 3 | $31.92 | $38.23 |
+> | 4 | $42.43 | $50.85 |
+> | 5 | $52.95 | $63.46 |
+> | 6 | $63.46 | $76.08 |
+> | 7 | $73.98 | $88.70 |
+> | 8 | $84.50 | $101.32 |
+> | 9 | $95.01 | $113.94 |
+> | 10 | $105.53 | $126.56 |
 
 ## Decisiones pendientes (llenar antes de implementar)
 
