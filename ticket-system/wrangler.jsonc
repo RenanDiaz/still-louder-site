@@ -1,4 +1,4 @@
-// Cloudflare Workers config for the TICKET SYSTEM (entradas.stilllouder.space).
+// Cloudflare Workers config for the TICKET SYSTEM (entradas.still-louder.com).
 // One Worker serves both halves of the app:
 //   - static assets: the Vite multi-page build in dist/
 //   - /api/*: the existing Vercel-style handlers, adapted by cloudflare/worker.ts
@@ -44,12 +44,14 @@
 
   "observability": {
     "enabled": true
-  }
+  },
 
-  // Custom domain — uncomment once the DNS zone stilllouder.space is on this
-  // Cloudflare account (until then, test on the *.workers.dev URL). Remember
-  // that PUBLIC_BASE_URL / YAPPY_BTN_DOMAIN must match the serving domain.
-  // "routes": [
-  //   { "pattern": "entradas.stilllouder.space", "custom_domain": true }
-  // ]
+  // Custom domain. Requires the still-louder.com zone on this Cloudflare
+  // account; deploy creates the DNS record + certificate. PUBLIC_BASE_URL and
+  // YAPPY_BTN_DOMAIN (secrets) and the domain registered in the Yappy portal
+  // MUST match this host, or the Yappy button / IPN fail.
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "entradas.still-louder.com", "custom_domain": true }
+  ]
 }

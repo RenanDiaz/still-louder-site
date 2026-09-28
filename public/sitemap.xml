@@ -2,18 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://stilllouder.space/</loc>
+    <loc>https://still-louder.com/</loc>
     <lastmod>2026-09-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://stilllouder.space/images/album_covers/skirlaz.jpeg</image:loc>
+      <image:loc>https://still-louder.com/images/album_covers/skirlaz.jpeg</image:loc>
       <image:title>Portada del sencillo Skirlaz de Still Louder</image:title>
       <image:caption>Artwork oficial del sencillo Skirlaz de Still Louder, banda de rock panameña</image:caption>
     </image:image>
   </url>
   <url>
-    <loc>https://stilllouder.space/al-vacio-pre-release</loc>
+    <loc>https://still-louder.com/al-vacio-pre-release</loc>
     <lastmod>2025-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

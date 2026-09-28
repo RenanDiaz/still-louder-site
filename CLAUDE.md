@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the official website for **Still Louder**, a Panamanian rock band, promoting their single "Al Vacío". The site is a static, performant landing page that links to various streaming platforms and provides information about the release.
 
-**Live URL**: https://stilllouder.space/
+**Live URL**: https://still-louder.com/
 **Repository**: https://github.com/RenanDiaz/still-louder-site
 
 ---
@@ -23,7 +23,7 @@ The rest of this document describes the **main site** unless stated otherwise.
 | Purpose | Static landing page for the single "Al Vacío" | Ticketing flow (purchase, admin, gate validation) |
 | Stack | Vite + vanilla ES6 modules + CSS | Vite + React + TypeScript + serverless API |
 | Vercel project | Main project (root config) | **Separate** Vercel project (`ticket-system/vercel.json`) |
-| Production domain | https://stilllouder.space/ | **Subdomain** `https://entradas.stilllouder.space` |
+| Production domain | https://still-louder.com/ | **Subdomain** `https://entradas.still-louder.com` |
 | Config files | root `vercel.json`, `vite.config.js`, `package.json` | `ticket-system/vercel.json`, `vite.config.ts`, `package.json` |
 
 **Key implications:**
@@ -487,10 +487,13 @@ vercel --prod
 - No environment variables required for basic functionality
 - Google Analytics ID is hardcoded in `index.html` and `config.js`
 
-### Cloudflare Workers (alternative deploy)
+### Cloudflare Workers (production target)
 
-Both apps can also deploy to **Cloudflare Workers** — see `DEPLOY_CLOUDFLARE.md`
-for the full guide. Key rules when touching either app:
+Production is moving from Vercel to **Cloudflare Workers** and from
+`stilllouder.space` to **`still-louder.com`** (`entradas.still-louder.com` for
+tickets). Vercel configs stay in place as the rollback path until the cutover
+in `DEPLOY_CLOUDFLARE.md` ("Cutover a still-louder.com") is done. Key rules
+when touching either app:
 
 - The main site is an assets-only Worker (`wrangler.jsonc` at the root). Its
   security/caching headers are **duplicated**: `vercel.json` (Vercel) and

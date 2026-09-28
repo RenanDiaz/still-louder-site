@@ -103,7 +103,7 @@ export const CONFIG = {
     announceUrl: 'https://www.instagram.com/still_louder/',
     // Página de ayuda del sistema de entradas: sigue en pie para consultas
     // sobre compras del último show, aunque su venta esté cerrada.
-    helpUrl: 'https://entradas.stilllouder.space/ayuda'
+    helpUrl: 'https://entradas.still-louder.com/ayuda'
   },
 
   // Analytics Configuration
@@ -125,7 +125,7 @@ export const CONFIG = {
   // Site Information
   site: {
     name: 'Still Louder',
-    url: 'https://stilllouder.space/',
+    url: 'https://still-louder.com/',
     description:
       '¡Ya disponible! Escucha "Skirlaz", el nuevo sencillo de Still Louder, y mira el lyric video oficial en todas las plataformas digitales.',
     locale: 'es_PA',

@@ -59,7 +59,7 @@ export const env = {
     return optional('CRON_SECRET');
   },
   get publicBaseUrl() {
-    return optional('PUBLIC_BASE_URL', 'https://entradas.stilllouder.space');
+    return optional('PUBLIC_BASE_URL', 'https://entradas.still-louder.com');
   },
 
   // --- Yappy Botón de Pago V2 (server-only; never reaches the client) --------

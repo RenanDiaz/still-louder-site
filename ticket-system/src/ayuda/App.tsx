@@ -33,7 +33,7 @@ const FAQS: Faq[] = [
       <p>
         No. <b>{EVENT.name}</b> fue el <b>1 de agosto en {EVENT.venue}</b> y la venta está cerrada.
         Cuando anunciemos la próxima fecha, las entradas se venderán otra vez aquí mismo, en{' '}
-        <b>entradas.stilllouder.space</b>, directamente con la banda. Para enterarte primero,
+        <b>entradas.still-louder.com</b>, directamente con la banda. Para enterarte primero,
         síguenos en Instagram {IG}.
       </p>
     )

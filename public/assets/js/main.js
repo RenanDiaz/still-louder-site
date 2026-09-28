@@ -17,7 +17,7 @@ const CONFIG = {
   share: {
     title: 'Still Louder - Skirlaz',
     text: 'Escucha "Skirlaz" de Still Louder y mira el lyric video oficial - Rock panameño disponible ahora en todas las plataformas.',
-    url: 'https://stilllouder.space/'
+    url: 'https://still-louder.com/'
   },
   analytics: {
     enabled: typeof gtag !== 'undefined'

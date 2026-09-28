@@ -10,7 +10,7 @@
 | Hecho | Fuente |
 |---|---|
 | Fecha: **sábado 31 de octubre de 2026, 8:00 p.m.** (hora Panamá) | `NEXT_EVENT.dateISO`, tarjeta `#shows` del sitio |
-| Path público ya reservado: `entradas.stilllouder.space/31-10` (hoy teaser estático) | `ticket-system/31-10.html` |
+| Path público ya reservado: `entradas.still-louder.com/31-10` (hoy teaser estático) | `ticket-system/31-10.html` |
 | La venta es **directa con la banda**, sin intermediarios | copy de `#shows` y FAQ del sitio |
 | Lo único público hoy es la fecha; sin lugar, nombre, cartel ni paleta | comentarios en `31-10.html`, `src/teaser/App.tsx`, `config.js` |
 | Hay otro show antes: **11 oct**, teloneros de Stratovarius (Aurora at Soho), venta por **Ticketplus** — **fuera** de este sistema | flyer de la productora |
@@ -84,7 +84,7 @@ Estaciones sugeridas: `puerta-1`, `puerta-2` (como WWWY3).
 
 ### Sitio principal (`public/`) al abrir la venta
 
-1. `config.js`: `shows.upcoming[31-10].ticketsUrl = 'https://entradas.stilllouder.space/31-10'`.
+1. `config.js`: `shows.upcoming[31-10].ticketsUrl = 'https://entradas.still-louder.com/31-10'`.
 2. Tarjeta del 31-10 en `#shows`: revelar nombre, lugar y hora; CTA "Comprar
    entradas" apuntando a `ticketsUrl` (reemplaza "Enterarme primero").
 3. FAQ "¿Cómo compro entradas?": dejar de decir "la venta todavía no abre".

@@ -1,5 +1,5 @@
 // =============================================================================
-// Cloudflare Worker entry for the ticket system (entradas.stilllouder.space)
+// Cloudflare Worker entry for the ticket system (entradas.still-louder.com)
 // =============================================================================
 // Routes /api/* to the SAME Vercel-style handlers under api/ (through
 // cloudflare/vercel-adapter.ts) and serves the Vite build in dist/ as static

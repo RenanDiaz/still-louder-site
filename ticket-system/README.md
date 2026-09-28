@@ -8,7 +8,7 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 
 > Se construyó como un proyecto independiente dentro del repo (`/ticket-system`)
 > para no tocar el sitio estático existente. Se despliega como un **proyecto Vercel
-> aparte** (sugerido: subdominio `entradas.stilllouder.space`). Ver "Despliegue".
+> aparte** (sugerido: subdominio `entradas.still-louder.com`). Ver "Despliegue".
 
 ## Superficies
 
@@ -175,10 +175,10 @@ CUANTOAPP_PAYMENT_URL         # fallback genérico (link de pago con tarjeta)
 CUANTOAPP_PAYMENT_URL_1..10   # un link por cantidad: producto oculto en el catálogo
                               # de CuantoApp con el precio ya recargado (la comisión
                               # 4.9%+$0.35 es por transacción, no por entrada). Ver .env.example
-PUBLIC_BASE_URL=https://entradas.stilllouder.space
+PUBLIC_BASE_URL=https://entradas.still-louder.com
 # Yappy Botón de Pago V2 (vacías = la opción Yappy se oculta sola)
 YAPPY_BTN_MERCHANT_ID, YAPPY_BTN_SECRET_KEY (base64, se muestra UNA vez)
-YAPPY_BTN_DOMAIN=https://entradas.stilllouder.space   # igual al portal
+YAPPY_BTN_DOMAIN=https://entradas.still-louder.com   # igual al portal
 YAPPY_BTN_ENV=test|prod
 YAPPY_BTN_CDN_URL             # opcional: override del CDN del web component
 # Google Wallet (vacías = el botón "Agregar a Google Wallet" se oculta solo)
@@ -215,7 +215,7 @@ Crea un **segundo proyecto Vercel** apuntando al mismo repo con:
 - **Root Directory:** `ticket-system`
 - **Framework Preset:** Vite (build `vite build`, output `dist`)
 - Variables de entorno: las de arriba.
-- Dominio: `entradas.stilllouder.space` (CNAME en el DNS del dominio).
+- Dominio: `entradas.still-louder.com` (CNAME en el DNS del dominio).
 
 El sitio estático actual (raíz del repo) sigue siendo su propio proyecto Vercel,
 intacto. `vercel.json` aquí define headers de seguridad (CSP, HSTS,
