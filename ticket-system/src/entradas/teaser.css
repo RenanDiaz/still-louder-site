@@ -1,5 +1,9 @@
 /*
-  Teaser del show del 31 de octubre de 2026 (/31-10).
+  Vista TEASER de un evento (status = 'teaser'), p. ej. /31-10 hoy.
+
+  Convive en el mismo bundle que el tema de compra (theme.css): las reglas
+  globales (body, body::before) van bajo html[data-view='teaser'] y las de
+  theme.css bajo html:not([data-view='teaser']), así que nunca se pisan.
 
   PRINCIPIO: este evento todavía NO tiene diseño ni paleta. Esta hoja es
   deliberadamente monocroma — negro y hueso, sin un solo acento de color — para
@@ -65,7 +69,7 @@
 
 /* Negro plano con un halo apenas perceptible detrás del centro: es la "luz"
    de la que el texto parece estar saliendo. */
-body {
+html[data-view='teaser'] body {
   font-family: var(--tz-font-body);
   color: var(--tz-bone);
   background: var(--tz-void);
@@ -78,7 +82,7 @@ body {
 }
 
 /* Grano tenue: textura sin color, para que el negro no se vea plano. */
-body::before {
+html[data-view='teaser'] body::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -241,7 +245,7 @@ body::before {
   El misterio es una decisión estética; la legibilidad no se negocia.
 */
 @media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
-  body::before {
+  html[data-view='teaser'] body::before {
     display: none;
   }
 
@@ -272,7 +276,7 @@ body::before {
 /* Modo de contraste forzado (Windows): todo a los colores del sistema. Sin este
    bloque, el `color: transparent` de .tz-date dejaría la fecha invisible. */
 @media (forced-colors: active) {
-  body::before {
+  html[data-view='teaser'] body::before {
     display: none;
   }
 

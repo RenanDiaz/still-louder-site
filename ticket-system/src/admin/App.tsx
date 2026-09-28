@@ -10,6 +10,7 @@ import {
   fetchAdminTickets,
   fetchRefundReceipt,
   getGiftCampaign,
+  listEvents,
   listGiftCampaigns,
   markOrderPaid,
   refundOrder,
@@ -17,6 +18,7 @@ import {
   revokeTicket,
   toggleStage2,
   unrevokeTicket,
+  type AdminEvent,
   type AdminOrder,
   type AdminStats,
   type AdminTicket,
@@ -26,8 +28,11 @@ import {
   type GiftClaimRow
 } from '../shared/api';
 import { TIER_LABELS } from '../shared/config';
+import { EventosTab } from './EventosTab';
 
-const STORAGE_KEY = 'wwwy3_admin_pw';
+const STORAGE_KEY = 'sl_admin_pw';
+// Last event picked in the selector (persists across sessions on this device).
+const EVENT_KEY = 'sl_admin_event';
 
 const METHOD_LABELS: Record<string, string> = {
   yappy: 'Yappy',
@@ -119,7 +124,7 @@ function Gate({
     setError('');
     try {
       // A successful listing call doubles as a password check.
-      await fetchAdminOrders(password);
+      await listEvents(password);
       onSuccess();
     } catch (err) {
       const status = (err as Error & { status?: number }).status;
@@ -162,27 +167,96 @@ function Gate({
   );
 }
 
-type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin';
+type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin' | 'eventos';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'resumen', label: 'Resumen' },
   { key: 'ordenes', label: 'Órdenes' },
   { key: 'entradas', label: 'Entradas' },
   { key: 'regalos', label: 'Regalos' },
-  { key: 'checkin', label: 'Check-in' }
+  { key: 'checkin', label: 'Check-in' },
+  { key: 'eventos', label: 'Eventos' }
 ];
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Borrador',
+  teaser: 'Teaser',
+  on_sale: 'En venta',
+  archived: 'Archivado'
+};
+
+// Default selection: the remembered one, else the event on sale, else a
+// teaser, else the most recent (the API lists newest first).
+function pickDefaultEvent(events: AdminEvent[]): AdminEvent | null {
+  let remembered: string | null = null;
+  try {
+    remembered = localStorage.getItem(EVENT_KEY);
+  } catch {
+    // storage unavailable
+  }
+  return (
+    events.find((e) => e.id === remembered) ??
+    events.find((e) => e.status === 'on_sale') ??
+    events.find((e) => e.status === 'teaser') ??
+    events[0] ??
+    null
+  );
+}
 
 function Dashboard({ password, onLogout }: { password: string; onLogout: () => void }) {
   const [tab, setTab] = useState<TabKey>('resumen');
+  const [events, setEvents] = useState<AdminEvent[] | null>(null);
+  const [eventId, setEventId] = useState<string>('');
+  const [loadError, setLoadError] = useState('');
+
+  const reloadEvents = useCallback(async () => {
+    try {
+      const { events: list } = await listEvents(password);
+      setEvents(list);
+      setEventId((current) => (list.some((e) => e.id === current) ? current : (pickDefaultEvent(list)?.id ?? '')));
+    } catch {
+      setLoadError('Error cargando los eventos.');
+    }
+  }, [password]);
+
+  useEffect(() => {
+    reloadEvents();
+  }, [reloadEvents]);
+
+  function selectEvent(id: string) {
+    setEventId(id);
+    try {
+      localStorage.setItem(EVENT_KEY, id);
+    } catch {
+      // storage unavailable
+    }
+  }
+
+  const event = events?.find((e) => e.id === eventId) ?? null;
 
   return (
     <div className="container" style={{ maxWidth: 980 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Panel WWWY3</h1>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <h1>Panel{event ? ` · ${event.short_name}` : ''}</h1>
         <button className="secondary" onClick={onLogout}>
           Salir
         </button>
       </header>
+
+      {/* Todo lo de abajo (salvo Eventos) está scopeado al evento elegido. */}
+      {events && events.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <label htmlFor="event-select">Evento</label>
+          <select id="event-select" value={eventId} onChange={(e) => selectEvent(e.target.value)}>
+            {events.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name} — {STATUS_LABELS[e.status] ?? e.status}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      {loadError && <div className="alert alert--error">{loadError}</div>}
 
       <nav className="tabs" aria-label="Secciones del panel">
         {TABS.map((t) => (
@@ -197,18 +271,27 @@ function Dashboard({ password, onLogout }: { password: string; onLogout: () => v
         ))}
       </nav>
 
-      {tab === 'resumen' && <ResumenTab password={password} />}
-      {tab === 'ordenes' && <OrdenesTab password={password} />}
-      {tab === 'entradas' && <EntradasTab password={password} />}
-      {tab === 'regalos' && <RegalosTab password={password} />}
-      {tab === 'checkin' && <CheckinTab password={password} />}
+      {tab === 'eventos' && events && (
+        <EventosTab password={password} events={events} onChanged={reloadEvents} onSelect={selectEvent} />
+      )}
+      {tab !== 'eventos' && !event && events && <p className="muted">No hay eventos: crea uno en la pestaña Eventos.</p>}
+      {event && (
+        <>
+          {/* key={event.id}: al cambiar de evento cada pestaña arranca de cero. */}
+          {tab === 'resumen' && <ResumenTab key={event.id} password={password} event={event} />}
+          {tab === 'ordenes' && <OrdenesTab key={event.id} password={password} event={event} />}
+          {tab === 'entradas' && <EntradasTab key={event.id} password={password} event={event} />}
+          {tab === 'regalos' && <RegalosTab key={event.id} password={password} event={event} />}
+          {tab === 'checkin' && <CheckinTab key={event.id} password={password} event={event} />}
+        </>
+      )}
     </div>
   );
 }
 
 // --- Resumen (reportes) --------------------------------------------------------
 
-function ResumenTab({ password }: { password: string }) {
+function ResumenTab({ password, event }: { password: string; event: AdminEvent }) {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [ticketStats, setTicketStats] = useState<AdminTicketsResponse['stats'] | null>(null);
   const [message, setMessage] = useState('');
@@ -221,15 +304,15 @@ function ResumenTab({ password }: { password: string }) {
     setError('');
     try {
       const [ordersData, ticketsData] = await Promise.all([
-        fetchAdminOrders(password),
-        fetchAdminTickets(password)
+        fetchAdminOrders(password, event.id),
+        fetchAdminTickets(password, event.id)
       ]);
       setStats(ordersData.stats);
       setTicketStats(ticketsData.stats);
     } catch {
       setError('Error cargando el resumen.');
     }
-  }, [password]);
+  }, [password, event.id]);
 
   useEffect(() => {
     load();
@@ -251,7 +334,7 @@ function ResumenTab({ password }: { password: string }) {
     }
     if (!window.confirm(active ? `¿Activar Etapa 2 (${cap} cupos extra)?` : '¿Desactivar Etapa 2?')) return;
     try {
-      await toggleStage2(password, active, cap);
+      await toggleStage2(password, event.id, active, cap);
       await load();
     } catch {
       setError('Error al cambiar la Etapa 2.');
@@ -273,7 +356,7 @@ function ResumenTab({ password }: { password: string }) {
     if (!window.confirm('¿Crear/verificar la clase de Google Wallet del evento? Es seguro repetirlo.')) return;
     setError('');
     try {
-      const { classId, created } = await ensureWalletClass(password);
+      const { classId, created } = await ensureWalletClass(password, event.id);
       setMessage(created ? `✓ Clase de Google Wallet creada (${classId}).` : `✓ La clase de Google Wallet ya existía (${classId}).`);
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
@@ -466,7 +549,7 @@ function ResumenTab({ password }: { password: string }) {
 
 // --- Órdenes ---------------------------------------------------------------------
 
-function OrdenesTab({ password }: { password: string }) {
+function OrdenesTab({ password, event }: { password: string; event: AdminEvent }) {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -479,7 +562,7 @@ function OrdenesTab({ password }: { password: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchAdminOrders(password, { q, status: statusFilter });
+      const data = await fetchAdminOrders(password, event.id, { q, status: statusFilter });
       setOrders(data.orders);
     } catch {
       setError('Error cargando órdenes.');
@@ -675,7 +758,7 @@ function OrdenesTab({ password }: { password: string }) {
         o.paid_at
       ])
     ];
-    downloadCsv(`ordenes-wwwy3-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    downloadCsv(`ordenes-${event.slug}-${new Date().toISOString().slice(0, 10)}.csv`, rows);
   }
 
   return (
@@ -693,6 +776,7 @@ function OrdenesTab({ password }: { password: string }) {
         {showCourtesy && (
           <CourtesyForm
             password={password}
+            eventId={event.id}
             onDone={(msg) => {
               notify(msg);
               setShowCourtesy(false);
@@ -832,10 +916,12 @@ function OrdenesTab({ password }: { password: string }) {
 
 function CourtesyForm({
   password,
+  eventId,
   onDone,
   onError
 }: {
   password: string;
+  eventId: string;
   onDone: (msg: string) => void;
   onError: (msg: string) => void;
 }) {
@@ -857,7 +943,7 @@ function CourtesyForm({
     }
     setBusy(true);
     try {
-      const result = await createCourtesyOrder(password, {
+      const result = await createCourtesyOrder(password, eventId, {
         buyer_name: name,
         buyer_email: email,
         quantity,
@@ -928,7 +1014,7 @@ const GIFT_STATUS_LABELS: Record<string, string> = {
   closed: 'Cerrada'
 };
 
-function RegalosTab({ password }: { password: string }) {
+function RegalosTab({ password, event }: { password: string; event: AdminEvent }) {
   const [campaigns, setCampaigns] = useState<GiftCampaign[]>([]);
   const [created, setCreated] = useState<GiftCampaignCreated | null>(null);
   const [maxGifts, setMaxGifts] = useState(10);
@@ -945,7 +1031,7 @@ function RegalosTab({ password }: { password: string }) {
   const load = useCallback(async () => {
     setError('');
     try {
-      const r = await listGiftCampaigns(password);
+      const r = await listGiftCampaigns(password, event.id);
       setCampaigns(r.campaigns);
     } catch {
       setError('Error cargando las campañas.');
@@ -966,7 +1052,7 @@ function RegalosTab({ password }: { password: string }) {
     setError('');
     setMessage('');
     try {
-      const res = await createGiftCampaign(password, maxGifts);
+      const res = await createGiftCampaign(password, event.id, maxGifts);
       setCreated(res);
       setMessage(`✓ Campaña creada con ${maxGifts} entrada(s) de regalo.`);
       load();
@@ -1187,7 +1273,7 @@ function GiftQr({
 
 // --- Entradas --------------------------------------------------------------------
 
-function EntradasTab({ password }: { password: string }) {
+function EntradasTab({ password, event }: { password: string; event: AdminEvent }) {
   const [tickets, setTickets] = useState<AdminTicket[]>([]);
   const [stats, setStats] = useState<AdminTicketsResponse['stats'] | null>(null);
   const [q, setQ] = useState('');
@@ -1201,7 +1287,7 @@ function EntradasTab({ password }: { password: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchAdminTickets(password, { q, status: statusFilter, tier: tierFilter });
+      const data = await fetchAdminTickets(password, event.id, { q, status: statusFilter, tier: tierFilter });
       setTickets(data.tickets);
       setStats(data.stats);
     } catch {
@@ -1270,7 +1356,7 @@ function EntradasTab({ password }: { password: string }) {
         t.created_at
       ])
     ];
-    downloadCsv(`entradas-wwwy3-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    downloadCsv(`entradas-${event.slug}-${new Date().toISOString().slice(0, 10)}.csv`, rows);
   }
 
   return (
@@ -1405,14 +1491,14 @@ function EntradasTab({ password }: { password: string }) {
 
 const CHECKIN_REFRESH_MS = 10000;
 
-function CheckinTab({ password }: { password: string }) {
+function CheckinTab({ password, event }: { password: string; event: AdminEvent }) {
   const [data, setData] = useState<AdminTicketsResponse | null>(null);
   const [error, setError] = useState('');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const result = await fetchAdminTickets(password);
+      const result = await fetchAdminTickets(password, event.id);
       setData(result);
       setUpdatedAt(new Date());
       setError('');

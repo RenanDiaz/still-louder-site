@@ -10,7 +10,7 @@
 | Hecho | Fuente |
 |---|---|
 | Fecha: **sábado 31 de octubre de 2026, 8:00 p.m.** (hora Panamá) | `NEXT_EVENT.dateISO`, tarjeta `#shows` del sitio |
-| Path público ya reservado: `entradas.stilllouder.space/31-10` (hoy teaser estático) | `ticket-system/31-10.html` |
+| Path público ya reservado: `entradas.still-louder.com/31-10` (hoy teaser estático) | `ticket-system/31-10.html` |
 | La venta es **directa con la banda**, sin intermediarios | copy de `#shows` y FAQ del sitio |
 | Lo único público hoy es la fecha; sin lugar, nombre, cartel ni paleta | comentarios en `31-10.html`, `src/teaser/App.tsx`, `config.js` |
 | Hay otro show antes: **11 oct**, teloneros de Stratovarius (Aurora at Soho), venta por **Ticketplus** — **fuera** de este sistema | flyer de la productora |
@@ -20,6 +20,37 @@ Todo lo que WWWY3 ya resolvió se hereda sin rediscutir: emisión idempotente
 al pasar a `paid`, precios server-side con recargo por método, QR firmado,
 cupo race-safe, Yappy V2, Google Wallet, cortesías, regalos, reembolsos,
 `/support`, `/ayuda`.
+
+> **Actualización 28 sep:** multi-evento está implementado y la venta abre el
+> **1 de octubre** (no el 11, como recomendaba D7). La migración `0011` ya crea
+> el evento `31-10` en `teaser` con `presale_start = 2026-10-01T00:00-05:00`;
+> D1 y D3–D6 están confirmados y sembrados en la migración, con el evento ya
+> en `on_sale` (cuenta regresiva hasta el 1 oct 00:00). Faltan D8–D13 (sobre
+> todo el flyer para el OG, D11) y el checklist de operativa.
+>
+> **Confirmado:** nombre **Still Louder's Halloween Party**, invitados
+> **Fábula Sarcástica & Elefreak** (`tagline`), código QR `SL3110`; lugar
+> **Hops Food & Drinks, David, Chiriquí** (mismo que WWWY3), aforo **230**
+> (mismo que WWWY3), **preventa $10 para las primeras 100** entradas (etapa 1 =
+> 100, etapa 2 = 0) y **general $12** para el resto. Las cortesías siguen
+> restando del cupo de preventa (política de 0004); los regalos no.
+>
+> Links de CuantoApp (`CUANTOAPP_PAYMENT_URL_1..10`) con el gross-up de
+> 4.9% + $0.35 por transacción — el monto exacto que `/entradas` le muestra al
+> comprador:
+>
+> | Cantidad | Preventa ($10 c/u) | General ($12 c/u) |
+> |---|---|---|
+> | 1 | $10.89 | $12.99 |
+> | 2 | $21.40 | $25.61 |
+> | 3 | $31.92 | $38.23 |
+> | 4 | $42.43 | $50.85 |
+> | 5 | $52.95 | $63.46 |
+> | 6 | $63.46 | $76.08 |
+> | 7 | $73.98 | $88.70 |
+> | 8 | $84.50 | $101.32 |
+> | 9 | $95.01 | $113.94 |
+> | 10 | $105.53 | $126.56 |
 
 ## Decisiones pendientes (llenar antes de implementar)
 
@@ -84,7 +115,7 @@ Estaciones sugeridas: `puerta-1`, `puerta-2` (como WWWY3).
 
 ### Sitio principal (`public/`) al abrir la venta
 
-1. `config.js`: `shows.upcoming[31-10].ticketsUrl = 'https://entradas.stilllouder.space/31-10'`.
+1. `config.js`: `shows.upcoming[31-10].ticketsUrl = 'https://entradas.still-louder.com/31-10'`.
 2. Tarjeta del 31-10 en `#shows`: revelar nombre, lugar y hora; CTA "Comprar
    entradas" apuntando a `ticketsUrl` (reemplaza "Enterarme primero").
 3. FAQ "¿Cómo compro entradas?": dejar de decir "la venta todavía no abre".

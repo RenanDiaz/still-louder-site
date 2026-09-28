@@ -5,6 +5,27 @@
 > datos separados. La venta del 31 de octubre se especifica aparte en
 > `docs/features/entradas-31-10.md` y **depende de este**.
 
+## Estado: implementado (28 sep 2026)
+
+Implementado según este spec, con estas desviaciones deliberadas:
+
+| Spec | Implementación | Por qué |
+|---|---|---|
+| `31-10.html` y `src/teaser/` se eliminan | `src/teaser/` se movió a `src/entradas/Teaser.tsx` (+ `teaser.css`); **`31-10.html` se conserva** pero carga `src/entradas/main.tsx` | El preview del enlace de `/31-10` sigue teniendo sus propias meta (criterio 1 de `entradas-31-10.md`); sin rewrite. |
+| Evento "actual" = `on_sale` más cercano, si no el último `archived` | `on_sale` → **`teaser`** → último `archived` | Hoy (31-10 en teaser) `/entradas` y `/ayuda` muestran el próximo show, no WWWY3. |
+| Slugs futuros por rewrite | Rewrite **o** `/entradas?evento=<slug>` | Un evento nuevo es visitable sin redeploy. |
+| `/validar` elige evento | El listado de eventos de la puerta sale de `GET /api/tickets/validate` (staff) | Cero archivos nuevos bajo `api/`; staff no necesita permisos de admin. |
+| Soporte cruza eventos | `GET /api/admin/orders` **sin** `?event=` = búsqueda de soporte (requiere término) para soporte **y** admin | `/support` también se usa con la contraseña de admin. |
+| `documentName` de Yappy usa `short_name` | Sin cambio | `documentName` lo devuelve Yappy; no lo mandamos nosotros. |
+| — | Una orden a una tarifa con precio 0 → `409 tier_unavailable`; pasar a `on_sale` exige precios > 0 | Evita órdenes de $0 por un evento mal configurado. |
+| — | `GOOGLE_WALLET_CLASS_SUFFIX` retirado: clase = `${issuer}.${code.toLowerCase()}` | La de WWWY3 sigue siendo `…wwwy3` (el default anterior). |
+
+La migración siembra el show del 31-10 (`slug=31-10`, `code=SL3110`,
+**`on_sale`**, `presale_start` = 1 oct 00:00): Still Louder's Halloween Party ft.
+Fábula Sarcástica & Elefreak, Hops Food & Drinks (David), aforo 230, preventa
+$10 × 100, general $12. Se agregó la columna `events.tagline` (línea de
+invitados bajo el nombre).
+
 ## Contexto y problema
 
 Hoy el sistema tiene **un solo evento implícito**:

@@ -9,6 +9,15 @@ import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
 import { ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
 import { tokenToDataUrl } from './_lib/qr.js';
 import { env } from './_lib/env.js';
+import {
+  EVENT_CODE_RE,
+  EVENT_SLUG_RE,
+  canTransition,
+  getEventById,
+  getTierPrices,
+  type EventRow,
+  type EventStatus
+} from './_lib/events.js';
 import { randomBytes } from 'node:crypto';
 import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_lib/types.js';
 
@@ -20,7 +29,16 @@ import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_l
 // vercel.json maps /api/admin/:path* onto it, passing the sub-path in the
 // `path` query param:
 //
-//   GET  /api/admin/orders?q=&status=          order list + sales stats
+// Every route that reads or changes per-event data takes `?event=<event id>`
+// and is scoped to it; without it → 400 event_required (never "all events" by
+// accident). Routes that act on ONE order/ticket/campaign by id don't need it.
+// GET orders without ?event= is the support search: it spans every event.
+//
+//   GET  /api/admin/events                     events + summary metrics
+//   POST /api/admin/events                     create an event (starts as draft)
+//   PATCH /api/admin/events/:id                edit fields + tier prices
+//   POST /api/admin/events/:id/status          status transition { status }
+//   GET  /api/admin/orders?event=&q=&status=   order list + sales stats
 //   POST /api/admin/orders/cleanup             cancel expired pendings (also GET, cron)
 //   POST /api/admin/orders/:id/mark-paid       mark paid -> issue tickets + email
 //   POST /api/admin/orders/:id/cancel          cancel a specific pending order
@@ -52,6 +70,23 @@ const TICKET_TIERS = ['preventa', 'general', 'cortesia', 'regalo'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Reads ?event=<id> and loads the event, answering 400/404 itself when it
+// can't. Callers return early on null.
+async function requireEvent(req: VercelRequest, res: VercelResponse): Promise<EventRow | null> {
+  const raw = req.query.event;
+  const id = (Array.isArray(raw) ? raw[0] : raw ?? '').trim();
+  if (!id) {
+    sendJson(res, 400, { error: 'event_required' });
+    return null;
+  }
+  const event = await getEventById(id);
+  if (!event) {
+    sendJson(res, 404, { error: 'event_not_found' });
+    return null;
+  }
+  return event;
+}
+
 export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
   // The rewrite delivers the sub-path slash-joined in `path`
   // (e.g. "orders/<id>/mark-paid"); split it back into segments.
@@ -74,7 +109,13 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   // into listOrders is what unlocks the full table + sales stats for admins.
   if (route === 'orders' && req.method === 'GET') {
     if (!isSupport(req)) return sendJson(res, 401, { error: 'unauthorized' });
-    return listOrders(req, res, admin);
+    // With ?event= (admin panel): that event's list + its stats, admin only.
+    // Without it (/support, with the support OR the admin password): the
+    // cross-event search, which requires a search term and returns no stats.
+    if (!admin || !req.query.event) return listOrders(req, res, null);
+    const event = await requireEvent(req, res);
+    if (!event) return;
+    return listOrders(req, res, event);
   }
   if (segments[0] === 'orders' && segments.length === 2 && req.method === 'GET') {
     // GET orders/:id — one order + its tickets (orders/cleanup handled above).
@@ -101,13 +142,30 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     if (action === 'cancel') return cancelOrder(res, id);
     if (action === 'refund') return refund(req, res, id);
   }
+  if (route === 'events') {
+    if (req.method === 'GET') return listEvents(res);
+    if (req.method === 'POST') return createEvent(req, res);
+    return methodNotAllowed(res, ['GET', 'POST']);
+  }
+  if (segments[0] === 'events' && segments.length === 2) {
+    if (req.method !== 'PATCH') return methodNotAllowed(res, ['PATCH']);
+    return updateEvent(req, res, segments[1]);
+  }
+  if (segments[0] === 'events' && segments.length === 3 && segments[2] === 'status') {
+    if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
+    return setEventStatus(req, res, segments[1]);
+  }
   if (route === 'presale/stage2') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
-    return toggleStage2(req, res);
+    const event = await requireEvent(req, res);
+    if (!event) return;
+    return toggleStage2(req, res, event);
   }
   if (route === 'tickets') {
     if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
-    return listTickets(req, res);
+    const event = await requireEvent(req, res);
+    if (!event) return;
+    return listTickets(req, res, event);
   }
   if (segments[0] === 'tickets' && segments.length === 3) {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
@@ -117,12 +175,16 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   }
   if (route === 'courtesy') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
-    return createCourtesy(req, res);
+    const event = await requireEvent(req, res);
+    if (!event) return;
+    return createCourtesy(req, res, event);
   }
   if (route === 'gifts') {
-    if (req.method === 'GET') return listGiftCampaigns(res);
-    if (req.method === 'POST') return createGiftCampaign(req, res);
-    return methodNotAllowed(res, ['GET', 'POST']);
+    if (req.method !== 'GET' && req.method !== 'POST') return methodNotAllowed(res, ['GET', 'POST']);
+    const event = await requireEvent(req, res);
+    if (!event) return;
+    if (req.method === 'GET') return listGiftCampaigns(res, event);
+    return createGiftCampaign(req, res, event);
   }
   if (segments[0] === 'gifts' && segments.length === 2) {
     if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
@@ -134,7 +196,9 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   }
   if (route === 'wallet/google/ensure-class') {
     if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
-    return ensureWalletClass(res);
+    const event = await requireEvent(req, res);
+    if (!event) return;
+    return ensureWalletClass(res, event);
   }
 
   return sendJson(res, 404, { error: 'not_found' });
@@ -142,15 +206,17 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
 
 // --- Orders --------------------------------------------------------------------
 
-// includeStats distinguishes the two callers: admin (true) gets the full recent
-// list plus sales/revenue stats; the support role (false) gets only the matching
-// orders and MUST provide a search term — an empty query returns nothing so the
-// whole table is never dumped (this also doubles as the support login check).
+// `event` distinguishes the two callers: admin (an event) gets that event's
+// recent list plus its sales/revenue stats; the support role (null) searches
+// ACROSS events, gets only the matching orders (each tagged with its event) and
+// MUST provide a search term — an empty query returns nothing so the whole
+// table is never dumped (this also doubles as the support login check).
 async function listOrders(
   req: VercelRequest,
   res: VercelResponse,
-  includeStats: boolean
+  event: EventRow | null
 ): Promise<void> {
+  const includeStats = event !== null;
   const supabase = getSupabase();
   const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const status = typeof req.query.status === 'string' ? req.query.status : '';
@@ -162,10 +228,11 @@ async function listOrders(
 
   let query = supabase
     .from('orders')
-    .select('*')
+    .select('*, events(slug, code, name, short_name)')
     .order('created_at', { ascending: false })
     .limit(200);
 
+  if (event) query = query.eq('event_id', event.id);
   if (status && ORDER_STATUSES.includes(status)) {
     query = query.eq('status', status);
   }
@@ -192,13 +259,14 @@ async function listOrders(
 
   // --- Stats ---
   const { data: presale, error: presaleErr } = await supabase
-    .rpc('presale_status')
+    .rpc('presale_status', { p_event_id: event.id })
     .single<PresaleStatus>();
   if (presaleErr) throw new Error(`presale_status failed: ${presaleErr.message}`);
 
   const { data: paidOrders, error: paidErr } = await supabase
     .from('orders')
     .select('tier, quantity, total_cents, net_cents, fee_cents, payment_method')
+    .eq('event_id', event.id)
     .eq('status', 'paid');
   if (paidErr) throw new Error(`stats query failed: ${paidErr.message}`);
 
@@ -207,6 +275,7 @@ async function listOrders(
   const { data: refundedOrders, error: refundedErr } = await supabase
     .from('orders')
     .select('quantity, total_cents')
+    .eq('event_id', event.id)
     .eq('status', 'refunded');
   if (refundedErr) throw new Error(`refund stats query failed: ${refundedErr.message}`);
   const refunded = (refundedOrders ?? []) as Pick<Order, 'quantity' | 'total_cents'>[];
@@ -362,7 +431,9 @@ async function refundReceipt(res: VercelResponse, id: string): Promise<void> {
   if (!order) return sendJson(res, 404, { error: 'order_not_found' });
   if (order.status !== 'refunded') return sendJson(res, 409, { error: 'order_not_refunded' });
 
-  return sendHtml(res, 200, buildRefundReceiptHtml(order));
+  const event = await getEventById(order.event_id);
+  if (!event) throw new Error(`event ${order.event_id} not found for order ${order.id}`);
+  return sendHtml(res, 200, buildRefundReceiptHtml(order, event));
 }
 
 async function resendEmail(res: VercelResponse, id: string): Promise<void> {
@@ -387,7 +458,7 @@ async function getOrderDetail(res: VercelResponse, id: string): Promise<void> {
 
   const { data: order, error } = await supabase
     .from('orders')
-    .select('*')
+    .select('*, events(slug, code, name, short_name)')
     .eq('id', id)
     .maybeSingle<Order>();
   if (error) throw new Error(`order lookup failed: ${error.message}`);
@@ -416,7 +487,7 @@ async function cleanupOrders(req: VercelRequest, res: VercelResponse): Promise<v
 
 // --- Presale -------------------------------------------------------------------
 
-async function toggleStage2(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function toggleStage2(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
   const body = parseBody<{ active?: boolean; cap?: number }>(req);
   if (typeof body.active !== 'boolean') {
     return sendJson(res, 400, { error: 'invalid_active' });
@@ -439,9 +510,9 @@ async function toggleStage2(req: VercelRequest, res: VercelResponse): Promise<vo
   }
 
   const { data, error } = await getSupabase()
-    .from('event_config')
+    .from('events')
     .update(update)
-    .eq('id', 1)
+    .eq('id', event.id)
     .select('presale_stage2_active, presale_stage2_cap')
     .single<{ presale_stage2_active: boolean; presale_stage2_cap: number }>();
   if (error) throw new Error(`stage2 toggle failed: ${error.message}`);
@@ -458,7 +529,7 @@ interface TicketRow extends Pick<Ticket, 'id' | 'order_id' | 'tier' | 'status' |
   orders: { buyer_name: string; buyer_email: string } | null;
 }
 
-async function listTickets(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function listTickets(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
   const supabase = getSupabase();
   const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const status = typeof req.query.status === 'string' ? req.query.status : '';
@@ -467,6 +538,7 @@ async function listTickets(req: VercelRequest, res: VercelResponse): Promise<voi
   let query = supabase
     .from('tickets')
     .select('id, order_id, tier, status, used_at, used_by, created_at, orders!inner(buyer_name, buyer_email)')
+    .eq('event_id', event.id)
     .order('created_at', { ascending: false })
     .limit(1000);
 
@@ -499,10 +571,11 @@ async function listTickets(req: VercelRequest, res: VercelResponse): Promise<voi
     buyer_email: row.orders?.buyer_email ?? ''
   }));
 
-  // Global usage stats, unaffected by the list filters above.
+  // Event-wide usage stats, unaffected by the list filters above.
   const { data: allRows, error: statsErr } = await supabase
     .from('tickets')
     .select('tier, status')
+    .eq('event_id', event.id)
     .limit(10000);
   if (statsErr) throw new Error(`ticket stats query failed: ${statsErr.message}`);
 
@@ -570,7 +643,7 @@ interface CourtesyBody {
 // email behave identically to a purchase. Paid courtesy orders consume presale
 // cupo (counted by presale_status/create_order since migration 0004), but the
 // admin is never blocked by the cap: overshooting just shows presale sold out.
-async function createCourtesy(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function createCourtesy(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
   const body = parseBody<CourtesyBody>(req);
   const buyerName = (body.buyer_name ?? '').trim();
   const buyerEmail = (body.buyer_email ?? '').trim().toLowerCase();
@@ -588,6 +661,7 @@ async function createCourtesy(req: VercelRequest, res: VercelResponse): Promise<
   const { data: order, error } = await supabase
     .from('orders')
     .insert({
+      event_id: event.id,
       buyer_name: buyerName,
       buyer_email: buyerEmail,
       tier: 'cortesia',
@@ -628,7 +702,7 @@ interface CreateGiftBody {
   max_gifts?: number;
 }
 
-async function createGiftCampaign(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function createGiftCampaign(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
   const body = parseBody<CreateGiftBody>(req);
   const maxGifts = Number(body.max_gifts);
   // No hard upper bound on N, but keep it sane.
@@ -640,7 +714,7 @@ async function createGiftCampaign(req: VercelRequest, res: VercelResponse): Prom
   const supabase = getSupabase();
   const { data: campaign, error } = await supabase
     .from('gift_campaign')
-    .insert({ token, max_gifts: maxGifts })
+    .insert({ token, max_gifts: maxGifts, event_id: event.id })
     .select('*')
     .single<GiftCampaign>();
   if (error) throw new Error(`gift campaign insert failed: ${error.message}`);
@@ -651,11 +725,12 @@ async function createGiftCampaign(req: VercelRequest, res: VercelResponse): Prom
   return sendJson(res, 201, { campaign, url, qrDataUrl });
 }
 
-async function listGiftCampaigns(res: VercelResponse): Promise<void> {
+async function listGiftCampaigns(res: VercelResponse, event: EventRow): Promise<void> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('gift_campaign')
     .select('*')
+    .eq('event_id', event.id)
     .order('created_at', { ascending: false })
     .limit(200);
   if (error) throw new Error(`gift campaigns query failed: ${error.message}`);
@@ -717,13 +792,277 @@ async function closeGiftCampaign(res: VercelResponse, id: string): Promise<void>
 
 // --- Google Wallet -------------------------------------------------------------
 
-// Creates the event's Passes Class once (idempotent — see ensureEventTicketClass).
+// Creates THIS event's Passes Class once (idempotent — see ensureEventTicketClass).
 // Run it after setting the GOOGLE_WALLET_* env vars and before passes can be
 // saved; re-running it when the class already exists is a no-op.
-async function ensureWalletClass(res: VercelResponse): Promise<void> {
+async function ensureWalletClass(res: VercelResponse, event: EventRow): Promise<void> {
   if (!isGoogleWalletConfigured()) {
     return sendJson(res, 400, { error: 'google_wallet_not_configured' });
   }
-  const result = await ensureEventTicketClass();
+  const result = await ensureEventTicketClass(event);
   return sendJson(res, 200, result);
+}
+
+// --- Events ----------------------------------------------------------------------
+
+// Metrics next to each event so the selector/table shows where each show stands.
+async function listEvents(res: VercelResponse): Promise<void> {
+  const supabase = getSupabase();
+  const { data: events, error } = await supabase
+    .from('events')
+    .select('*')
+    .order('starts_at', { ascending: false });
+  if (error) throw new Error(`events query failed: ${error.message}`);
+
+  const { data: tiers, error: tiersErr } = await supabase.from('event_tier').select('event_id, tier, price_cents');
+  if (tiersErr) throw new Error(`event tiers query failed: ${tiersErr.message}`);
+
+  const { data: paid, error: paidErr } = await supabase
+    .from('orders')
+    .select('event_id, quantity')
+    .eq('status', 'paid')
+    .limit(20000);
+  if (paidErr) throw new Error(`event metrics query failed: ${paidErr.message}`);
+
+  const paidByEvent: Record<string, number> = {};
+  for (const o of (paid ?? []) as { event_id: string; quantity: number }[]) {
+    paidByEvent[o.event_id] = (paidByEvent[o.event_id] ?? 0) + o.quantity;
+  }
+  const tiersByEvent: Record<string, Record<string, number>> = {};
+  for (const t of (tiers ?? []) as { event_id: string; tier: string; price_cents: number }[]) {
+    (tiersByEvent[t.event_id] ??= {})[t.tier] = t.price_cents;
+  }
+
+  res.setHeader('Cache-Control', 'no-store');
+  return sendJson(res, 200, {
+    events: ((events ?? []) as EventRow[]).map((e) => ({
+      ...e,
+      tiers: { preventa: tiersByEvent[e.id]?.preventa ?? 0, general: tiersByEvent[e.id]?.general ?? 0 },
+      paidTickets: paidByEvent[e.id] ?? 0
+    }))
+  });
+}
+
+interface EventBody {
+  slug?: unknown;
+  code?: unknown;
+  name?: unknown;
+  short_name?: unknown;
+  tagline?: unknown;
+  venue?: unknown;
+  venue_address?: unknown;
+  starts_at?: unknown;
+  presale_start?: unknown;
+  presale_end?: unknown;
+  sales_end?: unknown;
+  event_end?: unknown;
+  presale_stage1_cap?: unknown;
+  presale_stage2_cap?: unknown;
+  total_capacity?: unknown;
+  theme?: unknown;
+  og_image_url?: unknown;
+  tiers?: { preventa?: unknown; general?: unknown };
+}
+
+const EVENT_DATE_FIELDS = ['starts_at', 'presale_start', 'presale_end', 'sales_end', 'event_end'] as const;
+const THEME_RE = /^[a-z0-9-]+$/;
+
+type EventFields = Partial<
+  Pick<
+    EventRow,
+    | 'slug'
+    | 'code'
+    | 'name'
+    | 'short_name'
+    | 'tagline'
+    | 'venue'
+    | 'venue_address'
+    | (typeof EVENT_DATE_FIELDS)[number]
+    | 'presale_stage1_cap'
+    | 'presale_stage2_cap'
+    | 'total_capacity'
+    | 'theme'
+    | 'og_image_url'
+  >
+>;
+
+/**
+ * Validates the fields present in `body` (all optional here: create checks the
+ * required ones afterwards). Returns the normalized fields + tier prices, or an
+ * error code for a 400.
+ */
+function parseEventBody(
+  body: EventBody
+): { fields: EventFields; tiers: Partial<Record<'preventa' | 'general', number>> } | { error: string } {
+  const fields: EventFields = {};
+  const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+
+  if (body.slug !== undefined) {
+    const slug = str(body.slug).toLowerCase();
+    if (!EVENT_SLUG_RE.test(slug)) return { error: 'invalid_slug' };
+    fields.slug = slug;
+  }
+  if (body.code !== undefined) {
+    const code = str(body.code).toUpperCase();
+    if (!EVENT_CODE_RE.test(code)) return { error: 'invalid_code' };
+    fields.code = code;
+  }
+  if (body.name !== undefined) {
+    const name = str(body.name);
+    if (name.length < 2 || name.length > 120) return { error: 'invalid_name' };
+    fields.name = name;
+  }
+  if (body.short_name !== undefined) {
+    const shortName = str(body.short_name);
+    if (shortName.length < 2 || shortName.length > 24) return { error: 'invalid_short_name' };
+    fields.short_name = shortName;
+  }
+  if (body.tagline !== undefined) fields.tagline = str(body.tagline).slice(0, 160) || null;
+  if (body.venue !== undefined) fields.venue = str(body.venue).slice(0, 120) || null;
+  if (body.venue_address !== undefined) fields.venue_address = str(body.venue_address).slice(0, 240) || null;
+  for (const key of EVENT_DATE_FIELDS) {
+    if (body[key] === undefined) continue;
+    const d = new Date(str(body[key]));
+    if (Number.isNaN(d.getTime())) return { error: `invalid_${key}` };
+    fields[key] = d.toISOString();
+  }
+  for (const key of ['presale_stage1_cap', 'presale_stage2_cap', 'total_capacity'] as const) {
+    if (body[key] === undefined) continue;
+    const n = Number(body[key]);
+    if (!Number.isInteger(n) || n < (key === 'total_capacity' ? 1 : 0) || n > 100000) {
+      return { error: `invalid_${key}` };
+    }
+    fields[key] = n;
+  }
+  if (body.theme !== undefined) {
+    const theme = str(body.theme) || 'default';
+    if (!THEME_RE.test(theme)) return { error: 'invalid_theme' };
+    fields.theme = theme;
+  }
+  if (body.og_image_url !== undefined) {
+    const url = str(body.og_image_url);
+    if (url && !/^https:\/\/\S+$/.test(url)) return { error: 'invalid_og_image_url' };
+    fields.og_image_url = url || null;
+  }
+
+  const tiers: Partial<Record<'preventa' | 'general', number>> = {};
+  for (const tier of ['preventa', 'general'] as const) {
+    const raw = body.tiers?.[tier];
+    if (raw === undefined) continue;
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 0 || n > 1000000) return { error: `invalid_price_${tier}` };
+    tiers[tier] = n;
+  }
+  return { fields, tiers };
+}
+
+/** presale_start ≤ presale_end ≤ sales_end ≤ event_end (mirrors the DB check). */
+function datesInOrder(e: Pick<EventRow, 'presale_start' | 'presale_end' | 'sales_end' | 'event_end'>): boolean {
+  const t = (iso: string) => new Date(iso).getTime();
+  return t(e.presale_start) <= t(e.presale_end) && t(e.presale_end) <= t(e.sales_end) && t(e.sales_end) <= t(e.event_end);
+}
+
+async function upsertTiers(eventId: string, tiers: Partial<Record<'preventa' | 'general', number>>): Promise<void> {
+  const rows = Object.entries(tiers).map(([tier, price_cents]) => ({ event_id: eventId, tier, price_cents }));
+  if (rows.length === 0) return;
+  const { error } = await getSupabase().from('event_tier').upsert(rows, { onConflict: 'event_id,tier' });
+  if (error) throw new Error(`event tiers upsert failed: ${error.message}`);
+}
+
+function isUniqueViolation(error: { code?: string } | null): boolean {
+  return error?.code === '23505';
+}
+
+async function createEvent(req: VercelRequest, res: VercelResponse): Promise<void> {
+  const parsed = parseEventBody(parseBody<EventBody>(req));
+  if ('error' in parsed) return sendJson(res, 400, { error: parsed.error });
+  const { fields, tiers } = parsed;
+
+  for (const key of ['slug', 'code', 'name', 'short_name', ...EVENT_DATE_FIELDS] as const) {
+    if (fields[key] === undefined) return sendJson(res, 400, { error: `missing_${key}` });
+  }
+  if (!datesInOrder(fields as EventRow)) return sendJson(res, 400, { error: 'invalid_date_order' });
+  if (tiers.preventa === undefined || tiers.general === undefined) {
+    return sendJson(res, 400, { error: 'missing_tiers' });
+  }
+
+  const { data: event, error } = await getSupabase()
+    .from('events')
+    .insert({ ...fields, status: 'draft' })
+    .select('*')
+    .single<EventRow>();
+  if (isUniqueViolation(error)) return sendJson(res, 409, { error: 'slug_or_code_taken' });
+  if (error) throw new Error(`event insert failed: ${error.message}`);
+
+  await upsertTiers(event!.id, tiers);
+  return sendJson(res, 201, { event: { ...event!, tiers: await getTierPrices(event!.id) } });
+}
+
+async function updateEvent(req: VercelRequest, res: VercelResponse, id: string): Promise<void> {
+  const current = await getEventById(id);
+  if (!current) return sendJson(res, 404, { error: 'event_not_found' });
+  if (current.status === 'archived') return sendJson(res, 409, { error: 'event_archived' });
+
+  const parsed = parseEventBody(parseBody<EventBody>(req));
+  if ('error' in parsed) return sendJson(res, 400, { error: parsed.error });
+  const { fields, tiers } = parsed;
+
+  // The code is signed into every QR and the slug is the public URL: once
+  // tickets exist, changing either would orphan them.
+  const identityChanged =
+    (fields.code !== undefined && fields.code !== current.code) ||
+    (fields.slug !== undefined && fields.slug !== current.slug);
+  if (identityChanged) {
+    const { count, error } = await getSupabase()
+      .from('tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', id);
+    if (error) throw new Error(`event tickets count failed: ${error.message}`);
+    if ((count ?? 0) > 0) return sendJson(res, 409, { error: 'identity_locked' });
+  }
+
+  if (!datesInOrder({ ...current, ...fields })) return sendJson(res, 400, { error: 'invalid_date_order' });
+
+  if (Object.keys(fields).length > 0) {
+    const { error } = await getSupabase()
+      .from('events')
+      .update({ ...fields, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (isUniqueViolation(error)) return sendJson(res, 409, { error: 'slug_or_code_taken' });
+    if (error) throw new Error(`event update failed: ${error.message}`);
+  }
+  await upsertTiers(id, tiers);
+
+  const updated = await getEventById(id);
+  return sendJson(res, 200, { event: { ...updated!, tiers: await getTierPrices(id) } });
+}
+
+async function setEventStatus(req: VercelRequest, res: VercelResponse, id: string): Promise<void> {
+  const body = parseBody<{ status?: string }>(req);
+  const target = body.status as EventStatus;
+  const current = await getEventById(id);
+  if (!current) return sendJson(res, 404, { error: 'event_not_found' });
+  if (!canTransition(current.status, target)) {
+    return sendJson(res, 409, { error: 'invalid_transition', from: current.status, to: body.status ?? null });
+  }
+  // Going on sale with a free sellable tier would create $0 orders.
+  if (target === 'on_sale') {
+    const prices = await getTierPrices(id);
+    if (!(prices.preventa > 0) || !(prices.general > 0)) {
+      return sendJson(res, 409, { error: 'missing_prices' });
+    }
+  }
+
+  // Conditional on the status we validated against, so two admins racing
+  // can't apply an invalid chain of transitions.
+  const { data, error } = await getSupabase()
+    .from('events')
+    .update({ status: target, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('status', current.status)
+    .select('*')
+    .maybeSingle<EventRow>();
+  if (error) throw new Error(`event status update failed: ${error.message}`);
+  if (!data) return sendJson(res, 409, { error: 'status_changed' });
+  return sendJson(res, 200, { event: data });
 }

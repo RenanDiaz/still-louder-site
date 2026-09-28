@@ -1,14 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
-import { haveSalesEnded } from './_lib/event.js';
 import {
-  MAX_QUANTITY_PER_ORDER,
-  areSalesOpenByDate,
-  isPresaleOpenByDate,
-  priceBreakdown,
-  reservationMinutesFor
-} from './_lib/pricing.js';
+  areSalesOpen,
+  getEventBySlug,
+  getCurrentEvent,
+  getTierPrices,
+  haveSalesEnded,
+  isPresaleOpen
+} from './_lib/events.js';
+import { MAX_QUANTITY_PER_ORDER, priceBreakdown, reservationMinutesFor } from './_lib/pricing.js';
 import { sendOrderNotificationEmail } from './_lib/email.js';
 import type { Order, PaymentMethod, PresaleStatus, Tier } from './_lib/types.js';
 
@@ -17,6 +18,7 @@ const METHODS: PaymentMethod[] = ['yappy', 'cuantoapp', 'cash'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface CreateOrderBody {
+  event?: string; // slug; omitted = the current event
   buyer_name?: string;
   buyer_email?: string;
   buyer_phone?: string;
@@ -89,29 +91,35 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY_PER_ORDER) {
     return sendJson(res, 400, { error: 'invalid_quantity' });
   }
-  // Sales haven't opened yet: the buy form is hidden client-side until the
-  // presale start time, but reject direct POSTs too — nothing is sold before then.
-  if (!areSalesOpenByDate()) {
-    return sendJson(res, 409, { error: 'sales_not_open' });
+  // The event decides everything below: which one is being sold, its dates
+  // and its prices. The client only names it (slug); a draft is never public.
+  const slug = (body.event ?? '').trim();
+  const event = slug ? await getEventBySlug(slug) : await getCurrentEvent();
+  if (!event || event.status === 'draft') {
+    return sendJson(res, 404, { error: 'event_not_found' });
   }
-  // El evento ya pasó: la venta está cerrada en TODAS las tarifas, quede cupo o
-  // no. El cliente reemplaza el formulario por el aviso de cierre al recibir
-  // este código, pero la decisión es de aquí — un POST directo tampoco pasa.
-  if (haveSalesEnded()) {
+  // El evento ya pasó (o está archivado): la venta está cerrada en TODAS las
+  // tarifas, quede cupo o no. El cliente reemplaza el formulario por el aviso
+  // de cierre al recibir este código — un POST directo tampoco pasa.
+  if (haveSalesEnded(event)) {
     return sendJson(res, 409, { error: 'sales_closed' });
+  }
+  // Not on sale (teaser / paused) or before presale_start: nothing is sold yet.
+  if (!areSalesOpen(event)) {
+    return sendJson(res, 409, { error: event.status === 'on_sale' ? 'sales_not_open' : 'sales_closed' });
   }
   // Once the presale window has closed, preventa can no longer be sold — even
   // if cupo remains. The client falls back to general on this error.
-  if (tier === 'preventa' && !isPresaleOpenByDate()) {
+  if (tier === 'preventa' && !isPresaleOpen(event)) {
     return sendJson(res, 409, { error: 'presale_ended' });
   }
   // The tier is not the buyer's choice: while presale is open and has cupo,
   // nobody should pay the (higher) general price. This guards against stale
   // or tampered clients; the current client only sends 'general' when presale
   // is unavailable. The extra RPC only runs during the presale window.
-  if (tier === 'general' && isPresaleOpenByDate()) {
+  if (tier === 'general' && isPresaleOpen(event)) {
     const { data: presaleStatus, error: presaleError } = await getSupabase()
-      .rpc('presale_status')
+      .rpc('presale_status', { p_event_id: event.id })
       .single<PresaleStatus>();
     if (presaleError) throw new Error(`presale_status failed: ${presaleError.message}`);
     // Si el evento ya está agotado no hay nada que redirigir a preventa: el
@@ -124,11 +132,17 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   // El precio se calcula en el servidor; el cliente no puede influir en él. El
   // total incluye el recargo por servicio que absorbe la comisión del método de
   // pago, de modo que el neto (precio base × cantidad) lo recibe la banda.
-  const { netCents, feeCents, totalCents } = priceBreakdown(tier, quantity, method);
+  const unitPrice = (await getTierPrices(event.id))[tier as 'preventa' | 'general'];
+  // A sellable tier without a configured price would create a $0 order: refuse.
+  if (!(unitPrice > 0)) {
+    return sendJson(res, 409, { error: 'tier_unavailable' });
+  }
+  const { netCents, feeCents, totalCents } = priceBreakdown(unitPrice, quantity, method);
   const reservationMinutes = reservationMinutesFor(method);
 
   const { data: order, error } = await getSupabase()
     .rpc('create_order', {
+      p_event_id: event.id,
       p_buyer_name: buyerName,
       p_buyer_email: buyerEmail,
       p_buyer_phone: buyerPhone,
@@ -156,13 +170,14 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
   // Aviso interno al operador de que se registró una compra. Best-effort: un
   // fallo de correo no debe tumbar la creación de la orden ni afectar al comprador.
   try {
-    await sendOrderNotificationEmail(order!);
+    await sendOrderNotificationEmail(order!, event);
   } catch (notifyError) {
     console.error('[orders] order notification email failed', notifyError);
   }
 
   return sendJson(res, 201, {
     orderId: order!.id,
+    event: event.slug,
     tier: order!.tier,
     quantity: order!.quantity,
     totalCents: order!.total_cents,

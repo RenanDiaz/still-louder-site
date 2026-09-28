@@ -1,7 +1,7 @@
 Contact: mailto:security@stilllouder.space
-Expires: 2026-01-11T00:00:00.000Z
+Expires: 2027-09-28T00:00:00.000Z
 Preferred-Languages: es, en
-Canonical: https://stilllouder.space/.well-known/security.txt
+Canonical: https://still-louder.com/.well-known/security.txt
 
 # Security Policy
 # If you discover a security vulnerability, please report it responsibly
@@ -15,8 +15,8 @@ Canonical: https://stilllouder.space/.well-known/security.txt
 # Please allow 48 hours for initial response
 # We appreciate responsible disclosure and will credit reporters
 
-# This site is hosted on Vercel
-# For Vercel platform issues: https://vercel.com/security
+# This site is hosted on Cloudflare
+# For Cloudflare platform issues: https://www.cloudflare.com/disclosure/
 
 # Acknowledgments
 # We thank security researchers who help keep our site secure

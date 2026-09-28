@@ -86,24 +86,24 @@ export const CONFIG = {
         ticketsVendor: 'Ticketplus',
         ticketsUrl: 'https://ventas.ticketpluspty.com/event/stratovarius-xg5o64'
       },
-      // 31 oct: fecha propia en modo COMING SOON. La fecha está confirmada,
-      // pero el resto se guarda a propósito (no hay diseño ni paleta todavía):
-      // nada de lugar, cartel, ni de lo que se estrena esa noche. Al anunciar
-      // de verdad: ampliar el copy de su tarjeta en index.html y abrir la
-      // venta con `ticketsUrl` (URL del evento en el ticket-system, ver
-      // docs/features/entradas-31-10.md).
+      // 31 oct: fecha propia, venta directa en el ticket-system (evento
+      // `31-10`, ver docs/features/entradas-31-10.md). Preventa $10 (primeras
+      // 100) desde el 1 oct a las 00:00; general $12.
       oct31: {
+        name: "Still Louder's Halloween Party",
+        guests: 'Fábula Sarcástica & Elefreak',
         dateISO: '2026-10-31T20:00:00-05:00',
         dateLabel: '31 · 10 · 2026',
-        // null = la venta todavía no abre: el CTA de la tarjeta lleva a Instagram.
-        ticketsUrl: null
+        venue: 'Hops Food & Drinks',
+        city: 'David, Chiriquí',
+        presaleStartISO: '2026-10-01T00:00:00-05:00',
+        ticketsUrl: 'https://entradas.still-louder.com/31-10'
       }
     },
     // Canal donde se anuncian las fechas (destino del CTA mientras no hay venta).
     announceUrl: 'https://www.instagram.com/still_louder/',
-    // Página de ayuda del sistema de entradas: sigue en pie para consultas
-    // sobre compras del último show, aunque su venta esté cerrada.
-    helpUrl: 'https://entradas.stilllouder.space/ayuda'
+    // Página de ayuda del sistema de entradas (FAQ del evento actual + canales).
+    helpUrl: 'https://entradas.still-louder.com/ayuda'
   },
 
   // Analytics Configuration
@@ -125,7 +125,7 @@ export const CONFIG = {
   // Site Information
   site: {
     name: 'Still Louder',
-    url: 'https://stilllouder.space/',
+    url: 'https://still-louder.com/',
     description:
       '¡Ya disponible! Escucha "Skirlaz", el nuevo sencillo de Still Louder, y mira el lyric video oficial en todas las plataformas digitales.',
     locale: 'es_PA',

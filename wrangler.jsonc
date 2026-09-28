@@ -1,4 +1,4 @@
-// Cloudflare Workers config for the MAIN SITE (stilllouder.space).
+// Cloudflare Workers config for the MAIN SITE (still-louder.com).
 // Static-assets-only Worker: no server code, `dist/` is served directly.
 // The ticket system deploys as its OWN Worker from ticket-system/wrangler.jsonc.
 //
@@ -16,12 +16,17 @@
     // /foo/ redirects to /foo.
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
-  }
+  },
 
-  // Custom domain — uncomment once the DNS zone stilllouder.space is on this
-  // Cloudflare account (until then, test on the *.workers.dev URL):
-  // "routes": [
-  //   { "pattern": "stilllouder.space", "custom_domain": true },
-  //   { "pattern": "www.stilllouder.space", "custom_domain": true }
-  // ]
+  // Custom domains. Requires the still-louder.com zone on this Cloudflare
+  // account (it is if the domain was bought on Cloudflare Registrar); deploy
+  // creates the DNS records and certificates. www is served too but should be
+  // 301'd to the apex with a dashboard Redirect Rule (see DEPLOY_CLOUDFLARE.md)
+  // so there is a single canonical host. workers_dev keeps the *.workers.dev
+  // URL alive for testing.
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "still-louder.com", "custom_domain": true },
+    { "pattern": "www.still-louder.com", "custom_domain": true }
+  ]
 }

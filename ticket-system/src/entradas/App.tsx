@@ -1,43 +1,121 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   createOrder,
   getOrderStatus,
   getPresaleStatus,
   getYappyConfig,
   type CreateOrderResponse,
+  type PresaleNumbers,
   type PresaleStatusResponse,
+  type PublicEvent,
   type YappyConfigResponse
 } from '../shared/api';
 import {
-  EVENT,
+  BAND_NAME,
   PAYMENT_METHODS,
   SOCIAL,
-  TIERS,
+  TIER_LABELS,
+  formatEventDay,
+  formatEventTime,
   formatMoney,
+  formatPriceLabel,
   priceBreakdown,
   type TierKey
 } from '../shared/config';
 import { Countdown } from './Countdown';
+import { Teaser } from './Teaser';
 import { YappyButton } from './YappyButton';
 
 type Method = (typeof PAYMENT_METHODS)[number]['value'];
 
+// Paths that mean "no slug": /entradas (and the root redirect) show the
+// server's current event. Any other path is the event slug (/31-10,
+// /when-we-were-young-3 via rewrite). ?evento=<slug> works on any path, so a
+// brand-new event is reachable before it gets its own rewrite.
+const NO_SLUG_PATHS = new Set(['', 'entradas', 'index', 'index.html', 'entradas.html']);
+
+function resolveSlug(): string | null {
+  const fromQuery = new URLSearchParams(window.location.search).get('evento');
+  if (fromQuery) return fromQuery.trim().toLowerCase();
+  const last = window.location.pathname.split('/').filter(Boolean).pop() ?? '';
+  const clean = last.replace(/\.html$/, '');
+  return NO_SLUG_PATHS.has(clean) ? null : clean;
+}
+
 // A pending Yappy order survives a refresh (the Yappy modal's countdown dies
 // with the page, but the IPN doesn't need the browser — restoring the
-// confirmation lets polling pick the truth back up).
-const PENDING_ORDER_KEY = 'wwwy3.pendingYappyOrder';
+// confirmation lets polling pick the truth back up). Stored per event.
+const pendingOrderKey = (slug: string) => `sl.pendingYappyOrder.${slug}`;
 
-function restorePendingOrder(): CreateOrderResponse | null {
+function restorePendingOrder(slug: string): CreateOrderResponse | null {
   try {
-    const raw = sessionStorage.getItem(PENDING_ORDER_KEY);
+    const raw = sessionStorage.getItem(pendingOrderKey(slug));
     return raw ? (JSON.parse(raw) as CreateOrderResponse) : null;
   } catch {
     return null;
   }
 }
 
+/**
+ * Loads the event (by path slug, or the current one) and picks the view from
+ * its status: teaser → minimal teaser; everything else → the sale page, which
+ * itself decides countdown / form / sold out / "ya pasó" from the event dates.
+ */
 export default function App() {
-  const [presale, setPresale] = useState<PresaleStatusResponse | null>(null);
+  const slug = useMemo(resolveSlug, []);
+  const [data, setData] = useState<PresaleStatusResponse | null>(null);
+  const [loadError, setLoadError] = useState<'not_found' | 'network' | null>(null);
+
+  useEffect(() => {
+    getPresaleStatus(slug)
+      .then(setData)
+      .catch((err: Error & { status?: number }) => setLoadError(err.status === 404 ? 'not_found' : 'network'));
+  }, [slug]);
+
+  const event = data?.event ?? null;
+
+  // Theme + view on <html>: theme.css / themes/*.css / teaser.css key off these.
+  useEffect(() => {
+    if (!event) return;
+    const root = document.documentElement;
+    root.dataset.theme = event.theme;
+    root.dataset.view = event.status === 'teaser' ? 'teaser' : 'sale';
+    if (event.status !== 'teaser') document.title = `${event.name} · ${BAND_NAME} en vivo`;
+  }, [event]);
+
+  if (loadError) return <LoadErrorNotice kind={loadError} />;
+  if (!data || !event) return <div className="tk-page" aria-busy="true" />;
+  if (event.status === 'teaser') return <Teaser event={event} />;
+  return <Sale event={event} initialPresale={data.presale} />;
+}
+
+function LoadErrorNotice({ kind }: { kind: 'not_found' | 'network' }) {
+  return (
+    <div className="tk-page">
+      <div className="tk-wrap">
+        <div className="tk-closed-notice" role="status">
+          <strong>{kind === 'not_found' ? '⚡ No encontramos este evento' : '⚡ No pudimos cargar la página'}</strong>
+          <p>
+            {kind === 'not_found' ? (
+              <>
+                Revisa el enlace o busca la fecha en nuestro Instagram{' '}
+                <a href={SOCIAL.instagramDm} target="_blank" rel="noopener noreferrer">
+                  <b>{SOCIAL.instagramHandle}</b>
+                </a>
+                .
+              </>
+            ) : (
+              'Revisa tu conexión y recarga la página.'
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: PresaleNumbers | null }) {
+  const [presale, setPresale] = useState<PresaleNumbers | null>(initialPresale);
   const [yappyCfg, setYappyCfg] = useState<YappyConfigResponse | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -46,45 +124,53 @@ export default function App() {
   // State (not a constant) so a server-side `presale_ended` rejection — e.g.
   // a buyer with a skewed clock — can flip it too.
   const [presaleEnded, setPresaleEnded] = useState(
-    () => Date.now() >= new Date(EVENT.presaleEnd).getTime()
+    () => Date.now() >= new Date(event.presaleEnd).getTime()
   );
-  // Sales open at EVENT.presaleStart: until then the buy form stays hidden and
+  // Sales open at event.presaleStart: until then the buy form stays hidden and
   // only the countdown + an "aún no disponible" notice show. State (not a
   // constant) so it flips on its own at the opening time without a redeploy.
-  const presaleStartMs = new Date(EVENT.presaleStart).getTime();
+  const presaleStartMs = new Date(event.presaleStart).getTime();
   const [salesOpen, setSalesOpen] = useState(() => Date.now() >= presaleStartMs);
   // El evento ya pasó: la venta cerró y la página queda como archivo. Estado
   // (no constante) para que un rechazo `sales_closed` del servidor —un cliente
   // con reloj atrasado— también lo active. El servidor es la autoridad.
   const [salesEnded, setSalesEnded] = useState(
-    () => Date.now() >= new Date(EVENT.salesEnd).getTime()
+    () => event.status === 'archived' || Date.now() >= new Date(event.salesEnd).getTime()
   );
   const [quantity, setQuantity] = useState(1);
   const [method, setMethod] = useState<Method>('cuantoapp');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [confirmation, setConfirmation] = useState<CreateOrderResponse | null>(restorePendingOrder);
+  const [confirmation, setConfirmation] = useState<CreateOrderResponse | null>(() => restorePendingOrder(event.slug));
 
   // Flip salesOpen on its own when the opening time arrives (no redeploy
-  // needed). The opening is today, so the delay is well within setTimeout's range.
+  // needed). setTimeout caps at ~24.8 days, so re-arm in chunks for far dates.
+  const [rearm, setRearm] = useState(0);
   useEffect(() => {
     if (salesOpen) return;
-    const id = setTimeout(() => setSalesOpen(true), Math.max(presaleStartMs - Date.now(), 0));
+    const remaining = presaleStartMs - Date.now();
+    const id = setTimeout(
+      () => (Date.now() >= presaleStartMs ? setSalesOpen(true) : setRearm((n) => n + 1)),
+      Math.min(Math.max(remaining, 0), 2 ** 31 - 1)
+    );
     return () => clearTimeout(id);
-  }, [salesOpen, presaleStartMs]);
+  }, [salesOpen, presaleStartMs, rearm]);
 
   // Cupo de preventa. Con la venta cerrada no hay contador que mostrar ni
   // formulario que alimentar: no consultamos nada ni dejamos el sondeo corriendo.
+  // (La carga inicial ya vino con el evento; aquí solo el refresco.)
+  const refreshPresale = () =>
+    getPresaleStatus(event.slug)
+      .then((r) => setPresale(r.presale))
+      .catch(() => {});
   useEffect(() => {
     if (salesEnded) return;
-    getPresaleStatus().then(setPresale).catch(() => setPresale(null));
     // Refresca el cupo periódicamente: el contador "quedan N" y el cierre por
     // agotado deben reflejar compras de otros compradores sin recargar la página.
-    const timer = setInterval(() => {
-      getPresaleStatus().then(setPresale).catch(() => {});
-    }, 60_000);
+    const timer = setInterval(refreshPresale, 60_000);
     return () => clearInterval(timer);
-  }, [salesEnded]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salesEnded, event.slug]);
 
   // La config de Yappy se pide siempre: una orden pendiente restaurada de
   // sessionStorage necesita el CDN del botón incluso si la venta ya cerró.
@@ -98,21 +184,21 @@ export default function App() {
       .catch(() => setYappyCfg({ enabled: false, cdnUrl: null }));
   }, []);
 
-  // Persist pending Yappy confirmations across refreshes (see PENDING_ORDER_KEY).
+  // Persist pending Yappy confirmations across refreshes (see pendingOrderKey).
   useEffect(() => {
     try {
       if (confirmation && confirmation.payment.method === 'yappy') {
-        sessionStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(confirmation));
+        sessionStorage.setItem(pendingOrderKey(event.slug), JSON.stringify(confirmation));
       } else {
-        sessionStorage.removeItem(PENDING_ORDER_KEY);
+        sessionStorage.removeItem(pendingOrderKey(event.slug));
       }
     } catch {
       // storage unavailable (private mode) — refresh just loses the view
     }
-  }, [confirmation]);
+  }, [confirmation, event.slug]);
 
   const presaleSoldOut = presale?.soldOut ?? false;
-  // Aforo total (230): al agotarse no se vende más en NINGUNA tarifa — el
+  // Aforo total: al agotarse no se vende más en NINGUNA tarifa — el
   // formulario se reemplaza por el aviso de agotado. null = status aún no cargó.
   const eventSoldOut = presale?.eventSoldOut ?? false;
   const totalAvailable = presale?.totalAvailable ?? null;
@@ -123,7 +209,9 @@ export default function App() {
   const tier: TierKey = presaleAvailable ? 'preventa' : 'general';
   // El total que paga el comprador incluye el "Cargo por servicio" que absorbe
   // la comisión del método elegido. Estimación en cliente; el servidor manda.
-  const { netCents, feeCents, totalCents } = priceBreakdown(tier, quantity, method);
+  const unitPrice = event.tiers[tier];
+  const tierLabel = TIER_LABELS[tier];
+  const { netCents, feeCents, totalCents } = priceBreakdown(unitPrice, quantity, method);
 
   // No ofrecer más boletos de los que quedan (el servidor rechaza igual, pero
   // el selector no debe invitar a pedir 10 cuando quedan 3).
@@ -139,6 +227,7 @@ export default function App() {
     setSubmitting(true);
     try {
       const result = await createOrder({
+        event: event.slug,
         buyer_name: name,
         buyer_email: email,
         buyer_phone: phone || undefined,
@@ -149,7 +238,7 @@ export default function App() {
       setConfirmation(result);
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
-      if (code === 'sales_closed') {
+      if (code === 'sales_closed' || code === 'event_not_found') {
         // El servidor dice que el evento ya pasó (nuestro reloj iba atrasado):
         // el formulario se reemplaza por el aviso de cierre.
         setSalesEnded(true);
@@ -165,7 +254,7 @@ export default function App() {
           totalAvailable: 0,
           eventSoldOut: true
         }));
-        getPresaleStatus().then(setPresale).catch(() => {});
+        refreshPresale();
       } else if (code === 'presale_sold_out') {
         setError('La preventa se agotó. Ahora aplica el precio general — revisa el total antes de continuar.');
         // Flip availability locally right away (works even if the status fetch
@@ -178,7 +267,7 @@ export default function App() {
           totalAvailable: p?.totalAvailable ?? 0,
           eventSoldOut: p?.eventSoldOut ?? false
         }));
-        getPresaleStatus().then(setPresale).catch(() => {});
+        refreshPresale();
       } else if (code === 'presale_ended') {
         setError('La preventa terminó. Ahora aplica el precio general — revisa el total antes de continuar.');
         setPresaleEnded(true);
@@ -188,7 +277,10 @@ export default function App() {
         setError('¡La preventa está disponible! Aplica su precio — revisa el total antes de continuar.');
         setPresaleEnded(false);
         setPresale((p) => (p ? { ...p, available: Math.max(p.available, 1), soldOut: false } : p));
-        getPresaleStatus().then(setPresale).catch(() => {});
+        refreshPresale();
+      } else if (code === 'sales_not_open') {
+        setError('La venta aún no abre. Revisa el contador y vuelve a intentarlo cuando llegue a cero.');
+        setSalesOpen(false);
       } else if (code === 'invalid_email') {
         setError('Revisa el correo: parece inválido.');
       } else {
@@ -207,6 +299,7 @@ export default function App() {
     return (
       <Confirmation
         data={confirmation}
+        event={event}
         yappyCdnUrl={yappyCfg?.cdnUrl ?? null}
         onReset={() => setConfirmation(null)}
       />
@@ -219,23 +312,16 @@ export default function App() {
       <div className="tk-wrap">
         {/* Hero: arte del flyer oficial sobre parche de papel inclinado. Sigue
             siendo el h1 de la página: el alt lleva el texto que antes era visible. */}
-        <div className="tk-title-block tk-reveal">
-          <div className="tk-patch tk-title-patch tk-title-patch--art">
-            <h1 className="tk-title-art">
-              <img
-                src="/wwwy3-title.webp"
-                alt={`${EVENT.band} presenta: ${EVENT.name}`}
-                width={984}
-                height={543}
-              />
-            </h1>
-          </div>
-        </div>
+        <EventHero event={event} />
 
         <p className="tk-meta tk-reveal">
-          {salesEnded
-            ? 'Fue una noche de covers de las bandas que nos inspiraron'
-            : 'Una noche de covers de las bandas que nos inspiraron'}
+          {event.theme === 'wwwy3'
+            ? salesEnded
+              ? 'Fue una noche de covers de las bandas que nos inspiraron'
+              : 'Una noche de covers de las bandas que nos inspiraron'
+            : `${formatEventDay(event.startsAt)} · ${formatEventTime(event.startsAt)}${
+                event.venue ? ` · ${event.venue}` : ''
+              }`}
         </p>
 
         {/* Precios + fecha como stickers de collage */}
@@ -247,7 +333,7 @@ export default function App() {
             style={{ transform: 'rotate(-4deg)' }}
           >
             <small>BOLETOS</small>
-            <span className="amt">{TIERS.preventa.priceLabel}</span>
+            <span className="amt">{formatPriceLabel(event.tiers.preventa)}</span>
             <small>PREVENTA</small>
             {!presaleAvailable && (
               <span className="tk-badge__stamp" aria-label="Preventa agotada">
@@ -256,8 +342,8 @@ export default function App() {
             )}
           </div>
           <div className="tk-date tk-patch tk-reveal" style={{ transform: 'rotate(1.5deg)' }}>
-            <span className="day">1 AGO</span>
-            <span className="venue">{EVENT.venue} ⚡</span>
+            <span className="day">{shortDay(event.startsAt)}</span>
+            <span className="venue">{event.venue ?? 'Panamá'} ⚡</span>
           </div>
           {/* Con la venta cerrada el sello también va en la tarifa general: nada
               en esta página debe sugerir que todavía se puede comprar. */}
@@ -266,7 +352,7 @@ export default function App() {
             style={{ transform: 'rotate(4deg)' }}
           >
             <small>BOLETOS</small>
-            <span className="amt">{TIERS.general.priceLabel}</span>
+            <span className="amt">{formatPriceLabel(event.tiers.general)}</span>
             <small>GENERAL</small>
             {salesEnded && (
               <span className="tk-badge__stamp" aria-label="Venta cerrada">
@@ -280,7 +366,7 @@ export default function App() {
             el countdown desaparece en vez de quedarse clavado en ceros. */}
         {!salesEnded && (
           <div className="tk-reveal">
-            <Countdown />
+            <Countdown presaleStart={event.presaleStart} startsAt={event.startsAt} />
           </div>
         )}
         {/* Antes de que abra la preventa el formulario se oculta: el comprador
@@ -288,9 +374,9 @@ export default function App() {
             aforo total agotado tampoco hay formulario: solo el aviso de agotado.
             Y con el evento ya pasado la página queda como archivo del show. */}
         {salesEnded ? (
-          <EventOverNotice />
+          <EventOverNotice event={event} />
         ) : !salesOpen ? (
-          <PresaleNotOpenNotice />
+          <PresaleNotOpenNotice event={event} />
         ) : eventSoldOut ? (
           <SoldOutNotice />
         ) : (
@@ -306,8 +392,8 @@ export default function App() {
                 Tipo de entrada
               </span>
               <p className="tk-tier" aria-labelledby="tier-label" aria-live="polite">
-                <span className="tk-tier__name">{TIERS[tier].label}</span>
-                <strong className="tk-tier__price">{TIERS[tier].priceLabel}</strong>
+                <span className="tk-tier__name">{tierLabel}</span>
+                <strong className="tk-tier__price">{formatPriceLabel(unitPrice)}</strong>
               </p>
               <p className="tk-hint">
                 {presaleAvailable
@@ -373,9 +459,9 @@ export default function App() {
 
               <div className="tk-price-summary" aria-live="polite">
                 <p className="tk-price-summary__row">
-                  <span className="tk-price-summary__tier">{TIERS[tier].label}</span>
+                  <span className="tk-price-summary__tier">{tierLabel}</span>
                   <span className="tk-price-summary__calc">
-                    {TIERS[tier].priceLabel} × {quantity}
+                    {formatPriceLabel(unitPrice)} × {quantity}
                   </span>
                   <span className="tk-price-summary__amount">{formatMoney(netCents)}</span>
                 </p>
@@ -440,12 +526,12 @@ function Decorations() {
     <>
       <div className="tk-deco" style={{ top: 70, left: -6, transform: 'rotate(-15deg)' }} aria-hidden="true">
         <svg width="44" height="44" viewBox="0 0 24 24" focusable="false">
-          <path fill="#ff2e93" d="M12 2l2.6 6.6L22 9.3l-5 4.7L18.5 22 12 18l-6.5 4L7 14 2 9.3l7.4-.7z" />
+          <path style={{ fill: 'var(--pink)' }} d="M12 2l2.6 6.6L22 9.3l-5 4.7L18.5 22 12 18l-6.5 4L7 14 2 9.3l7.4-.7z" />
         </svg>
       </div>
       <div className="tk-deco" style={{ top: 168, right: -4, transform: 'rotate(12deg)' }} aria-hidden="true">
         <svg width="32" height="38" viewBox="0 0 12 22" focusable="false">
-          <path fill="#15121c" d="M7 0L0 12h4l-2 10 8-13H6z" />
+          <path style={{ fill: 'var(--ink)' }} d="M7 0L0 12h4l-2 10 8-13H6z" />
         </svg>
       </div>
     </>
@@ -457,31 +543,79 @@ function Decorations() {
  * aviso le dice al comprador que aún no puede comprar y lo remite al countdown.
  * Se reemplaza solo por el formulario cuando llega la hora de apertura.
  */
-function PresaleNotOpenNotice() {
+function PresaleNotOpenNotice({ event }: { event: PublicEvent }) {
   return (
     <div className="tk-closed-notice tk-reveal" role="status">
       <strong>⚡ La preventa aún no abre</strong>
       <p>
-        Las entradas estarán disponibles a la <b>medianoche del 15 de junio</b>. El contador de
-        arriba marca cuánto falta — vuelve cuando llegue a cero para comprar la tuya.
+        Las entradas estarán disponibles el{' '}
+        <b>
+          {formatEventDay(event.presaleStart)} a las {formatEventTime(event.presaleStart)}
+        </b>
+        . El contador de arriba marca cuánto falta — vuelve cuando llegue a cero para comprar la tuya.
       </p>
     </div>
   );
 }
 
 /**
+ * Hero: WWWY3 keeps its flyer art (theme `wwwy3`); any other event gets its
+ * name as a typographic title on the paper patch until it has art of its own.
+ * Either way it's the page's h1.
+ */
+function EventHero({ event }: { event: PublicEvent }) {
+  if (event.theme === 'wwwy3') {
+    return (
+      <div className="tk-title-block tk-reveal">
+        <div className="tk-patch tk-title-patch tk-title-patch--art">
+          <h1 className="tk-title-art">
+            <img src="/wwwy3-title.webp" alt={`${BAND_NAME} presenta: ${event.name}`} width={984} height={543} />
+          </h1>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="tk-title-block tk-reveal">
+      <div className="tk-patch tk-title-patch">
+        <h1 className="tk-title">
+          <span className="l1">{event.name}</span>
+        </h1>
+        <div className="tk-byline">{event.tagline ?? `by ${BAND_NAME}`}</div>
+      </div>
+    </div>
+  );
+}
+
+/** "31 OCT" (hora Panamá) para el sticker de fecha. */
+function shortDay(iso: string): string {
+  const parts = new Intl.DateTimeFormat('es-PA', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'America/Panama'
+  }).formatToParts(new Date(iso));
+  const day = parts.find((p) => p.type === 'day')?.value ?? '';
+  const month = (parts.find((p) => p.type === 'month')?.value ?? '').replace('.', '');
+  return `${day} ${month}`.toUpperCase();
+}
+
+/**
  * Post-evento: la venta cerró y la página queda como archivo del show. Este
  * aviso reemplaza al formulario y al countdown; el resto de la página (arte,
  * precios con sello, enlace a /ayuda) sigue en pie para quien llegue buscando
- * su compra. Se activa solo por fecha (EVENT.salesEnd) — sin redeploy.
+ * su compra. Se activa por fecha (event.salesEnd) o al archivar el evento.
  */
-function EventOverNotice() {
+function EventOverNotice({ event }: { event: PublicEvent }) {
   return (
     <div className="tk-closed-notice tk-reveal" role="status">
       <strong>⚡ El show ya pasó</strong>
       <p>
-        {EVENT.name} fue el <b>1 de agosto en {EVENT.venue}</b> — gracias a todos los que llegaron.
-        Ya no vendemos entradas para este evento.
+        {event.name} fue el{' '}
+        <b>
+          {formatEventDay(event.startsAt)}
+          {event.venue ? ` en ${event.venue}` : ''}
+        </b>{' '}
+        — gracias a todos los que llegaron. Ya no vendemos entradas para este evento.
       </p>
       <p>
         La próxima fecha la anunciamos primero en Instagram{' '}
@@ -499,7 +633,7 @@ function EventOverNotice() {
 }
 
 /**
- * Con el aforo total agotado (230 boletos comprometidos) la venta cierra en
+ * Con el aforo total agotado (todos los boletos comprometidos) la venta cierra en
  * TODAS las tarifas: este aviso reemplaza al formulario de compra completo.
  */
 function SoldOutNotice() {
@@ -518,7 +652,7 @@ function PresaleIndicator({
   presale,
   presaleEnded
 }: {
-  presale: PresaleStatusResponse | null;
+  presale: PresaleNumbers | null;
   presaleEnded: boolean;
 }) {
   // Contador de aforo total: cuántos boletos quedan a la venta sumando todas
@@ -572,10 +706,12 @@ function PresaleIndicator({
 
 function Confirmation({
   data,
+  event,
   yappyCdnUrl,
   onReset
 }: {
   data: CreateOrderResponse;
+  event: PublicEvent;
   yappyCdnUrl: string | null;
   onReset: () => void;
 }) {
@@ -584,7 +720,7 @@ function Confirmation({
     <div className="tk-page">
       <Decorations />
       <div className="tk-wrap">
-        <p className="tk-kicker tk-reveal">★ ¡nos vemos en {EVENT.venue}! ♥ ★</p>
+        <p className="tk-kicker tk-reveal">★ ¡nos vemos {event.venue ? `en ${event.venue}` : 'en el show'}! ♥ ★</p>
 
         <div className="tk-title-block tk-reveal">
           <div className="tk-patch tk-title-patch">
@@ -592,7 +728,9 @@ function Confirmation({
               <span className="l1">¡ORDEN</span>
               <span className="l2">CREADA!</span>
             </h1>
-            <div className="tk-byline">{EVENT.shortName} · by {EVENT.band}</div>
+            <div className="tk-byline">
+              {event.shortName} · by {BAND_NAME}
+            </div>
           </div>
         </div>
 

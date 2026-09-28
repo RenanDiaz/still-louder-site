@@ -19,6 +19,7 @@ interface OrderStatusRow {
   paid_at: string | null;
   reservation_expires_at: string | null;
   emailed_at: string | null;
+  events: { slug: string } | null;
 }
 
 export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
@@ -29,7 +30,7 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
 
   const { data: order, error } = await getSupabase()
     .from('orders')
-    .select('id, status, paid_at, reservation_expires_at, emailed_at')
+    .select('id, status, paid_at, reservation_expires_at, emailed_at, events!inner(slug)')
     .eq('id', id)
     .maybeSingle<OrderStatusRow>();
   if (error) throw new Error(`status lookup failed: ${error.message}`);
@@ -37,6 +38,7 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
 
   return sendJson(res, 200, {
     orderId: order.id,
+    event: { slug: order.events?.slug ?? null },
     status: order.status,
     paidAt: order.paid_at,
     reservationExpiresAt: order.reservation_expires_at,

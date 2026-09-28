@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { env } from './env.js';
 import { tokenToPngBuffer } from './qr.js';
 import { buildWalletSaveUrl } from './google-wallet.js';
+import { formatEventDateTime, formatEventShortDay, type EventRow } from './events.js';
 import type { Order } from './types.js';
 
 let resend: Resend | null = null;
@@ -23,6 +24,51 @@ const METHOD_LABEL: Record<string, string> = {
   cash: 'Efectivo',
   courtesy: 'Cortesía'
 };
+
+// Paleta por tema del evento (events.theme). Solo colores inline: los clientes
+// de correo no cargan CSS externo. `wwwy3` conserva el morado/rosa original;
+// cualquier otro tema cae en `mono` (negro + hueso), sin heredar la identidad
+// de WWWY3.
+interface EmailPalette {
+  frame: string;
+  header: string;
+  accent: string;
+  accentOnDark: string;
+  tint: string;
+  perforation: string;
+  label: string;
+  footerText: string;
+  footerMuted: string;
+}
+
+const PALETTES: Record<string, EmailPalette> = {
+  wwwy3: {
+    frame: '#2c1c4a',
+    header: '#3e2768',
+    accent: '#ff2e93',
+    accentOnDark: '#ff6cb6',
+    tint: '#efe6ff',
+    perforation: '#c9aef0',
+    label: '#8a6db0',
+    footerText: '#e7dcf7',
+    footerMuted: '#9b86c4'
+  },
+  mono: {
+    frame: '#0b0b0b',
+    header: '#161616',
+    accent: '#8a1c1c',
+    accentOnDark: '#e8e2d4',
+    tint: '#efebe2',
+    perforation: '#c9c2b2',
+    label: '#6f6857',
+    footerText: '#d8d2c4',
+    footerMuted: '#9a9383'
+  }
+};
+
+function paletteFor(theme: string): EmailPalette {
+  return PALETTES[theme] ?? PALETTES.mono;
+}
 
 function formatMoney(totalCents: number): string {
   return `$${(totalCents / 100).toFixed(2)}`;
@@ -53,7 +99,13 @@ function escapeHtml(value: string): string {
  * Each QR is shown inline via a hosted, stateless image URL (renders in every
  * mail client and stays scannable on screen) and also attached as a PNG fallback.
  */
-export async function sendTicketEmail(order: Order, tokens: string[]): Promise<void> {
+export async function sendTicketEmail(order: Order, event: EventRow, tokens: string[]): Promise<void> {
+  const P = paletteFor(event.theme);
+  const eventName = escapeHtml(event.name);
+  const ticketStrip = [formatEventShortDay(event), event.venue?.toUpperCase()]
+    .filter(Boolean)
+    .map((part) => escapeHtml(part as string))
+    .join(' · ');
   const attachments = await Promise.all(
     tokens.map(async (token, i) => ({
       filename: `entrada-${i + 1}.png`,
@@ -68,7 +120,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
   const serifFont = "Georgia,'Times New Roman',Times,serif";
   const patchFont = "'Arial Black',Arial,Helvetica,sans-serif";
 
-  // Un toque del tema: morado/rosa y un titular tipo marcador. SOLO estilos
+  // Un toque del tema (paleta del evento) y un titular tipo marcador. SOLO estilos
   // inline + tablas (los clientes de correo eliminan filtros SVG / mix-blend-mode).
   // Cada QR va dentro de algo que parece un boleto de show: franja morada de
   // cabecera, cuerpo blanco con el QR súper legible y un talón con línea de
@@ -107,10 +159,10 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
         <table role="presentation" width="320" cellpadding="0" cellspacing="0" align="center"
                style="margin:22px auto;background:#ffffff;border:2px solid #15121c;border-radius:10px;border-collapse:separate;overflow:hidden;">
           <tr>
-            <td style="background:#3e2768;padding:12px 16px;text-align:center;">
-              <div style="font-family:${serifFont};font-style:italic;font-size:20px;color:#ff2e93;line-height:1;">When We Were Young 3</div>
+            <td style="background:${P.header};padding:12px 16px;text-align:center;">
+              <div style="font-family:${serifFont};font-style:italic;font-size:20px;color:${P.accent};line-height:1;">${eventName}</div>
               <div style="font-family:${patchFont};font-size:12px;letter-spacing:2px;color:#ffffff;margin-top:4px;text-transform:uppercase;">
-                1 AGO · HOPS · ${escapeHtml(tierLabel)}
+                ${ticketStrip} · ${escapeHtml(tierLabel)}
               </div>
             </td>
           </tr>
@@ -126,12 +178,12 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
           </tr>
           <tr>
             <td style="padding:0 16px;">
-              <div style="border-top:2px dashed #c9aef0;height:1px;font-size:0;line-height:0;">&nbsp;</div>
+              <div style="border-top:2px dashed ${P.perforation};height:1px;font-size:0;line-height:0;">&nbsp;</div>
             </td>
           </tr>
           <tr>
             <td style="padding:10px 16px 16px;text-align:center;">
-              <span style="font-family:${patchFont};font-size:14px;letter-spacing:3px;color:#ff2e93;text-transform:uppercase;">★ ADMIT ONE ★</span>
+              <span style="font-family:${patchFont};font-size:14px;letter-spacing:3px;color:${P.accent};text-transform:uppercase;">★ ADMIT ONE ★</span>
               <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#5a5468;margin-top:6px;">
                 Válido para una sola admisión · Orden #${order.id}
               </div>
@@ -144,7 +196,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
 
   const detailRow = (label: string, value: string) => `
     <tr>
-      <td style="padding:7px 0;font-family:${patchFont};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6db0;width:96px;vertical-align:top;white-space:nowrap;">${label}</td>
+      <td style="padding:7px 0;font-family:${patchFont};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${P.label};width:96px;vertical-align:top;white-space:nowrap;">${label}</td>
       <td style="padding:7px 0;font-size:15px;color:#15121c;font-weight:bold;">${value}</td>
     </tr>`;
 
@@ -160,21 +212,21 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
   // blanco neutro (como el papel del flyer original) con acentos morado/rosa, para
   // que no se vea plano junto al header fuerte.
   const html = `
-    <div style="background:#2c1c4a;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
+    <div style="background:${P.frame};padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" align="center"
              style="max-width:560px;margin:0 auto;background:#f6f5f8;border-radius:14px;overflow:hidden;color:#15121c;">
         <!-- Header oscuro + barra rosa de acento que puentea al cuerpo claro -->
         <tr>
-          <td style="background:#3e2768;padding:30px 24px 26px;text-align:center;">
-            <div style="font-family:${patchFont};font-size:12px;color:#ff6cb6;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">
-              Still Louder · WWWY3
+          <td style="background:${P.header};padding:30px 24px 26px;text-align:center;">
+            <div style="font-family:${patchFont};font-size:12px;color:${P.accentOnDark};letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">
+              Still Louder · ${escapeHtml(event.short_name)}
             </div>
             <div style="font-family:${serifFont};font-size:30px;color:#ffffff;line-height:1.1;">
               ¡Tu entrada está lista! 🎸
             </div>
           </td>
         </tr>
-        <tr><td style="height:5px;background:#ff2e93;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="height:5px;background:${P.accent};font-size:0;line-height:0;">&nbsp;</td></tr>
 
         <!-- Cuerpo claro -->
         <tr>
@@ -191,16 +243,21 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
 
             <!-- Tarjeta de detalles con acento lateral rosa y mini-título serif -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                   style="background:#ffffff;border:1px solid #e1dfe9;border-left:5px solid #ff2e93;border-radius:10px;">
+                   style="background:#ffffff;border:1px solid #e1dfe9;border-left:5px solid ${P.accent};border-radius:10px;">
               <tr>
                 <td style="padding:18px 20px;">
-                  <div style="font-family:${serifFont};font-style:italic;font-size:19px;color:#3e2768;margin-bottom:10px;">
+                  <div style="font-family:${serifFont};font-style:italic;font-size:19px;color:${P.header};margin-bottom:10px;">
                     Detalles de tu orden
                   </div>
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                    ${detailRow('Evento', 'When We Were Young 3')}
-                    ${detailRow('Lugar', 'Hops')}
-                    ${detailRow('Fecha', '1 de agosto')}
+                    ${detailRow(
+                      'Evento',
+                      event.tagline
+                        ? `${eventName}<br /><span style="font-weight:normal;font-size:14px;">${escapeHtml(event.tagline)}</span>`
+                        : eventName
+                    )}
+                    ${event.venue ? detailRow('Lugar', escapeHtml(event.venue)) : ''}
+                    ${detailRow('Fecha', escapeHtml(formatEventDateTime(event)))}
                     ${detailRow('Tipo', escapeHtml(tierLabel))}
                     ${detailRow('Cantidad', `${order.quantity} ${order.quantity === 1 ? 'entrada' : 'entradas'}`)}
                   </table>
@@ -211,7 +268,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
             <!-- Aviso de admisión en caja lila tintada -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
               <tr>
-                <td style="background:#efe6ff;border-radius:10px;padding:14px 18px;font-size:14px;line-height:1.55;color:#3e2768;">
+                <td style="background:${P.tint};border-radius:10px;padding:14px 18px;font-size:14px;line-height:1.55;color:${P.header};">
                   Presenta ${tokens.length === 1 ? 'este código QR' : 'estos códigos QR'} en la puerta.
                   Cada código es válido para <strong>una sola admisión</strong>.
                 </td>
@@ -223,12 +280,12 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
 
         <!-- Footer oscuro: bookend que enmarca el cuerpo claro -->
         <tr>
-          <td style="background:#3e2768;padding:20px 24px;text-align:center;">
-            <div style="font-size:13px;color:#e7dcf7;line-height:1.6;">
+          <td style="background:${P.header};padding:20px 24px;text-align:center;">
+            <div style="font-size:13px;color:${P.footerText};line-height:1.6;">
               ${contactLine}
-              <a href="https://ig.me/m/still_louder" style="color:#ff6cb6;text-decoration:none;"><strong>@still_louder</strong></a>.
+              <a href="https://ig.me/m/still_louder" style="color:${P.accentOnDark};text-decoration:none;"><strong>@still_louder</strong></a>.
             </div>
-            <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:#9b86c4;text-transform:uppercase;margin-top:10px;">
+            <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:${P.footerMuted};text-transform:uppercase;margin-top:10px;">
               Orden #${order.id}
             </div>
           </td>
@@ -240,7 +297,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
     from: env.emailFrom,
     to: order.buyer_email,
     ...(replyTo ? { replyTo } : {}),
-    subject: 'Tu entrada para WWWY3 — Still Louder',
+    subject: `Tu entrada para ${event.short_name} — Still Louder`,
     html,
     attachments
   });
@@ -251,7 +308,7 @@ export async function sendTicketEmail(order: Order, tokens: string[]): Promise<v
  * pendiente de pago). Best-effort: el endpoint de compra nunca debe fallar por
  * esto. Solo se envía si ORDER_NOTIFICATION_EMAIL está configurada.
  */
-export async function sendOrderNotificationEmail(order: Order): Promise<void> {
+export async function sendOrderNotificationEmail(order: Order, event: EventRow): Promise<void> {
   const recipients = env.orderNotificationEmail
     .split(',')
     .map((addr) => addr.trim())
@@ -261,33 +318,34 @@ export async function sendOrderNotificationEmail(order: Order): Promise<void> {
   const tierLabel = TIER_LABEL[order.tier] ?? order.tier;
   const methodLabel = METHOD_LABEL[order.payment_method] ?? order.payment_method;
   const adminUrl = `${env.publicBaseUrl}/admin`;
+  const P = paletteFor(event.theme);
 
   const serifFont = "Georgia,'Times New Roman',Times,serif";
   const patchFont = "'Arial Black',Arial,Helvetica,sans-serif";
 
   const detailRow = (label: string, value: string) => `
     <tr>
-      <td style="padding:7px 0;font-family:${patchFont};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6db0;width:110px;vertical-align:top;white-space:nowrap;">${label}</td>
+      <td style="padding:7px 0;font-family:${patchFont};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${P.label};width:110px;vertical-align:top;white-space:nowrap;">${label}</td>
       <td style="padding:7px 0;font-size:15px;color:#15121c;font-weight:bold;">${value}</td>
     </tr>`;
 
   const phoneRow = order.buyer_phone ? detailRow('Teléfono', escapeHtml(order.buyer_phone)) : '';
 
   const html = `
-    <div style="background:#2c1c4a;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
+    <div style="background:${P.frame};padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" align="center"
              style="max-width:560px;margin:0 auto;background:#f6f5f8;border-radius:14px;overflow:hidden;color:#15121c;">
         <tr>
-          <td style="background:#3e2768;padding:28px 24px 24px;text-align:center;">
-            <div style="font-family:${patchFont};font-size:12px;color:#ff6cb6;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">
-              Still Louder · WWWY3
+          <td style="background:${P.header};padding:28px 24px 24px;text-align:center;">
+            <div style="font-family:${patchFont};font-size:12px;color:${P.accentOnDark};letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">
+              Still Louder · ${escapeHtml(event.short_name)}
             </div>
             <div style="font-family:${serifFont};font-size:27px;color:#ffffff;line-height:1.15;">
               Nueva compra registrada 🎟️
             </div>
           </td>
         </tr>
-        <tr><td style="height:5px;background:#ff2e93;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="height:5px;background:${P.accent};font-size:0;line-height:0;">&nbsp;</td></tr>
         <tr>
           <td style="padding:26px 24px 8px;">
             <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">
@@ -296,13 +354,14 @@ export async function sendOrderNotificationEmail(order: Order): Promise<void> {
             </p>
 
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                   style="background:#ffffff;border:1px solid #e1dfe9;border-left:5px solid #ff2e93;border-radius:10px;">
+                   style="background:#ffffff;border:1px solid #e1dfe9;border-left:5px solid ${P.accent};border-radius:10px;">
               <tr>
                 <td style="padding:18px 20px;">
-                  <div style="font-family:${serifFont};font-style:italic;font-size:19px;color:#3e2768;margin-bottom:10px;">
+                  <div style="font-family:${serifFont};font-style:italic;font-size:19px;color:${P.header};margin-bottom:10px;">
                     Detalles de la orden
                   </div>
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    ${detailRow('Evento', escapeHtml(event.name))}
                     ${detailRow('Comprador', escapeHtml(order.buyer_name))}
                     ${detailRow('Correo', escapeHtml(order.buyer_email))}
                     ${phoneRow}
@@ -327,7 +386,7 @@ export async function sendOrderNotificationEmail(order: Order): Promise<void> {
               <tr>
                 <td align="center">
                   <a href="${adminUrl}"
-                     style="display:inline-block;background:#ff2e93;color:#ffffff;text-decoration:none;
+                     style="display:inline-block;background:${P.accent};color:#ffffff;text-decoration:none;
                             font-family:${patchFont};font-size:14px;letter-spacing:2px;text-transform:uppercase;
                             padding:14px 28px;border-radius:8px;">
                     Abrir panel de administración
@@ -338,8 +397,8 @@ export async function sendOrderNotificationEmail(order: Order): Promise<void> {
           </td>
         </tr>
         <tr>
-          <td style="background:#3e2768;padding:18px 24px;text-align:center;">
-            <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:#9b86c4;text-transform:uppercase;">
+          <td style="background:${P.header};padding:18px 24px;text-align:center;">
+            <div style="font-family:${patchFont};font-size:10px;letter-spacing:2px;color:${P.footerMuted};text-transform:uppercase;">
               Aviso automático · Sistema de entradas
             </div>
           </td>
@@ -350,7 +409,7 @@ export async function sendOrderNotificationEmail(order: Order): Promise<void> {
   await getResend().emails.send({
     from: env.emailFrom,
     to: recipients,
-    subject: `Nueva compra: ${order.buyer_name} · ${order.quantity}x ${tierLabel} · ${formatMoney(order.total_cents)}`,
+    subject: `Nueva compra ${event.short_name}: ${order.buyer_name} · ${order.quantity}x ${tierLabel} · ${formatMoney(order.total_cents)}`,
     html
   });
 }

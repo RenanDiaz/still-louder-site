@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
-import { haveSalesEnded } from './_lib/event.js';
+import { haveSalesEnded, type EventRow } from './_lib/events.js';
 import { issueOrder } from './_lib/issue.js';
 import type { ClaimGiftRow, GiftCampaignStatus } from './_lib/types.js';
 
@@ -37,23 +37,36 @@ async function getCampaignStatus(req: VercelRequest, res: VercelResponse): Promi
   const token = (Array.isArray(raw) ? raw[0] : raw ?? '').trim();
   // Neutral 404 for missing/unknown token — never reveal whether a campaign exists.
   if (!token) return sendJson(res, 404, { error: 'not_found' });
-  // El evento ya pasó: las campañas quedan cerradas sin tocar la BD. El 404
-  // neutral es el mismo que para un token inválido, así que un QR de campaña
-  // que siga circulando impreso no revela nada — solo deja de dar boletos.
-  if (haveSalesEnded()) return sendJson(res, 404, { error: 'not_found' });
-
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('gift_campaign')
-    .select('status')
+    .select('status, events!inner(*)')
     .eq('token', token)
-    .maybeSingle<{ status: GiftCampaignStatus }>();
+    .maybeSingle<{ status: GiftCampaignStatus; events: EventRow | null }>();
   if (error) throw new Error(`gift campaign lookup failed: ${error.message}`);
-  if (!data) return sendJson(res, 404, { error: 'not_found' });
+  if (!data || !data.events) return sendJson(res, 404, { error: 'not_found' });
+  const event = data.events;
+  // El evento de la campaña ya pasó (o no está a la venta): el 404 neutral es
+  // el mismo que para un token inválido, así que un QR de campaña que siga
+  // circulando impreso no revela nada — solo deja de dar boletos.
+  if (event.status !== 'on_sale' || haveSalesEnded(event)) {
+    return sendJson(res, 404, { error: 'not_found' });
+  }
 
-  // Only expose the status — never claimed_count/max_gifts.
+  // Only expose the status and the event's public copy — never
+  // claimed_count/max_gifts.
   res.setHeader('Cache-Control', 'no-store');
-  return sendJson(res, 200, { status: data.status });
+  return sendJson(res, 200, {
+    status: data.status,
+    event: {
+      slug: event.slug,
+      name: event.name,
+      shortName: event.short_name,
+      venue: event.venue,
+      startsAt: event.starts_at,
+      theme: event.theme
+    }
+  });
 }
 
 interface ClaimBody {
@@ -70,10 +83,9 @@ async function claimGift(req: VercelRequest, res: VercelResponse): Promise<void>
   const email = (body.email ?? '').trim().toLowerCase();
   const phone = (body.phone ?? '').trim() || null;
 
+  // (Evento terminado / fuera de venta → claim_gift responde 'closed', el mismo
+  // código que una campaña desactivada, así que el cliente lo maneja tal cual.)
   if (!token) return sendJson(res, 404, { error: 'not_found' });
-  // Evento terminado: no se emiten más regalos. `closed` es el mismo código que
-  // ya devuelve una campaña desactivada, así que el cliente lo maneja tal cual.
-  if (haveSalesEnded()) return sendJson(res, 409, { error: 'closed' });
   if (name.length < 2) return sendJson(res, 400, { error: 'invalid_name' });
   if (!EMAIL_RE.test(email)) return sendJson(res, 400, { error: 'invalid_email' });
 

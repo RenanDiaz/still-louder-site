@@ -4,7 +4,7 @@ Official website for **Still Louder**, a Panamanian rock band, promoting their
 single **"Al Vacío"**. A modern, fast, and accessible landing page built with
 progressive-enhancement principles that links fans to every streaming platform.
 
-🌐 **Live:** https://stilllouder.space/
+🌐 **Live:** https://still-louder.com/
 
 ---
 
@@ -18,7 +18,7 @@ but deploy as **separate Vercel projects** to **different domains**:
 | **Location** | repo root (`public/`, `scripts/`, …) | [`ticket-system/`](ticket-system/) |
 | **Purpose** | Static landing page for "Al Vacío" | Ticket sales, issuance & gate validation |
 | **Stack** | Vite + vanilla ES6 modules + CSS | Vite + React + TypeScript + serverless API |
-| **Domain** | https://stilllouder.space/ | https://entradas.stilllouder.space |
+| **Domain** | https://still-louder.com/ | https://entradas.still-louder.com |
 
 The two apps have **independent** build configs, dependencies, security headers,
 and `public/` directories — a change in one does not affect the other. This
@@ -203,8 +203,9 @@ vercel --prod
 The ticket system is deployed as a **separate** Vercel project — see
 [`ticket-system/README.md`](ticket-system/README.md).
 
-Both apps can also deploy to **Cloudflare Workers** (`wrangler.jsonc` in the
-root and in `ticket-system/`) — see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
+**Production is moving to Cloudflare Workers** on `still-louder.com`
+(`wrangler.jsonc` in the root and in `ticket-system/`); Vercel stays as the
+rollback path until the cutover — see [`DEPLOY_CLOUDFLARE.md`](DEPLOY_CLOUDFLARE.md).
 
 ---
 

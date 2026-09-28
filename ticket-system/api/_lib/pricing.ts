@@ -1,18 +1,9 @@
-import type { PaymentMethod, Tier } from './types.js';
+import type { PaymentMethod } from './types.js';
 
-// Prices are authoritative on the server. The client never sends an amount;
-// we derive total_cents here from (tier, quantity) so a tampered request can't
-// change what's owed.
-const TIER_PRICE_CENTS: Record<Tier, number> = {
-  preventa: 600, // $6 presale
-  general: 800, // $8 day-of / general
-  cortesia: 0, // admin-issued comps; never purchasable via /api/orders
-  regalo: 0 // gift-campaign tickets; issued $0 via the hidden /regalo claim
-};
-
-export function priceFor(tier: Tier, quantity: number): number {
-  return TIER_PRICE_CENTS[tier] * quantity;
-}
+// Prices are authoritative on the server. The client never sends an amount:
+// the unit price comes from `event_tier` (per event, see events.ts) and the
+// total is derived here from (unit price, quantity, method), so a tampered
+// request can't change what's owed. cortesia/regalo are always $0.
 
 // =============================================================================
 // Recargo por método de pago ("Cargo por servicio")
@@ -58,11 +49,11 @@ export interface PriceBreakdown {
 }
 
 /**
- * Desglose autoritativo del precio para una (tier, cantidad, método). El neto es
- * siempre el precio base; el total absorbe la comisión del método de pago.
+ * Desglose autoritativo del precio para (precio unitario del evento, cantidad,
+ * método). El neto es siempre el precio base; el total absorbe la comisión.
  */
-export function priceBreakdown(tier: Tier, quantity: number, method: PaymentMethod): PriceBreakdown {
-  const netCents = priceFor(tier, quantity);
+export function priceBreakdown(unitPriceCents: number, quantity: number, method: PaymentMethod): PriceBreakdown {
+  const netCents = unitPriceCents * quantity;
   if (netCents <= 0) return { netCents: 0, feeCents: 0, totalCents: 0 };
 
   const fee = PAYMENT_FEES[method];
@@ -78,26 +69,6 @@ export function priceBreakdown(tier: Tier, quantity: number, method: PaymentMeth
   }
 
   return { netCents, feeCents: totalCents - netCents, totalCents };
-}
-
-// Presale closes at the start of the event day (Panama time, UTC-5); after that
-// only general/day-of pricing is sold, regardless of remaining cupo. Mirrors
-// EVENT.presaleEnd in the client config — duplicated on purpose because the
-// server is authoritative on what can be sold (the same pattern as prices).
-const PRESALE_END_ISO = '2026-08-01T00:00:00-05:00';
-
-export function isPresaleOpenByDate(now: Date = new Date()): boolean {
-  return now.getTime() < new Date(PRESALE_END_ISO).getTime();
-}
-
-// Sales don't open until the presale start time (Panama time, UTC-5). The buy
-// form is hidden client-side until then, but the server is authoritative: no
-// order can be created before this instant, even via a direct POST. Mirrors
-// EVENT.presaleStart in the client config.
-const PRESALE_START_ISO = '2026-06-15T00:00:00-05:00';
-
-export function areSalesOpenByDate(now: Date = new Date()): boolean {
-  return now.getTime() >= new Date(PRESALE_START_ISO).getTime();
 }
 
 // How long a pending order holds its presale cupo before cleanup frees it.

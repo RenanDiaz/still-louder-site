@@ -5,6 +5,7 @@ export type TicketStatus = 'valid' | 'used' | 'void';
 
 export interface Order {
   id: string;
+  event_id: string;
   buyer_name: string;
   buyer_email: string;
   buyer_phone: string | null;
@@ -37,6 +38,7 @@ export interface Order {
 export interface Ticket {
   id: string;
   order_id: string;
+  event_id: string;
   tier: Tier;
   status: TicketStatus;
   used_at: string | null;
@@ -61,14 +63,16 @@ export interface PresaleStatus {
   event_sold_out: boolean;
 }
 
-// 'event_closed' no viene del RPC: lo devuelve el endpoint cuando el evento ya
-// terminó, antes de tocar la BD (ver `_lib/event.ts`).
-export type ValidateResult = 'valid' | 'already_used' | 'void' | 'not_found' | 'event_closed';
+// 'event_closed' y 'wrong_event' no vienen del RPC: el endpoint los decide antes
+// de tocar la BD — evento terminado (`isEventOver`) o QR de otro evento (el
+// código firmado del token no coincide con el evento de la estación).
+export type ValidateResult = 'valid' | 'already_used' | 'void' | 'not_found' | 'event_closed' | 'wrong_event';
 
 export type GiftCampaignStatus = 'active' | 'exhausted' | 'closed';
 
 export interface GiftCampaign {
   id: string;
+  event_id: string;
   token: string;
   max_gifts: number;
   claimed_count: number;

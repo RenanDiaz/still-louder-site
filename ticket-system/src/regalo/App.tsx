@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
-import { claimGift, fetchGiftCampaign } from '../shared/api';
-import { EVENT, SOCIAL } from '../shared/config';
+import { claimGift, fetchGiftCampaign, type GiftCampaignStatusResponse } from '../shared/api';
+import { BAND_NAME, SOCIAL, formatEventDay } from '../shared/config';
+
+// The campaign's event (name, venue, date, theme) comes with the campaign
+// status; the copy below never hardcodes a show.
+type GiftEvent = GiftCampaignStatusResponse['event'];
 
 // Hidden gift-claim surface, reached only via /regalo/<token> (the QR target).
 // The token is the campaign secret; it lives in the URL path so no PII ever
@@ -27,6 +31,7 @@ type View =
 export default function App() {
   const [token] = useState(tokenFromPath);
   const [view, setView] = useState<View>({ kind: 'loading' });
+  const [event, setEvent] = useState<GiftEvent | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -35,6 +40,8 @@ export default function App() {
     }
     fetchGiftCampaign(token)
       .then((res) => {
+        setEvent(res.event);
+        document.documentElement.dataset.theme = res.event.theme;
         if (res.status === 'active') setView({ kind: 'form' });
         else if (res.status === 'exhausted') setView({ kind: 'soldout' });
         else setView({ kind: 'notfound' }); // 'closed' → neutral
@@ -50,13 +57,14 @@ export default function App() {
     case 'soldout':
       return <SoldOut />;
     case 'claimed':
-      return <Claimed />;
+      return <Claimed event={event} />;
     case 'already':
       return <AlreadyClaimed />;
     case 'form':
       return (
         <ClaimForm
           token={token}
+          event={event}
           onClaimed={() => setView({ kind: 'claimed' })}
           onSoldOut={() => setView({ kind: 'soldout' })}
           onAlready={() => setView({ kind: 'already' })}
@@ -68,12 +76,14 @@ export default function App() {
 
 function ClaimForm({
   token,
+  event,
   onClaimed,
   onSoldOut,
   onAlready,
   onGone
 }: {
   token: string;
+  event: GiftEvent | null;
   onClaimed: () => void;
   onSoldOut: () => void;
   onAlready: () => void;
@@ -129,14 +139,22 @@ function ClaimForm({
             <span className="l2">DE REGALO!</span>
           </h1>
           <div className="tk-byline">
-            {EVENT.shortName} · by {EVENT.band}
+            {event ? `${event.shortName} · ` : ''}by {BAND_NAME}
           </div>
         </div>
       </div>
 
       <p className="tk-meta tk-reveal">
-        Encontraste el QR secreto 🤘 Las primeras personas en completar este formulario
-        se ganan una entrada para <b>{EVENT.name}</b> el 1 de agosto en {EVENT.venue}.
+        Encontraste el QR secreto 🤘 Las primeras personas en completar este formulario se ganan
+        una entrada
+        {event && (
+          <>
+            {' '}
+            para <b>{event.name}</b> el {formatEventDay(event.startsAt)}
+            {event.venue ? ` en ${event.venue}` : ''}
+          </>
+        )}
+        .
       </p>
 
       <form className="tk-form tk-reveal" onSubmit={handleSubmit}>
@@ -188,10 +206,10 @@ function ClaimForm({
   );
 }
 
-function Claimed() {
+function Claimed({ event }: { event: GiftEvent | null }) {
   return (
     <Shell>
-      <p className="tk-kicker tk-reveal">★ ¡nos vemos en {EVENT.venue}! ♥ ★</p>
+      <p className="tk-kicker tk-reveal">★ ¡nos vemos {event?.venue ? `en ${event.venue}` : 'en el show'}! ♥ ★</p>
       <div className="tk-title-block tk-reveal">
         <div className="tk-patch tk-title-patch">
           <h1 className="tk-title">
@@ -199,7 +217,7 @@ function Claimed() {
             <span className="l2">RECLAMADO!</span>
           </h1>
           <div className="tk-byline">
-            {EVENT.shortName} · by {EVENT.band}
+            {event ? `${event.shortName} · ` : ''}by {BAND_NAME}
           </div>
         </div>
       </div>
