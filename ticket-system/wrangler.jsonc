@@ -6,7 +6,7 @@
 // Deploy:   npm run deploy:cloudflare      (build + wrangler deploy)
 // Preview:  npm run preview:cloudflare     (build + wrangler dev)
 // Secrets:  every env var in api/_lib/env.ts must be set with
-//           `wrangler secret put <NAME>` — see DEPLOY_CLOUDFLARE.md (repo root).
+//           `wrangler secret put <NAME>` — see docs/deploy-cloudflare.md (repo root).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-louder-tickets",

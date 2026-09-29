@@ -63,7 +63,7 @@ ticket-system/
 │   ├── yappy/config.ts       # GET   /api/yappy/config           (público, sin secretos)
 │   ├── yappy/create-order.ts # POST  /api/yappy/create-order     (público, scoped a la orden)
 │   └── yappy/ipn.ts          # GET   /api/yappy/ipn              (confirmación firmada de Yappy)
-├── cloudflare/               # deploy alternativo en Workers (ver DEPLOY_CLOUDFLARE.md)
+├── cloudflare/               # deploy alternativo en Workers (ver docs/deploy-cloudflare.md)
 │   ├── worker.ts             # router de /api/* — REGISTRAR aquí cada archivo nuevo de api/
 │   └── vercel-adapter.ts     # shim req/res para correr los handlers de api/ en Workers
 ├── src/                      # frontend React
@@ -252,7 +252,7 @@ ejecuta `/api/admin/orders/cleanup`.
 
 > **Cloudflare:** la app también puede deployarse como Worker de Cloudflare sin
 > reescribir la API (adaptador en `cloudflare/`, config en `wrangler.jsonc`).
-> Guía completa: [`DEPLOY_CLOUDFLARE.md`](../DEPLOY_CLOUDFLARE.md) en la raíz.
+> Guía completa: [`docs/deploy-cloudflare.md`](../docs/deploy-cloudflare.md).
 
 > Alternativa: integrarlo en el proyecto existente bajo `/entradas` y `/validar`.
 > Se eligió el proyecto aparte por la configuración inusual de `publicDir` del

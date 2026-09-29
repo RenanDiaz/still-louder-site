@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the official website for **Still Louder**, a Panamanian rock band, promoting their single "Al Vacío". The site is a static, performant landing page that links to various streaming platforms and provides information about the release.
+This is the official website for **Still Louder**, a Panamanian rock band. The site is a static, performant landing page: current single ("Skirlaz", `CONFIG.release`), streaming links, upcoming shows (`#shows`, driven by `CONFIG.shows`), about, FAQ, social/store links and a contact form. `al-vacio-pre-release.html` is a legacy page from the previous single "Al Vacío".
 
 **Live URL**: https://still-louder.com/
 **Repository**: https://github.com/RenanDiaz/still-louder-site
@@ -14,13 +14,14 @@ This is the official website for **Still Louder**, a Panamanian rock band, promo
 ## Two Separate Applications (Important)
 
 This repository contains **two independent applications** that share a single
-git repo but deploy as **separate Vercel projects** to **different domains**.
+git repo but deploy **separately** (two Vercel projects today, two Cloudflare
+Workers after the cutover) to **different domains**.
 The rest of this document describes the **main site** unless stated otherwise.
 
 | | Main site | Ticket system |
 |---|---|---|
 | Location | repo root (`public/`, `scripts/`, etc.) | `ticket-system/` |
-| Purpose | Static landing page for the single "Al Vacío" | Ticketing flow (purchase, admin, gate validation) |
+| Purpose | Static band landing page (current single, shows, contact) | Ticketing flow (purchase, admin, gate validation) |
 | Stack | Vite + vanilla ES6 modules + CSS | Vite + React + TypeScript + serverless API |
 | Vercel project | Main project (root config) | **Separate** Vercel project (`ticket-system/vercel.json`) |
 | Production domain | https://still-louder.com/ | **Subdomain** `https://entradas.still-louder.com` |
@@ -197,6 +198,7 @@ still-louder-site/
 │   │   │   ├── sw-register.js   # Service Worker registration
 │   │   │   └── al-vacio-pre-release/  # Pre-release page scripts
 │   │   ├── images/              # Optimized images (WebP, AVIF formats)
+│   │   ├── _headers             # Cloudflare mirror of vercel.json headers
 │   │   ├── site.webmanifest     # PWA manifest
 │   │   └── links.json           # Platform links data
 │   ├── .well-known/
@@ -209,10 +211,12 @@ still-louder-site/
 │   └── robots.txt               # Search engine directives
 ├── scripts/
 │   └── optimize-images.js       # Image optimization script
+├── docs/                        # Specs (features/), reference docs (main-site/), deploy guide — index in docs/README.md
 ├── ticket-system/               # SEPARATE app — see "Ticket System" section
 ├── dist/                        # Build output (generated, gitignored)
 ├── vite.config.js               # Vite configuration
 ├── vercel.json                  # Vercel deployment config (headers, caching)
+├── wrangler.jsonc               # Cloudflare Workers config (assets-only)
 ├── eslint.config.js             # ESLint flat config (rules live here)
 ├── .eslintrc.json               # Legacy ESLint config (kept for tooling compat)
 ├── .prettierrc                  # Prettier configuration
@@ -223,6 +227,13 @@ still-louder-site/
 `publicDir` is `assets` — i.e. the *source* directory doubles as the Vite root,
 and `public/assets/` is treated as the static dir. Paths in HTML are
 root-relative to `public/`. Keep this in mind before restructuring directories.
+
+**Known build gap (unfixed):** only the two HTML inputs and `public/assets/`
+reach `dist/`. Files sitting directly in `public/` (`sw.js`, `offline.html`,
+`robots.txt`, `sitemap.xml`, `.well-known/security.txt`) are **not deployed**,
+and classic `<script src="assets/js/...">` tags 404 in production (publicDir
+files land at `dist/js/...`). So the PWA/offline support does not work in
+production today. Details: `docs/main-site/pwa.md` → Known issues.
 
 ---
 
@@ -374,7 +385,8 @@ The service worker (`sw.js`) uses different caching strategies:
 
 ### Security Headers
 
-All security headers are configured in `vercel.json`:
+All security headers are configured in `vercel.json` **and mirrored in
+`public/assets/_headers`** for Cloudflare (see "Cloudflare Workers" below):
 - Content Security Policy (CSP)
 - HSTS (2 years, preload ready)
 - X-Frame-Options (DENY)
@@ -427,6 +439,7 @@ single text field (`CONFIG.contact.messageField`), and submits via
 `fetch(url, { mode: 'no-cors' })`. A hidden honeypot (`#contact-website`) drops
 bot submissions. **The Form URL is config-driven (`CONFIG.contact`), and
 `docs.google.com` must stay in the `connect-src` CSP directive in `vercel.json`
+and `public/assets/_headers`
 or the submit fails silently.** To capture separate columns instead of one
 composed field, point `CONFIG.contact.formUrl`/`messageField` at a dedicated
 Form (and extend the handler with per-field `entry.*` IDs).
@@ -503,7 +516,7 @@ vercel --prod
 Production is moving from Vercel to **Cloudflare Workers** and from
 `stilllouder.space` to **`still-louder.com`** (`entradas.still-louder.com` for
 tickets). Vercel configs stay in place as the rollback path until the cutover
-in `DEPLOY_CLOUDFLARE.md` ("Cutover a still-louder.com") is done. Key rules
+in `docs/deploy-cloudflare.md` ("Cutover a still-louder.com") is done. Key rules
 when touching either app:
 
 - The main site is an assets-only Worker (`wrangler.jsonc` at the root). Its
@@ -564,7 +577,7 @@ Edit `public/assets/css/variables.css` → modify `--color-*` variables.
 - Don't skip accessibility attributes (ARIA labels, alt text)
 - Don't modify the frozen CONFIG object
 - Don't add dependencies without considering bundle size
-- Don't remove security headers from `vercel.json`
+- Don't remove security headers from `vercel.json` / `public/assets/_headers`
 
 ---
 
@@ -595,13 +608,18 @@ perf: optimize cover image loading
 
 ## Related Documentation
 
-- `README.md` - User-facing documentation (repo overview, both apps)
+Full index: `docs/README.md`.
+
+- `README.md` - Repo overview and quick start
 - `ticket-system/README.md` - Ticket system architecture, env vars, Supabase setup, Yappy integration, deployment
-- `SECURITY_SUMMARY.md` - Detailed security implementation
-- `PWA_IMPLEMENTATION.md` - Service Worker and PWA details
-- `SEO_ACCESSIBILITY_SUMMARY.md` - SEO and accessibility work
-- `PHASE_5_6_IMPLEMENTATION.md` - UX improvements documentation
-- `PLAN_DE_MEJORAS.md` - Overall improvement plan (Spanish)
+- `docs/features/*.md` - Feature specs (spec-first; code links to them by path — don't rename)
+- `docs/main-site/pwa.md` - Service Worker, manifest, offline, PWA testing
+- `docs/main-site/security.md` - Security headers / CSP and verification
+- `docs/main-site/seo-accessibility.md` - SEO metadata, structured data, a11y conventions
+- `docs/deploy-cloudflare.md` - Cloudflare Workers deploy and domain cutover
+
+Reference docs describe the current state; don't add per-phase "implementation
+summary" files — PR descriptions and git history are the changelog.
 
 ---
 

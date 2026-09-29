@@ -4,7 +4,7 @@
 //
 // Deploy:   npm run deploy:cloudflare      (build + wrangler deploy)
 // Preview:  npm run preview:cloudflare     (build + wrangler dev)
-// Full guide: DEPLOY_CLOUDFLARE.md
+// Full guide: docs/deploy-cloudflare.md
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-louder-site",
@@ -21,7 +21,7 @@
   // Custom domains. Requires the still-louder.com zone on this Cloudflare
   // account (it is if the domain was bought on Cloudflare Registrar); deploy
   // creates the DNS records and certificates. www is served too but should be
-  // 301'd to the apex with a dashboard Redirect Rule (see DEPLOY_CLOUDFLARE.md)
+  // 301'd to the apex with a dashboard Redirect Rule (see docs/deploy-cloudflare.md)
   // so there is a single canonical host. workers_dev keeps the *.workers.dev
   // URL alive for testing.
   "workers_dev": true,
