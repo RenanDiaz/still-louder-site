@@ -45,7 +45,7 @@ fixed page takes effect right away.
 |---|---|---|
 | `default-src` | `'self'` | Fallback for anything not listed. |
 | `script-src` | `'self' https://www.googletagmanager.com https://www.google-analytics.com 'unsafe-inline'` | gtag.js loader (GA4 `G-ZZ4XG8CD88`) and the inline gtag bootstrap in both pages (see Limitations). |
-| `style-src` | `'self' https://fonts.googleapis.com 'unsafe-inline'` | Google Fonts CSS (Inter, Bebas Neue). `'unsafe-inline'` for the `style="..."` markup injected by `sw-register.js` and the pre-release skip-link script. |
+| `style-src` | `'self' https://fonts.googleapis.com 'unsafe-inline'` | Google Fonts CSS (Inter, Bebas Neue). `'unsafe-inline'` for the `style="..."` markup injected by `sw-register.js`. |
 | `font-src` | `'self' https://fonts.gstatic.com` | Google Fonts files. |
 | `img-src` | `'self' https://i.imgur.com https://i.ytimg.com data: blob:` | `i.imgur.com`: pre-release cover (`al-vacio-pre-release.html`) and hero background (`css/al-vacio-pre-release/style.css`). `i.ytimg.com`: YouTube thumbnails for the embed. `data:`: Vite inlines assets under 4 KB as base64. |
 | `connect-src` | `'self' https://www.google-analytics.com https://www.googletagmanager.com https://docs.google.com https://fonts.googleapis.com https://fonts.gstatic.com https://i.imgur.com https://i.ytimg.com` | GA4 beacons. `docs.google.com` for the `fetch` POST to the Google Forms (contact and pre-release comments). **If you remove it, both forms break and show no error.** The Google Fonts, `i.imgur.com` and `i.ytimg.com` origins are there for the service worker: `sw.js` is served with this same CSP and every request it makes is a `fetch` (precache of the Fonts CSS, runtime caching of font files and those images). Remove one and the SW install or its caching of that origin fails. |
@@ -62,9 +62,9 @@ fixed page takes effect right away.
 - Every `target="_blank"` anchor in `index.html` and
   `al-vacio-pre-release.html` has `rel="noopener noreferrer"` (checked
   mechanically; no exceptions found). Keep it that way for new links.
-- JS-opened windows: `main.js` PWA shortcuts use `window.open(url, '_blank')`
-  **without** `noopener` (see Drift). New code should pass
-  `'noopener,noreferrer'` as the third argument.
+- JS-opened windows: `main.js` PWA shortcuts use
+  `window.open(url, '_blank', 'noopener,noreferrer')`, with the URLs from
+  `CONFIG.platforms`. New code should do the same.
 - The YouTube embed uses `youtube-nocookie.com` with
   `referrerpolicy="strict-origin-when-cross-origin"`.
 - No SRI: the only third-party script is gtag.js, and it is versionless and
@@ -85,18 +85,23 @@ network level.
   is filled, the form resets and pretends success, and nothing is sent. There is
   no rate limit or CAPTCHA, so Google Forms' own abuse handling is the only
   server-side control.
-- **Pre-release comments form** (`al-vacio-pre-release.html`,
-  `assets/js/al-vacio-pre-release/script.js`). It has no honeypot, and the Form
-  URL is hardcoded instead of read from `CONFIG.comments`. See Drift: the script
-  does not currently bind to this form.
+- **Pre-release comments form** (`al-vacio-pre-release.html` `#commentForm`,
+  `assets/js/al-vacio-pre-release/script.js`). Config-driven through
+  `CONFIG.comments`. Requires name and comment; when `nameField` and
+  `commentField` are the same entry (today), both are folded into one value
+  prefixed "Comentario (Al Vacío)". Feedback goes to `#commentStatus`
+  (`role="status"`). The form has `method="post"`, so without JS it never puts
+  the data in the URL. It has no honeypot.
 - Data handling: submissions go to Google (the band's Form/Sheet). The site
   itself stores nothing. Do not add fields for sensitive data.
 
 ## robots.txt and security.txt
 
-- `public/assets/robots.txt` (served at `/robots.txt`) disallows `/assets/js/`, `/assets/css/`, `/*.mp3$`,
-  `/admin`, `/config` and similar paths. This is crawler etiquette, not access
-  control, because the site has no private paths.
+- `public/assets/robots.txt` (served at `/robots.txt`) is a single
+  `User-agent: *` group that allows everything except `/*.mp3$` and the
+  never-deployed `/.git/`, `/node_modules/`, `/dist/`. This is crawler
+  etiquette, not access control, because the site has no private paths. Never
+  disallow `/assets/` (hashed JS/CSS): Google needs it to render the page.
 - `public/assets/.well-known/security.txt` (served at `/.well-known/security.txt`)
   has the RFC 9116 fields `Contact`, `Expires` 2027-09-28,
   `Preferred-Languages` and `Canonical`.
@@ -106,8 +111,8 @@ network level.
 ## Known limitations
 
 - **`'unsafe-inline'` in `script-src`**: needed by the inline gtag bootstrap
-  (both pages) and the two inline scripts at the end of
-  `al-vacio-pre-release.html` (skip-link focus styles, social-click tracking).
+  (both pages) and the inline social-click tracking script at the end of
+  `al-vacio-pre-release.html`.
   JSON-LD blocks are data and do not need it. To remove it: move those scripts
   into `.js` files, or use CSP hashes. Nonces are not an option for a static
   host.
@@ -141,28 +146,23 @@ network level.
 
 ## Known issues / drift
 
-Recorded here only. None of these are fixed yet.
+Recorded here only. The unwired pre-release comments form and the
+`window.open` without `noopener` were fixed; see git history.
 
-1. **Pre-release comments form is unwired**: `script.js:16-19` queries
-   `#comentario-form`, `#enviar-comentario`, `#comentario` and
-   `#comentario-mensaje`. The HTML (`al-vacio-pre-release.html:344-373`) uses
-   `#commentForm`, `#nameInput` and `#commentInput`. The form has no `action`,
-   so without JS it does a native GET to the same page, which puts the name and
-   comment in the URL (and the GA page_view). The script guards on the missing
-   elements so the rest of its init (audio tracking, sponsors carousel) runs.
-2. **Contact and comments share one Google Form/field**:
-   `config.js:137-140` (`comments`) and `config.js:151-153` (`contact`), plus
-   the hardcoded copy at `script.js:38,40`. Contact messages land in the
-   comments sheet. `CONFIG.comments` is unused.
-3. **security.txt uses the old domain**: `public/assets/.well-known/security.txt:1`
+1. **Contact and comments share one Google Form/field**:
+   `CONFIG.comments` and `CONFIG.contact` (`config.js`) point at the same Form
+   and `entry.1365306044`, so both land in one sheet. Comments are prefixed
+   "Comentario (Al Vacío)" to tell them apart. Splitting them is a product
+   decision; it only needs new values in `CONFIG.comments`.
+2. **security.txt uses the old domain**: `public/assets/.well-known/security.txt:1`
    has `Contact: mailto:security@stilllouder.space`, while `Canonical` is on
    `still-louder.com`. It also says "hosted on Cloudflare" (`:18`), but Vercel
    is still the rollback host.
-4. **Image-only CSP only on Vercel, and probably dead**: `vercel.json:15` sets a
+3. **Image-only CSP only on Vercel, and probably dead**: `vercel.json:15` sets a
    strict CSP for `/assets/images/(.*)`, but `_headers` has no equivalent. On
    Vercel the later `/(.*)` rule (`vercel.json:149`) sets the same key and most
    likely overrides it. Verify with `curl -sI` on an image.
-5. **Caching rule drift** between `vercel.json` and `_headers`:
+4. **Caching rule drift** between `vercel.json` and `_headers`:
    - Vercel forces `Content-Type` on `/assets/css`/`/assets/js`
      (`vercel.json:27-28,40-41`). `_headers` does not.
    - Vercel's audio rules (`vercel.json:55-80`: `/assets/**.mp3|wav|ogg`) vs
@@ -175,8 +175,7 @@ Recorded here only. None of these are fixed yet.
    - Neither host covers the unhashed `dist/js/*` and `dist/css/*` copies.
    The security headers themselves (CSP etc., `vercel.json:149-177` vs
    `_headers:11-18`) are identical.
-6. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
+5. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
    `region1.google-analytics.com`/`*.analytics.google.com`, which the CSP
    (`vercel.json:149`, `_headers:11`) does not allow. Check the console for
    violations.
-7. **`window.open` without `noopener`**: `public/assets/js/main.js:480`.
