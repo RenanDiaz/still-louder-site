@@ -13,44 +13,28 @@
   "categories": ["music", "entertainment"],
   "icons": [
     {
-      "src": "/assets/favicon-96x96.png",
+      "src": "/favicon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/web-app-manifest-192x192.png",
+      "src": "/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/web-app-manifest-512x512.png",
+      "src": "/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/apple-touch-icon.png",
+      "src": "/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/assets/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Vista móvil de Still Louder - Al Vacío"
-    },
-    {
-      "src": "/assets/screenshot-desktop.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Vista de escritorio de Still Louder - Al Vacío"
     }
   ],
   "shortcuts": [
@@ -58,40 +42,19 @@
       "name": "Escuchar en Spotify",
       "short_name": "Spotify",
       "description": "Abre Al Vacío en Spotify",
-      "url": "/index.html?action=spotify",
-      "icons": [
-        {
-          "src": "/assets/images/icons/spotify-shortcut.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "url": "/index.html?action=spotify"
     },
     {
       "name": "Escuchar en Apple Music",
       "short_name": "Apple Music",
       "description": "Abre Al Vacío en Apple Music",
-      "url": "/index.html?action=apple",
-      "icons": [
-        {
-          "src": "/assets/images/icons/apple-shortcut.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "url": "/index.html?action=apple"
     },
     {
       "name": "Ver en YouTube",
       "short_name": "YouTube",
       "description": "Mira el video de Al Vacío en YouTube",
-      "url": "/index.html?action=youtube",
-      "icons": [
-        {
-          "src": "/assets/images/icons/youtube-shortcut.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "url": "/index.html?action=youtube"
     },
     {
       "name": "Pre-lanzamiento",
@@ -100,7 +63,7 @@
       "url": "/al-vacio-pre-release.html",
       "icons": [
         {
-          "src": "/assets/favicon-96x96.png",
+          "src": "/favicon-96x96.png",
           "sizes": "96x96",
           "type": "image/png"
         }
@@ -109,15 +72,5 @@
   ],
   "related_applications": [],
   "prefer_related_applications": false,
-  "iarc_rating_id": "",
-  "share_target": {
-    "action": "/share",
-    "method": "GET",
-    "enctype": "application/x-www-form-urlencoded",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
+  "iarc_rating_id": ""
 }

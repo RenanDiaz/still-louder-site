@@ -53,16 +53,16 @@ npm run preview    # serve the production build
 - **Vite root is `public/`** and `public/assets/` is the static dir (copied
   verbatim to `dist/`). HTML paths are root-relative to `public/`.
 - **Pages:** `index.html` (landing), `al-vacio-pre-release.html` (legacy page of
-  the previous single), `offline.html` (PWA fallback).
+  the previous single), `public/assets/offline.html` (PWA fallback, served at `/offline.html`).
 - **JS:** ES modules under `public/assets/js/`, wired from `main.js`. All URLs,
   dates and copy constants live in the frozen `CONFIG` in
   [`config.js`](public/assets/js/config.js) (`platforms`, `social`, `store`,
   `shows`, `release`, `site`, `contact`, `features`, …).
 - **CSS:** design tokens in [`variables.css`](public/assets/css/variables.css),
   styles in `style.css`.
-- **Service worker** (`public/sw.js`) for offline/caching — bump its
-  `CACHE_VERSION` when shipping HTML/CSS/JS changes. ⚠️ It currently does
-  **not** ship in the build (see [`docs/main-site/pwa.md`](docs/main-site/pwa.md#known-issues)).
+- **Service worker** (`public/assets/sw.js`, served at `/sw.js`) for
+  offline/caching — bump its `CACHE_VERSION` when shipping HTML/CSS/JS changes.
+  See [`docs/main-site/pwa.md`](docs/main-site/pwa.md).
 - **Contact form** posts to a Google Form (no backend).
 - **Analytics:** Google Analytics 4.
 

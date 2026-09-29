@@ -48,7 +48,7 @@ fixed page takes effect right away.
 | `style-src` | `'self' https://fonts.googleapis.com 'unsafe-inline'` | Google Fonts CSS (Inter, Bebas Neue). `'unsafe-inline'` for the `style="..."` markup injected by `sw-register.js` and the pre-release skip-link script. |
 | `font-src` | `'self' https://fonts.gstatic.com` | Google Fonts files. |
 | `img-src` | `'self' https://i.imgur.com https://i.ytimg.com data: blob:` | `i.imgur.com`: pre-release cover (`al-vacio-pre-release.html`) and hero background (`css/al-vacio-pre-release/style.css`). `i.ytimg.com`: YouTube thumbnails for the embed. `data:`: Vite inlines assets under 4 KB as base64. |
-| `connect-src` | `'self' https://www.google-analytics.com https://www.googletagmanager.com https://docs.google.com` | GA4 beacons. `docs.google.com` for the `fetch` POST to the Google Forms (contact and pre-release comments). **If you remove it, both forms break and show no error.** |
+| `connect-src` | `'self' https://www.google-analytics.com https://www.googletagmanager.com https://docs.google.com https://fonts.googleapis.com https://fonts.gstatic.com https://i.imgur.com https://i.ytimg.com` | GA4 beacons. `docs.google.com` for the `fetch` POST to the Google Forms (contact and pre-release comments). **If you remove it, both forms break and show no error.** The Google Fonts, `i.imgur.com` and `i.ytimg.com` origins are there for the service worker: `sw.js` is served with this same CSP and every request it makes is a `fetch` (precache of the Fonts CSS, runtime caching of font files and those images). Remove one and the SW install or its caching of that origin fails. |
 | `media-src` | `'self'` | Self-hosted MP3 on the pre-release page. |
 | `frame-src` | `'self' https://www.youtube-nocookie.com https://www.youtube.com` | The lyric-video iframe (`youtube-nocookie.com/embed/...`). `youtube.com` covers redirects/fallback. |
 | `frame-ancestors` | `'none'` | The site cannot be framed. |
@@ -94,16 +94,14 @@ network level.
 
 ## robots.txt and security.txt
 
-- `public/robots.txt` disallows `/assets/js/`, `/assets/css/`, `/*.mp3$`,
+- `public/assets/robots.txt` (served at `/robots.txt`) disallows `/assets/js/`, `/assets/css/`, `/*.mp3$`,
   `/admin`, `/config` and similar paths. This is crawler etiquette, not access
   control, because the site has no private paths.
-- `public/.well-known/security.txt` exists (RFC 9116 fields: `Contact`,
-  `Expires` 2027-09-28, `Preferred-Languages`, `Canonical`).
-- **Neither file is shipped.** Only the HTML inputs and publicDir
-  (`public/assets/`) reach `dist/`. Files that sit directly in `public/`
-  (`robots.txt`, `sitemap.xml`, `sw.js`, `offline.html`, `.well-known/`) are not
-  referenced as build inputs, so they are not emitted. A local
-  `vite build` confirms this. See Drift.
+- `public/assets/.well-known/security.txt` (served at `/.well-known/security.txt`)
+  has the RFC 9116 fields `Contact`, `Expires` 2027-09-28,
+  `Preferred-Languages` and `Canonical`.
+- Both live in publicDir (`public/assets/`), which Vite copies verbatim to the
+  root of `dist/`. Files left loose in `public/` are not deployed.
 
 ## Known limitations
 
@@ -134,8 +132,8 @@ network level.
 5. Browser DevTools console on both pages: no CSP violations. Exercise the
    YouTube embed, the fonts, GA (Network tab: the `collect` beacon returns
    200/204), the contact form submit, and the pre-release audio.
-6. `/robots.txt` and `/.well-known/security.txt` return 200, not the SPA/404.
-   They currently fail (see Drift).
+6. `/robots.txt`, `/sitemap.xml`, `/.well-known/security.txt` and `/sw.js` return 200,
+   not the SPA/404. `/sw.js` has `Cache-Control: no-cache`.
 7. `npm audit` at the repo root (dev dependencies only, since nothing from
    `node_modules` ships to the browser).
 8. After any header change, confirm the `vercel.json` and `_headers` values
@@ -145,49 +143,40 @@ network level.
 
 Recorded here only. None of these are fixed yet.
 
-1. **robots.txt, sitemap.xml, security.txt not shipped**: they live in
-   `public/`, not in publicDir `public/assets/`, so they are missing from
-   `dist/`. `sw.js` and `offline.html` are missing too, and the service worker
-   registration in `sw-register.js:9` points at `/sw.js`.
-2. **Classic scripts 404 after build**: `index.html:1300` and
-   `al-vacio-pre-release.html:466,469` reference `assets/js/sw-register.js` and
-   `assets/js/al-vacio-pre-release/script.js`. Vite leaves those paths as
-   written, but publicDir copies the files to `dist/js/...`, not
-   `dist/assets/js/...`.
-3. **Pre-release comments form is unwired**: `script.js:16-19` queries
+1. **Pre-release comments form is unwired**: `script.js:16-19` queries
    `#comentario-form`, `#enviar-comentario`, `#comentario` and
    `#comentario-mensaje`. The HTML (`al-vacio-pre-release.html:344-373`) uses
    `#commentForm`, `#nameInput` and `#commentInput`. The form has no `action`,
    so without JS it does a native GET to the same page, which puts the name and
-   comment in the URL (and the GA page_view).
-4. **Contact and comments share one Google Form/field**:
+   comment in the URL (and the GA page_view). The script guards on the missing
+   elements so the rest of its init (audio tracking, sponsors carousel) runs.
+2. **Contact and comments share one Google Form/field**:
    `config.js:137-140` (`comments`) and `config.js:151-153` (`contact`), plus
    the hardcoded copy at `script.js:38,40`. Contact messages land in the
    comments sheet. `CONFIG.comments` is unused.
-5. **security.txt uses the old domain**: `public/.well-known/security.txt:1`
+3. **security.txt uses the old domain**: `public/assets/.well-known/security.txt:1`
    has `Contact: mailto:security@stilllouder.space`, while `Canonical` is on
    `still-louder.com`. It also says "hosted on Cloudflare" (`:18`), but Vercel
    is still the rollback host.
-6. **Image-only CSP only on Vercel, and probably dead**: `vercel.json:15` sets a
+4. **Image-only CSP only on Vercel, and probably dead**: `vercel.json:15` sets a
    strict CSP for `/assets/images/(.*)`, but `_headers` has no equivalent. On
    Vercel the later `/(.*)` rule (`vercel.json:149`) sets the same key and most
    likely overrides it. Verify with `curl -sI` on an image.
-7. **Caching rule drift** between `vercel.json` and `_headers`:
+5. **Caching rule drift** between `vercel.json` and `_headers`:
    - Vercel forces `Content-Type` on `/assets/css`/`/assets/js`
      (`vercel.json:27-28,40-41`). `_headers` does not.
    - Vercel's audio rules (`vercel.json:55-80`: `/assets/**.mp3|wav|ogg`) vs
-     `_headers:37` (`/assets/mp3/*` only).
+     `_headers:38` (`/assets/mp3/*` only).
    - Vercel's extension rules for root images and favicons
-     (`vercel.json:82-143`) vs `_headers:42` (`/images/*` only).
-   - `/assets/webmanifest/*` is only in `_headers:33`.
-   - HTML revalidation: Vercel by extension (`vercel.json:180-197`),
-     Cloudflare by clean URL (`_headers:47-51`, so each new page needs its own
+     (`vercel.json:82-143`) vs `_headers:43` (`/images/*` only).
+   - HTML revalidation: Vercel by extension (`vercel.json:181-189,199-207`),
+     Cloudflare by clean URL (`_headers:48-55`, so each new page needs its own
      line).
    - Neither host covers the unhashed `dist/js/*` and `dist/css/*` copies.
    The security headers themselves (CSP etc., `vercel.json:149-177` vs
    `_headers:11-18`) are identical.
-8. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
+6. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
    `region1.google-analytics.com`/`*.analytics.google.com`, which the CSP
    (`vercel.json:149`, `_headers:11`) does not allow. Check the console for
    violations.
-9. **`window.open` without `noopener`**: `public/assets/js/main.js:480`.
+7. **`window.open` without `noopener`**: `public/assets/js/main.js:480`.

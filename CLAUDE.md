@@ -198,19 +198,20 @@ still-louder-site/
 │   │   │   ├── sw-register.js   # Service Worker registration
 │   │   │   └── al-vacio-pre-release/  # Pre-release page scripts
 │   │   ├── images/              # Optimized images (WebP, AVIF formats)
+│   │   ├── .well-known/
+│   │   │   └── security.txt     # Security contact information (→ /.well-known/security.txt)
 │   │   ├── _headers             # Cloudflare mirror of vercel.json headers
-│   │   ├── site.webmanifest     # PWA manifest
+│   │   ├── site.webmanifest     # PWA manifest (→ /site.webmanifest)
+│   │   ├── sw.js                # Service Worker (→ /sw.js)
+│   │   ├── offline.html         # Offline fallback page (→ /offline.html)
+│   │   ├── sitemap.xml          # SEO sitemap (→ /sitemap.xml)
+│   │   ├── robots.txt           # Search engine directives (→ /robots.txt)
 │   │   └── links.json           # Platform links data
-│   ├── .well-known/
-│   │   └── security.txt         # Security contact information
 │   ├── index.html               # Main landing page
-│   ├── al-vacio-pre-release.html # Pre-release page
-│   ├── offline.html             # Offline fallback page
-│   ├── sw.js                    # Service Worker
-│   ├── sitemap.xml              # SEO sitemap
-│   └── robots.txt               # Search engine directives
+│   └── al-vacio-pre-release.html # Pre-release page
 ├── scripts/
-│   └── optimize-images.js       # Image optimization script
+│   ├── optimize-images.js       # Image optimization script
+│   └── check-dist.js            # Post-build check: every local ref resolves in dist/
 ├── docs/                        # Specs (features/), reference docs (main-site/), deploy guide — index in docs/README.md
 ├── ticket-system/               # SEPARATE app — see "Ticket System" section
 ├── dist/                        # Build output (generated, gitignored)
@@ -228,12 +229,20 @@ still-louder-site/
 and `public/assets/` is treated as the static dir. Paths in HTML are
 root-relative to `public/`. Keep this in mind before restructuring directories.
 
-**Known build gap (unfixed):** only the two HTML inputs and `public/assets/`
-reach `dist/`. Files sitting directly in `public/` (`sw.js`, `offline.html`,
-`robots.txt`, `sitemap.xml`, `.well-known/security.txt`) are **not deployed**,
-and classic `<script src="assets/js/...">` tags 404 in production (publicDir
-files land at `dist/js/...`). So the PWA/offline support does not work in
-production today. Details: `docs/main-site/pwa.md` → Known issues.
+What reaches `dist/`: the two HTML inputs (plus everything Vite bundles from
+them, hashed under `dist/assets/`) and the contents of `public/assets/`, copied
+verbatim to the **root** of `dist/` (`public/assets/sw.js` → `/sw.js`). Rules
+that follow from this:
+
+- A file that must live at a fixed public URL (`sw.js`, `offline.html`,
+  `robots.txt`, `sitemap.xml`, `.well-known/*`, the manifest and its icons)
+  goes in `public/assets/`. Anything left loose in `public/` that is not a
+  Rollup input is **not deployed**.
+- Load local scripts with `<script type="module" src="/assets/js/...">` so Vite
+  bundles them. A classic `<script src="assets/js/...">` is left untouched and
+  404s in production (the publicDir copy is at `/js/...`).
+- Inside publicDir files (manifest, `sw.js`, `offline.html`) reference other
+  publicDir files by their root path (`/favicon-96x96.png`), never `/assets/...`.
 
 ---
 
@@ -267,6 +276,7 @@ npm run preview
 | `format` | `npm run format` | Format code with Prettier |
 | `format:check` | `npm run format:check` | Check code formatting |
 | `validate` | `npm run validate` | Run lint + format check |
+| `check:dist` | `npm run check:dist` | After a build: verify every local ref in `dist/` (HTML, SW precache, manifest) exists |
 | `optimize:images` | `npm run optimize:images` | Optimize images with Sharp |
 
 ### Before Committing
@@ -476,6 +486,7 @@ Before deploying, verify:
 - [ ] `npm run validate` passes (lint + format)
 - [ ] Dev server works: `npm run dev`
 - [ ] Production build works: `npm run build && npm run preview`
+- [ ] `npm run check:dist` passes (no missing files in `dist/`)
 - [ ] All platform links work and open in new tabs
 - [ ] Share button works (or falls back to clipboard)
 - [ ] No console errors in browser DevTools
