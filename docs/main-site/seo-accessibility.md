@@ -36,7 +36,7 @@ meta tags, JSON-LD and the sitemap do not, so they must use `/images/...`.
   `og:see_also` links to Instagram, Facebook, YouTube and TikTok, and
   `theme-color #0d1216`.
 - Share image: home uses `/images/album_covers/skirlaz.jpeg` (640x640).
-  Pre-release uses a hotlinked `https://i.imgur.com/CoA13WN.jpg`.
+  Pre-release uses `/images/album_covers/al-vacio.jpeg` (760x760).
 
 ### 1.2 Structured data (JSON-LD, inline `<script type="application/ld+json">`)
 
@@ -51,7 +51,7 @@ Keep that `@id` stable.
 ### 1.3 Sitemap and robots
 
 - `public/assets/sitemap.xml` lists two URLs: `/` (priority 1.0, image = Skirlaz
-  cover) and `/al-vacio-pre-release` (priority 0.8, image = imgur cover). It
+  cover) and `/al-vacio-pre-release` (priority 0.8, image = Al Vacío cover). It
   uses the `image:` sitemap extension.
 - `public/assets/robots.txt`: a single `User-agent: *` group with `Allow: /`
   and `Disallow` for `/*.mp3$`, `/.git/`, `/node_modules/` and `/dist/`, plus
@@ -184,21 +184,12 @@ Fixed and removed from this list (see git history): the Halloween JSON-LD
 image path, the placeholder/made-up JSON-LD fields and `SearchAction`, the
 robots.txt groups and disallows, accent-as-text contrast and the skip link,
 the mobile menu's ARIA state and focus handling, and the pre-release page's
-nested footer, inline skip-link style/JS and `theme-color`.
+nested footer, inline skip-link style/JS, `theme-color`, conflicting
+`#band` entity and imgur hotlinks (images now self-hosted).
 
 - **MusicEvent completeness**: neither event has `endDate`, and the
   Stratovarius `offers` has no `price` (`index.html`). Rich Results flags both
   as warnings. Don't add them until the real values are known.
-- **`#band` image on the pre-release page**: its `MusicGroup` (same `@id`
-  as home, `al-vacio-pre-release.html:144-172`) now matches home's logo,
-  genre, founding date (2009) and location, but `image` is still the imgur
-  cover until it is self-hosted (next item).
-- **Hotlinked imgur images**: the pre-release page's OG image, Twitter image,
-  JSON-LD image, sitemap image and cover `<img>` load
-  `https://i.imgur.com/CoA13WN.jpg`, and its CSS background is
-  `https://i.imgur.com/N1DNYjI.jpg`. Self-hosting needs the original files in
-  `public/assets/images/`; after that, `i.imgur.com` can leave the CSP and
-  `sw.js`.
 - **Small OG image**: 640x640 (`index.html:85`) is below the 1200x630
   recommended for `summary_large_image`.
 - **Unverified handle**: `twitter:site`/`creator` `@StillLouder`
