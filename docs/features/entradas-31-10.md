@@ -60,7 +60,7 @@ el spec está completo con esos valores.
 | # | Decisión | Recomendación / default | Notas |
 |---|---|---|---|
 | D1 | Nombre del evento y `short_name` | Pendiente. `short_name` ≤ 8 chars, sirve de `code` del QR y sufijo de Wallet | Sin nombre no hay slug definitivo ni copy de correo. |
-| D2 | `slug` definitivo | `31-10` como slug canónico; al haber nombre, agregar rewrite `/<nombre>` → `/entradas` **además**, sin retirar `/31-10` | Es el enlace que ya circula (teaser, tarjeta del sitio). |
+| D2 | `slug` definitivo | **Hecho**: slug canónico `halloween-party` (migración `0013`); `/31-10` queda como redirect 301 a `/halloween-party` (`vercel.json` + `public/_redirects`) | `/31-10` es el enlace que ya circula (teaser, tarjeta del sitio, flyers): el 301 lo mantiene vivo. El `code` `SL3110` no cambia, así que los QR emitidos siguen válidos. |
 | D3 | Lugar y dirección | Pendiente | Correo, Wallet, `/ayuda`, JSON-LD del sitio. |
 | D4 | Aforo total | Pendiente. Default WWWY3: 230 | `events.total_capacity`. |
 | D5 | Tarifas y precios | `preventa` / `general`, mismos nombres que WWWY3. Precios pendientes (WWWY3: $6 / $8) | Si el 31-10 tiene un estreno/aniversario, considerar precio general más alto y preventa corta. |

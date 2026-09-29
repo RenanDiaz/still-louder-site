@@ -16,13 +16,13 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 
 | Ruta        | Quién        | Qué hace                                                        |
 | ----------- | ------------ | --------------------------------------------------------------- |
-| `/entradas` | Público      | Compra de **cualquier evento**: el slug sale del path (`/31-10`, `/when-we-were-young-3` por rewrite) o de `?evento=<slug>`; sin slug = el evento "actual". El `status` del evento decide la vista (teaser / cuenta regresiva / formulario / agotado / "ya pasó"). |
+| `/entradas` | Público      | Compra de **cualquier evento**: el slug sale del path (`/halloween-party`, `/when-we-were-young-3` por rewrite) o de `?evento=<slug>`; sin slug = el evento "actual". El `status` del evento decide la vista (teaser / cuenta regresiva / formulario / agotado / "ya pasó"). |
 | `/admin`    | Admin        | Selector de evento + pestaña **Eventos** (crear/editar/transición de estado). Todo lo demás, scopeado al evento elegido: reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV. |
 | `/validar`  | Staff/puerta | Escáner de QR con resultado verde/rojo + sonido.                |
 | `/support`  | Soporte      | **Solo lectura**: buscar órdenes por email/teléfono/nombre/# de orden, ver su estado y sus entradas, y reenviar el correo con el QR. Sin acceso a mutaciones (pagar, cancelar, anular, cortesías, Etapa 2) ni a las estadísticas de ventas. |
 | `/ayuda`    | Público      | FAQ + canales oficiales de contacto; la copia sale del evento actual (`/api/presale/status`). Sin datos del usuario. El reenvío del QR **no** vive aquí a propósito — lo hace el staff desde `/support` cuando el comprador escribe. |
 | `/regalo/<token>` | Público (oculto) | Formulario de reclamo de regalo, alcanzable **solo** con el token de una campaña QR. `noindex`, nunca enlazado. Ver `docs/features/gift-qr-campaigns.md`. |
-| `/31-10`    | Público      | Show del 31 oct 2026: la **misma app** de `/entradas` (slug `31-10`). En `teaser` muestra solo la fecha; en `on_sale`, el flujo de compra. `31-10.html` existe solo para que el preview del enlace tenga sus propias meta. |
+| `/halloween-party` | Público | Show del 31 oct 2026: la **misma app** de `/entradas` (slug `halloween-party`). En `teaser` muestra solo la fecha; en `on_sale`, el flujo de compra. `halloween-party.html` existe solo para que el preview del enlace tenga sus propias meta. El path viejo `/31-10` redirige (301) aquí. |
 
 ## Arquitectura
 
@@ -86,7 +86,7 @@ ticket-system/
 │   ├── 0009_fix_claim_gift_ambiguous_status.sql
 │   ├── 0010_total_capacity.sql          # aforo total del evento
 │   └── 0011_events.sql                  # multi-evento: events + event_tier, event_id en todo
-├── index.html · entradas.html · 31-10.html · ayuda.html · regalo.html
+├── index.html · entradas.html · halloween-party.html · ayuda.html · regalo.html
 ├── admin.html · support.html · validar.html
 ├── vite.config.ts · vercel.json · wrangler.jsonc · .env.example
 └── tsconfig.json · tsconfig.api.json · tsconfig.cloudflare.json
@@ -396,7 +396,7 @@ correo y el pase de Wallet usan la misma paleta.
 2. **Publicar teaser** cuando quieras que la URL exista.
 3. Revisar: `/entradas?evento=<slug>` (o su ruta propia). Para una ruta bonita
    (`/<slug>`), agregar el rewrite a `vercel.json` **y** `public/_redirects`
-   (o un `<slug>.html` que cargue `src/entradas/main.tsx`, como `31-10.html`,
+   (o un `<slug>.html` que cargue `src/entradas/main.tsx`, como `halloween-party.html`,
    si el preview del enlace debe tener sus propias meta).
 4. Google Wallet: con el evento seleccionado, **"Clase de Google Wallet"**.
 5. CuantoApp: los links `CUANTOAPP_PAYMENT_URL_1..10` son globales — si los
@@ -406,9 +406,9 @@ correo y el pase de Wallet usan la misma paleta.
 7. Al terminar el show: **Archivar**.
 
 El show del 31-10 ya viene sembrado por la migración **en `on_sale`**: *Still
-Louder's Halloween Party* ft. Fábula Sarcástica & Elefreak (slug `31-10`,
-código `SL3110`), Hops Food & Drinks (David, Chiriquí), aforo 230, preventa $10
-para las primeras 100 y general $12. Hasta el 1 oct 00:00 `/31-10` muestra la
+Louder's Halloween Party* ft. Fábula Sarcástica & Elefreak (slug `halloween-party`
+desde la `0013` —antes `31-10`, que ahora redirige 301—, código `SL3110`), Hops Food & Drinks (David, Chiriquí), aforo 230, preventa $10
+para las primeras 100 y general $12. Hasta el 1 oct 00:00 `/halloween-party` muestra la
 cuenta regresiva y el servidor rechaza órdenes (`sales_not_open`); a esa hora
 el formulario se abre solo. La migración **`0012`** le asigna el tema
 `halloween` (sacado del flyer oficial) y el flyer como imagen OG/Wallet. Ver

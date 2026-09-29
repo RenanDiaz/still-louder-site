@@ -1,5 +1,5 @@
 /*
-  Vista TEASER de un evento (status = 'teaser'), p. ej. /31-10 hoy.
+  Vista TEASER de un evento (status = 'teaser'), p. ej. /halloween-party.
 
   Convive en el mismo bundle que el tema de compra (theme.css): las reglas
   globales (body, body::before) van bajo html[data-view='teaser'] y las de

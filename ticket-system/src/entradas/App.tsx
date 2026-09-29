@@ -29,7 +29,7 @@ import { YappyButton } from './YappyButton';
 type Method = (typeof PAYMENT_METHODS)[number]['value'];
 
 // Paths that mean "no slug": /entradas (and the root redirect) show the
-// server's current event. Any other path is the event slug (/31-10,
+// server's current event. Any other path is the event slug (/halloween-party,
 // /when-we-were-young-3 via rewrite). ?evento=<slug> works on any path, so a
 // brand-new event is reachable before it gets its own rewrite.
 const NO_SLUG_PATHS = new Set(['', 'entradas', 'index', 'index.html', 'entradas.html']);

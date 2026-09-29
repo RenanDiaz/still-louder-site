@@ -82,7 +82,8 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   password via `isSupport()`), `/regalo/<token>` (public **hidden** gift-claim
   form, reachable only via a campaign QR token; `noindex`, never linked; the
   first N claimants get a `regalo` ticket — see `docs/features/gift-qr-campaigns.md`).
-  `/31-10` (the 31 Oct 2026 show: `31-10.html` loads the SAME app as
+  `/halloween-party` (the 31 Oct 2026 show, slug `halloween-party` since
+  migration 0013; the old `/31-10` 301-redirects here: `halloween-party.html` loads the SAME app as
   `/entradas` — it exists only so the link preview has the show's own meta;
   the event row's `status` decides teaser vs. purchase flow).
   Root `index.html` redirects to `/entradas`;
