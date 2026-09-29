@@ -1,5 +1,10 @@
 # Venta de entradas — show del 31 de octubre de 2026
 
+> **Estado (29 sep 2026):** implementado. Slug canónico **`halloween-party`**
+> (migración `0013`); `/31-10` redirige 301 ahí y `ticket-system/31-10.html` es
+> hoy `halloween-party.html`. Las menciones a `/31-10` más abajo son el diseño
+> original — ver D2 y el README del ticket-system para el estado vigente.
+
 > Subsistema: `ticket-system/` (venta) + sitio principal (`public/`, solo el
 > enlace de compra). **Depende de `docs/features/multi-evento.md`**: este spec
 > describe la configuración y el flujo de UN evento sobre esa fundación. No se
