@@ -193,10 +193,10 @@ nested footer, inline skip-link style/JS and `theme-color`.
 - **MusicEvent completeness**: neither event has `endDate`, and the
   Stratovarius `offers` has no `price` (`index.html`). Rich Results flags both
   as warnings. Don't add them until the real values are known.
-- **Conflicting `#band` entity**: the pre-release page redefines the
-  `MusicGroup` with the same `@id` but imgur `logo`/`image`, different
-  `genre` and `foundingDate` 2020 (home says 2009)
-  (`al-vacio-pre-release.html:144-172`).
+- **`#band` image on the pre-release page**: its `MusicGroup` (same `@id`
+  as home, `al-vacio-pre-release.html:144-172`) now matches home's logo,
+  genre, founding date (2009) and location, but `image` is still the imgur
+  cover until it is self-hosted (next item).
 - **Hotlinked imgur images**: the pre-release page's OG image, Twitter image,
   JSON-LD image, sitemap image and cover `<img>` load
   `https://i.imgur.com/CoA13WN.jpg`, and its CSS background is
