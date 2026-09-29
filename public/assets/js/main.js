@@ -155,34 +155,59 @@ const initRevealAnimations = () => {
 const initMobileMenu = () => {
   const menuBtn = document.getElementById('mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
-  const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+  const mobileLinks = [...document.querySelectorAll('.mobile-nav-link')];
 
   if (!menuBtn || !mobileMenu) return;
 
-  const toggleMenu = () => {
-    const isActive = menuBtn.classList.toggle('active');
-    mobileMenu.classList.toggle('active');
-    document.body.style.overflow = isActive ? 'hidden' : '';
-    menuBtn.setAttribute('aria-label', isActive ? 'Cerrar menú' : 'Abrir menú');
+  const isOpen = () => mobileMenu.classList.contains('active');
+
+  const openMenu = () => {
+    menuBtn.classList.add('active');
+    mobileMenu.classList.add('active');
+    menuBtn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    mobileLinks[0]?.focus();
   };
 
-  const closeMenu = () => {
+  // returnFocus: false when a link was followed (focus moves to its target)
+  const closeMenu = ({ returnFocus = true } = {}) => {
     menuBtn.classList.remove('active');
     mobileMenu.classList.remove('active');
+    menuBtn.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
-    menuBtn.setAttribute('aria-label', 'Abrir menú');
+    if (returnFocus) {
+      menuBtn.focus();
+    }
   };
 
-  menuBtn.addEventListener('click', toggleMenu);
+  menuBtn.addEventListener('click', () => (isOpen() ? closeMenu() : openMenu()));
 
   mobileLinks.forEach((link) => {
-    link.addEventListener('click', closeMenu);
+    link.addEventListener('click', () => closeMenu({ returnFocus: false }));
   });
 
-  // Close on escape key
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && mobileMenu.classList.contains('active')) {
+    if (!isOpen()) {
+      return;
+    }
+
+    if (e.key === 'Escape') {
       closeMenu();
+      return;
+    }
+
+    // Keep Tab cycling between the button and the menu links while it covers the page
+    if (e.key === 'Tab') {
+      const focusables = [menuBtn, ...mobileLinks];
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   });
 };
@@ -207,6 +232,13 @@ const initSmoothScroll = () => {
           top: targetPosition,
           behavior: 'smooth'
         });
+
+        // preventDefault() skips the browser's own focus move; do it by hand so keyboard
+        // users (skip link, mobile menu) continue from the target, not the link they left
+        if (!target.hasAttribute('tabindex')) {
+          target.setAttribute('tabindex', '-1');
+        }
+        target.focus({ preventScroll: true });
       }
     });
   });
@@ -480,7 +512,8 @@ const initPWAShortcuts = () => {
     if (Object.hasOwn(platformMap, action)) {
       setTimeout(() => {
         window.open(platformMap[action], '_blank', 'noopener,noreferrer');
-      }
+      }, 500);
+    }
   }
 };
 

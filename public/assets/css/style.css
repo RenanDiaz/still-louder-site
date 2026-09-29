@@ -190,12 +190,18 @@ body {
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-normal);
+  transition:
+    opacity var(--transition-normal),
+    visibility var(--transition-normal);
 }
 
+/* visibility flips at once on open so main.js can focus the first link */
 .mobile-menu.active {
   opacity: 1;
   visibility: visible;
+  transition:
+    opacity var(--transition-normal),
+    visibility 0s;
 }
 
 .mobile-nav {
@@ -1483,6 +1489,11 @@ a:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
+}
+
+/* Sections focused by the in-page anchor handler (main.js) are not controls */
+[tabindex='-1']:focus {
+  outline: none;
 }
 
 /* ============================================
