@@ -5,7 +5,7 @@ Scope: the static main site (`public/`, Vite root). The ticket system
 
 Pages: `public/index.html` (home, current single **Skirlaz**, shows, band,
 FAQ, contact) and `public/al-vacio-pre-release.html` (legacy pre-release page
-for **Al Vacío**). `public/offline.html` is the service-worker fallback only.
+for **Al Vacío**). `public/assets/offline.html` is the service-worker fallback only.
 
 **Path rule you need for absolute URLs.** `vite.config.js` sets
 `publicDir: 'assets'`, so a file at `public/assets/images/x.jpg` is published at
@@ -50,10 +50,10 @@ Keep that `@id` stable.
 
 ### 1.3 Sitemap and robots
 
-- `public/sitemap.xml` lists two URLs: `/` (priority 1.0, image = Skirlaz
+- `public/assets/sitemap.xml` lists two URLs: `/` (priority 1.0, image = Skirlaz
   cover) and `/al-vacio-pre-release` (priority 0.8, image = imgur cover). It
   uses the `image:` sitemap extension.
-- `public/robots.txt`: `Allow: /` for `*`, `Disallow` for `/assets/js/`,
+- `public/assets/robots.txt`: `Allow: /` for `*`, `Disallow` for `/assets/js/`,
   `/assets/css/`, `/*.mp3$`, `/admin`, `/config`, `/.git/`, `/node_modules/`,
   `/dist/`, and `Crawl-delay: 10` for generic bots, AhrefsBot and SemrushBot.
   It has a separate group for Googlebot, Bingbot, Slurp and DuckDuckBot with
@@ -73,7 +73,7 @@ Keep that `@id` stable.
    platform links.
 4. `public/assets/js/config.js` (`platforms.*` URLs) and
    `public/assets/links.json`.
-5. `public/sitemap.xml`: `<lastmod>`, `image:loc`, `image:title` and
+5. `public/assets/sitemap.xml`: `<lastmod>`, `image:loc`, `image:title` and
    `image:caption` for `/`.
 6. Export the new cover as `/images/...` (JPEG for OG, plus AVIF and WebP for
    `<picture>`), then run `npm run optimize:images`.
@@ -170,7 +170,7 @@ contains absolute URLs. Then resubmit the sitemap in Search Console.
   (`index.html:303`). Because of `publicDir: 'assets'`, the file is served at
   `/images/shows/...` (the Stratovarius block at `index.html:270` gets this
   right), so this URL will 404 in production.
-- **Old domain**: `public/.well-known/security.txt:1` still uses
+- **Old domain**: `public/assets/.well-known/security.txt:1` still uses
   `mailto:security@stilllouder.space`. No other file in `public/` references
   `stilllouder.space`.
 - **Placeholder or empty structured data** in `index.html`: `isrcCode: ""`

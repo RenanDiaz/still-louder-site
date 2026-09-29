@@ -1,33 +1,35 @@
 # Main site: PWA and service worker
 
 Reference for the main site's service worker, web app manifest and offline page,
-written from the code. Read the **Known issues** section first: as the build is
-set up now, the production `dist/` **does not ship a working service worker**.
+written from the code. Remaining gaps are listed under **Known issues**.
 
 ## Files
 
 | File (source) | Role | In `dist/` after `npm run build` |
 |---|---|---|
-| `public/sw.js` | Service worker: precache, runtime caching, offline fallback, message API | **Not emitted** (see Known issues) |
-| `public/assets/js/sw-register.js` | Classic (non-module) script that registers the SW, shows the update banner and install prompt, and emits the analytics events | Copied to `/js/sw-register.js`, but the HTML still asks for `/assets/js/sw-register.js` |
-| `public/offline.html` | Offline fallback page (inline CSS/JS, retry button, auto-reloads when back online) | **Not emitted** |
-| `public/assets/site.webmanifest` | Web app manifest | Hashed copy at `/assets/webmanifest/site-[hash].webmanifest` (linked from HTML) plus a verbatim copy at `/site.webmanifest` |
-| `public/index.html`, `public/al-vacio-pre-release.html` | Link the manifest (`<link rel="manifest" href="/assets/site.webmanifest">`) and load `sw-register.js` with `<script src="assets/js/sw-register.js">` | Built entries |
+| `public/assets/sw.js` | Service worker: precache, runtime caching, offline fallback, message API | `/sw.js` (verbatim) |
+| `public/assets/js/sw-register.js` | Registers the SW, shows the update banner and install prompt, and emits the analytics events. Self-contained IIFE, loaded as `<script type="module">` | Bundled with a hash into `/assets/js/` |
+| `public/assets/offline.html` | Offline fallback page (inline CSS/JS, retry button, auto-reloads when back online) | `/offline.html` (verbatim; both hosts serve it at `/offline` too) |
+| `public/assets/site.webmanifest` | Web app manifest | `/site.webmanifest` (verbatim, unhashed) |
+| `public/index.html`, `public/al-vacio-pre-release.html` | Link the manifest (`<link rel="manifest" href="/site.webmanifest">`) and load `sw-register.js` with `<script type="module" src="/assets/js/sw-register.js">` | Built entries |
 | `public/assets/js/main.js` | `initPWAShortcuts()` handles `?action=` from manifest shortcuts | Bundled |
 | `vite.config.js` | `root: 'public'`, `publicDir: 'assets'`, inputs are only `index.html` and `al-vacio-pre-release.html` | — |
-| `vercel.json`, `public/assets/_headers` | Cache headers. Neither has a rule for `sw.js` | — |
+| `vercel.json`, `public/assets/_headers` | `Cache-Control: no-cache` for `/sw.js` in both | — |
 
 Vite reminder: files in `public/assets/` (the publicDir) are copied **to the
 root of `dist/`** with no `assets/` prefix, while files Vite processes from HTML
-land in hashed `dist/assets/<type>/` paths. That split is behind most of the
-issues below.
+land in hashed `dist/assets/<type>/` paths. So `sw.js`, `offline.html` and the
+manifest must reference other publicDir files by their root path
+(`/favicon-96x96.png`), and the manifest is linked by its publicDir URL
+(`/site.webmanifest`) so it keeps a stable, precacheable URL.
 
-## Service worker (`public/sw.js`)
+## Service worker (`public/assets/sw.js`)
+
 
 ### Cache names and versioning
 
 ```js
-const CACHE_VERSION   = 'still-louder-v1.3.2';
+const CACHE_VERSION   = 'still-louder-v1.4.0';
 const OFFLINE_VERSION = 'still-louder-offline-v1.3.0';
 ```
 
@@ -36,7 +38,7 @@ const OFFLINE_VERSION = 'still-louder-offline-v1.3.0';
 | Precache | `${CACHE_VERSION}-precache` | `PRECACHE_URLS`, fetched with `cache: 'no-cache'` at install |
 | Runtime | `${CACHE_VERSION}-runtime` | CSS/JS (stale-while-revalidate), fonts, HTML and everything else (network-first) |
 | Images | `${CACHE_VERSION}-images` | Images (cache-first) |
-| Offline | `OFFLINE_VERSION` | `/offline.html` only |
+| Offline | `OFFLINE_VERSION` | `/offline.html` only (stored as a non-redirected copy, see below) |
 
 On `activate`, every cache whose name is not one of those four is deleted, then
 `clients.claim()` runs. `install` finishes with `self.skipWaiting()`, so a new SW
@@ -75,16 +77,26 @@ age limits.
 
 ### Precache list (`PRECACHE_URLS`)
 
-`/`, `/index.html`, `/al-vacio-pre-release.html`, `/offline.html`,
-`/assets/css/style.css`, `/assets/js/script.js`, `/assets/js/sw-register.js`,
-`/assets/site.webmanifest`, `/assets/favicon-96x96.png`, `/assets/favicon.svg`,
-`/assets/apple-touch-icon.png`, `/assets/web-app-manifest-192x192.png`,
-`/assets/web-app-manifest-512x512.png`, and the Google Fonts CSS for
-`Inter:wght@400;600;700`.
+`/`, `/site.webmanifest`, `/favicon-96x96.png`, `/favicon.svg`,
+`/apple-touch-icon.png`, `/web-app-manifest-192x192.png`,
+`/web-app-manifest-512x512.png`, and the Google Fonts CSS with **exactly** the
+URL `index.html` loads (`Inter:wght@400;500;600;700&family=Bebas+Neue`).
+
+Only URLs that exist **unhashed** in `dist/` belong here. Hashed CSS/JS bundles
+change name on every build, so the runtime cache picks them up instead. Clean-URL
+pages (`/index.html`, `/al-vacio-pre-release.html`) are left out on purpose: both
+hosts redirect them, and a redirected response cannot answer a navigation.
 
 `cache.addAll()` is all-or-nothing. If **any** URL fails (404, network error,
 CSP block), the install promise rejects, the SW never activates, and the browser
-tries again on the next update check. See Known issues: one entry is always a 404.
+tries again on the next update check. After touching this list, run
+`npm run build` and confirm every entry exists in `dist/`.
+
+`/offline.html` is cached separately by `cacheOfflinePage()`. Vercel
+(`cleanUrls`) and Cloudflare (`html_handling`) answer it with a redirect to
+`/offline`; the SW follows it and stores the body as a fresh `Response`, because
+a redirected response served to a navigation request makes the browser fail the
+navigation.
 
 ### Message API
 
@@ -160,9 +172,13 @@ These are sent through `gtag` only if `gtag` is defined. All use `event_category
 
 ## Manual test checklist
 
-Dev: `npm run dev` (http://localhost:3000; Vite serves `public/` as root, so
+Dev: `npm run dev` (http://localhost:3000; Vite serves publicDir at `/`, so
 `/sw.js` resolves here). Prod-like: `npm run build && npm run preview` (serves
-`dist/`; this is where the Known issues show up). SWs need `localhost` or HTTPS.
+`dist/`, but sends **no** security headers). To test with the real Cloudflare
+headers (CSP included), run `npx wrangler dev --local-protocol https` after a
+build. Use HTTPS there: the CSP's `upgrade-insecure-requests` upgrades the
+`/offline.html` → `/offline` redirect, which breaks the SW install on plain-http
+`localhost`. SWs need `localhost` or HTTPS.
 
 1. **Registration**: DevTools → Application → Service Workers. Expect `/sw.js`
    to be *activated and running*, scope `/`. The console shows `[SW Register]`
@@ -191,45 +207,29 @@ Dev: `npm run dev` (http://localhost:3000; Vite serves `public/` as root, so
 
 ## Known issues
 
-These are code-versus-reality discrepancies found while writing this doc. None of them are fixed here.
+Code-versus-reality discrepancies still open. The build/deploy gaps (SW,
+offline page and manifest not shipped, precache 404s, CSP blocking the SW's
+cross-origin fetches, no `Cache-Control` for `sw.js`) were fixed by moving the
+files into publicDir; see git history.
 
-1. **No SW in production builds.** `public/sw.js` and `public/offline.html` sit in
-   the Vite root, not the publicDir, and are not Rollup inputs (`vite.config.js:9-12`).
-   So neither file reaches `dist/`, and `/sw.js` returns 404 on Vercel and Cloudflare.
-2. **`sw-register.js` 404s in production.** The HTML loads `assets/js/sw-register.js`
-   (`public/index.html:1300`, `public/al-vacio-pre-release.html:466`). Vite leaves
-   that classic script unbundled, and the publicDir copy lands at `/js/sw-register.js`.
-   The pre-release page's `assets/js/al-vacio-pre-release/script.js` (line 469) has the same problem.
-3. **Precache always fails.** `/assets/js/script.js` (`public/sw.js:25`) does not
-   exist anywhere, so `cache.addAll` (`sw.js:45`) rejects and install never
-   completes, even in dev. In `dist/`, most other precache entries also 404:
-   `/assets/css/style.css`, `/assets/site.webmanifest`, `/assets/favicon*`,
-   `/assets/apple-touch-icon.png`, `/assets/web-app-manifest-*.png` and `/offline.html`,
-   because publicDir files live at the root of `dist/` and HTML-referenced copies are hashed.
-4. **CSP blocks the SW's cross-origin fetches.** The site CSP (`vercel.json`,
-   `public/assets/_headers`) would apply to `sw.js`, and its `connect-src` omits
-   `fonts.googleapis.com`, `fonts.gstatic.com`, `i.imgur.com` and `i.ytimg.com`.
-   That blocks the precached Google Fonts URL (`sw.js:33`), which is also another
-   `addAll` failure, and the SW's re-fetch of those images. The precached font URL
-   (`Inter:wght@400;600;700`) also differs from the one `index.html:64` loads (adds 500 and Bebas Neue).
-5. **Manifest references missing files.** Icon paths use `/assets/...`
-   (`site.webmanifest:16-35`), which `dist/` serves at the root, so they 404 in production.
-   The screenshots (`:42`, `:49`) and shortcut icons under `/assets/images/icons/`
-   (`:64`, `:77`, `:90`) do not exist in the repo at all. `share_target.action`
-   `/share` (`:114`) has no page behind it.
-6. **Stale naming.** The manifest says "Skirlaz" (`:2`) while its screenshot and
-   shortcut labels say "Al Vacío". The `offline.html` footer reads "© 2025 … PWA v1.0.0".
-7. **Update banner is redundant.** Unconditional `skipWaiting()` at install
-   (`sw.js:53`) plus `controllerchange` → `reload()` (`sw-register.js:76-79`) means
+1. **Stale naming.** The manifest says "Skirlaz" (`site.webmanifest:2`) while its
+   shortcut descriptions say "Al Vacío". The `offline.html` footer reads
+   "© 2025 … PWA v1.0.0" (`offline.html:371`).
+2. **Update banner is redundant.** Unconditional `skipWaiting()` at install
+   (`sw.js:63`) plus `controllerchange` → `reload()` (`sw-register.js:76-79`) means
    updates apply and reload automatically, and the banner at best flashes. The same
-   reload also fires on the first-ever visit, because of `clients.claim()` (`sw.js:80`).
-8. **Debug logging in production.** `debug: true` (`sw-register.js:13`) and the
+   reload also fires on the first-ever visit, because of `clients.claim()` (`sw.js:90`).
+3. **Debug logging in production.** `debug: true` (`sw-register.js:13`) and the
    unconditional `console.log` calls throughout `sw.js` go against the no-`console.log` convention.
-9. **No explicit `Cache-Control` for `sw.js`** in `vercel.json` or `_headers`. The
-   platform default plus `updateViaCache: 'none'` is enough, but add a rule
-   (`max-age=0, must-revalidate`) to both files once `sw.js` actually ships.
-10. **Shortcut URLs** point at `/index.html?action=…` and `/al-vacio-pre-release.html`.
-    Both hosts serve clean URLs (Vercel `cleanUrls`, Cloudflare `html_handling`),
-    so these redirect. That works for navigation, but a precached redirected response
-    for `/al-vacio-pre-release.html` can fail when served to a navigation request.
-    Prefer `/?action=…` and `/al-vacio-pre-release`.
+4. **Shortcut URLs** point at `/index.html?action=…` and `/al-vacio-pre-release.html`.
+   Both hosts serve clean URLs (Vercel `cleanUrls`, Cloudflare `html_handling`),
+   so these redirect. That works for navigation (they are not precached), but
+   `/?action=…` and `/al-vacio-pre-release` would save a round trip.
+5. **Duplicate unhashed JS/CSS in `dist/`.** publicDir copies every file under
+   `public/assets/js/` and `public/assets/css/` to `/js/...` and `/css/...` even
+   though the pages load the hashed bundles. They are dead weight, not broken.
+6. **Plain-http CSP testing.** With the production CSP on `http://localhost`
+   (`wrangler dev` without `--local-protocol https`), `upgrade-insecure-requests`
+   upgrades the `/offline.html` → `/offline` redirect to `https://localhost` and
+   the SW never finishes installing. Production is HTTPS-only, so this only
+   affects local testing.

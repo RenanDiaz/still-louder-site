@@ -1,12 +1,12 @@
 // Still Louder - Skirlaz - Service Worker
-// Version 1.3.0 - PWA Implementation
+// Version 1.4.0 - PWA Implementation
 //
-// Bump de versión: la tarjeta del 31 oct 2026 pasó a llevar el flyer (HTML y
-// CSS nuevos). El CSS/JS se sirve stale-while-revalidate, así que sin
-// invalidar la caché un visitante recurrente vería el HTML nuevo con los
-// assets viejos por una carga (tarjeta sin estilo y sin cuenta regresiva).
+// Vive en public/assets/ (publicDir de Vite) para que el build lo copie tal cual
+// a dist/sw.js. Bump de versión: primer SW que de verdad se instala en producción;
+// PRECACHE_URLS pasó a contener solo URLs estables de dist/ (los CSS/JS con hash
+// los toma la caché de runtime).
 
-const CACHE_VERSION = 'still-louder-v1.3.2';
+const CACHE_VERSION = 'still-louder-v1.4.0';
 const OFFLINE_VERSION = 'still-louder-offline-v1.3.0';
 
 // Cache names
@@ -15,23 +15,38 @@ const RUNTIME_CACHE_NAME = `${CACHE_VERSION}-runtime`;
 const IMAGE_CACHE_NAME = `${CACHE_VERSION}-images`;
 const OFFLINE_CACHE_NAME = OFFLINE_VERSION;
 
-// Assets to precache (critical resources)
+// Assets to precache (critical resources). Only URLs that exist unhashed in dist/:
+// publicDir files (public/assets/*) are served from the site root. Hashed Vite
+// bundles are picked up by the runtime cache instead. cache.addAll is
+// all-or-nothing, so a single 404 here stops the SW from installing.
 const PRECACHE_URLS = [
   '/',
-  '/index.html',
-  '/al-vacio-pre-release.html',
-  '/offline.html',
-  '/assets/css/style.css',
-  '/assets/js/script.js',
-  '/assets/js/sw-register.js',
-  '/assets/site.webmanifest',
-  '/assets/favicon-96x96.png',
-  '/assets/favicon.svg',
-  '/assets/apple-touch-icon.png',
-  '/assets/web-app-manifest-192x192.png',
-  '/assets/web-app-manifest-512x512.png',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'
+  '/site.webmanifest',
+  '/favicon-96x96.png',
+  '/favicon.svg',
+  '/apple-touch-icon.png',
+  '/web-app-manifest-192x192.png',
+  '/web-app-manifest-512x512.png',
+  // Must match the stylesheet URL in index.html exactly.
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap'
 ];
+
+// Vercel (cleanUrls) and Cloudflare (html_handling) redirect /offline.html to
+// /offline. A redirected response cannot answer a navigation request, so the
+// offline page is stored as a fresh, non-redirected Response.
+async function cacheOfflinePage() {
+  const response = await fetch(new Request('/offline.html', { cache: 'no-cache' }));
+  if (!response.ok) {
+    throw new Error(`[Service Worker] Offline page fetch failed: ${response.status}`);
+  }
+  const body = await response.blob();
+  // The body is already decoded; keep the rest of the headers (CSP included).
+  const headers = new Headers(response.headers);
+  headers.delete('Content-Encoding');
+  headers.delete('Content-Length');
+  const cache = await caches.open(OFFLINE_CACHE_NAME);
+  await cache.put('/offline.html', new Response(body, { status: 200, statusText: 'OK', headers }));
+}
 
 // Install event - precache critical assets
 self.addEventListener('install', (event) => {
@@ -44,12 +59,8 @@ self.addEventListener('install', (event) => {
         console.log('[Service Worker] Precaching critical assets');
         return cache.addAll(PRECACHE_URLS.map((url) => new Request(url, { cache: 'no-cache' })));
       })
-      .then(() => {
-        // Cache offline page separately to ensure it's always available
-        return caches
-          .open(OFFLINE_CACHE_NAME)
-          .then((cache) => cache.add(new Request('/offline.html', { cache: 'no-cache' })));
-      })
+      // Cache offline page separately to ensure it's always available
+      .then(() => cacheOfflinePage())
       .then(() => self.skipWaiting()) // Force waiting service worker to become active
   );
 });
@@ -301,8 +312,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: event.data ? event.data.text() : 'New content available!',
-    icon: '/assets/web-app-manifest-192x192.png',
-    badge: '/assets/favicon-96x96.png',
+    icon: '/web-app-manifest-192x192.png',
+    badge: '/favicon-96x96.png',
     vibrate: [200, 100, 200],
     data: {
       dateOfArrival: Date.now(),
@@ -312,12 +323,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'explore',
         title: 'View',
-        icon: '/assets/favicon-96x96.png'
+        icon: '/favicon-96x96.png'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/assets/favicon-96x96.png'
+        icon: '/favicon-96x96.png'
       }
     ]
   };
