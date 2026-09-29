@@ -186,10 +186,6 @@ robots.txt groups and disallows, accent-as-text contrast and the skip link,
 the mobile menu's ARIA state and focus handling, and the pre-release page's
 nested footer, inline skip-link style/JS and `theme-color`.
 
-- **Old domain**: `public/assets/.well-known/security.txt:1` still uses
-  `mailto:security@stilllouder.space`, pending confirmation that
-  `security@still-louder.com` exists. No other file in `public/` references
-  `stilllouder.space`.
 - **MusicEvent completeness**: neither event has `endDate`, and the
   Stratovarius `offers` has no `price` (`index.html`). Rich Results flags both
   as warnings. Don't add them until the real values are known.

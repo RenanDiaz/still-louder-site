@@ -102,7 +102,8 @@ network level.
   never-deployed `/.git/`, `/node_modules/`, `/dist/`. This is crawler
   etiquette, not access control, because the site has no private paths. Never
   disallow `/assets/` (hashed JS/CSS): Google needs it to render the page.
-- `public/assets/.well-known/security.txt` (served at `/.well-known/security.txt`)
+- `public/assets/.well-known/security.txt` (served at `/.well-known/security.txt`,
+  contact `stilllouder.pa@gmail.com`)
   has the RFC 9116 fields `Contact`, `Expires` 2027-09-28,
   `Preferred-Languages` and `Canonical`.
 - Both live in publicDir (`public/assets/`), which Vite copies verbatim to the
@@ -146,23 +147,20 @@ network level.
 
 ## Known issues / drift
 
-Recorded here only. The unwired pre-release comments form and the
-`window.open` without `noopener` were fixed; see git history.
+Recorded here only. The unwired pre-release comments form, the
+`window.open` without `noopener` and security.txt's old-domain contact were
+fixed; see git history.
 
 1. **Contact and comments share one Google Form/field**:
    `CONFIG.comments` and `CONFIG.contact` (`config.js`) point at the same Form
    and `entry.1365306044`, so both land in one sheet. Comments are prefixed
-   "Comentario (Al Vacío)" to tell them apart. Splitting them is a product
-   decision; it only needs new values in `CONFIG.comments`.
-2. **security.txt uses the old domain**: `public/assets/.well-known/security.txt:1`
-   has `Contact: mailto:security@stilllouder.space`, while `Canonical` is on
-   `still-louder.com`. It also says "hosted on Cloudflare" (`:18`), but Vercel
-   is still the rollback host.
-3. **Image-only CSP only on Vercel, and probably dead**: `vercel.json:15` sets a
+   "Comentario (Al Vacío)" to tell them apart. Kept on purpose (the page is
+   legacy); splitting only needs new values in `CONFIG.comments`.
+2. **Image-only CSP only on Vercel, and probably dead**: `vercel.json:15` sets a
    strict CSP for `/assets/images/(.*)`, but `_headers` has no equivalent. On
    Vercel the later `/(.*)` rule (`vercel.json:149`) sets the same key and most
    likely overrides it. Verify with `curl -sI` on an image.
-4. **Caching rule drift** between `vercel.json` and `_headers`:
+3. **Caching rule drift** between `vercel.json` and `_headers`:
    - Vercel forces `Content-Type` on `/assets/css`/`/assets/js`
      (`vercel.json:27-28,40-41`). `_headers` does not.
    - Vercel's audio rules (`vercel.json:55-80`: `/assets/**.mp3|wav|ogg`) vs
@@ -175,7 +173,7 @@ Recorded here only. The unwired pre-release comments form and the
    - Neither host covers the unhashed `dist/js/*` and `dist/css/*` copies.
    The security headers themselves (CSP etc., `vercel.json:149-177` vs
    `_headers:11-18`) are identical.
-5. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
+4. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
    `region1.google-analytics.com`/`*.analytics.google.com`, which the CSP
    (`vercel.json:149`, `_headers:11`) does not allow. Check the console for
    violations.
