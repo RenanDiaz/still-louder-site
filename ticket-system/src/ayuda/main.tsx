@@ -5,6 +5,7 @@ import App from './App';
 // el mismo tema que /entradas y le sumamos los estilos propios del FAQ.
 import '../entradas/theme.css';
 import '../entradas/themes/mono.css';
+import '../entradas/themes/halloween.css';
 import './ayuda.css';
 
 createRoot(document.getElementById('root')!).render(

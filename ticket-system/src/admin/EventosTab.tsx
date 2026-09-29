@@ -45,7 +45,8 @@ const NEXT_STATUS: Record<EventStatus, { to: EventStatus; label: string; confirm
 
 const THEMES = [
   { value: 'mono', label: 'Mono (negro + hueso)' },
-  { value: 'wwwy3', label: 'WWWY3 (morado/rosa)' }
+  { value: 'wwwy3', label: 'WWWY3 (morado/rosa)' },
+  { value: 'halloween', label: 'Halloween (noche + rojo sangre)' }
 ];
 
 const ERROR_MESSAGES: Record<string, string> = {

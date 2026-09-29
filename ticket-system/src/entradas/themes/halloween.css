@@ -1,0 +1,120 @@
+/*
+  Tema `halloween` de /entradas (events.theme = 'halloween'), sacado del flyer
+  oficial de Still Louder's Halloween Party (31-10): noche negra con bruma
+  morada, rojo sangre del titular y hueso de la máscara de hockey.
+
+  A diferencia de `mono` (que solo cambia tokens), este tema también invierte
+  los parches: sobre el negro del flyer van "paneles de noche" oscuros con
+  texto hueso y canto rojo, en vez del papel claro de WWWY3. El formulario,
+  los avisos y las FAQ de /ayuda siguen siendo papel sólido (hueso, como la
+  máscara) porque ahí manda la legibilidad.
+
+  Contraste: --pink (#e5483c) da 5.3:1 sobre negro, así que sirve para texto
+  chico sobre el fondo y como fondo del CTA con texto --ink. --blood (#b33028,
+  el rojo exacto del flyer) solo se usa en rellenos y bordes.
+*/
+html[data-theme='halloween'] {
+  background: #030305; /* por si el body no cubre el alto (overscroll) */
+  --purple-deep: #030305;
+  --purple: #0c0b12;
+  --purple-lt: #3a2f55;
+  --lilac-haze: #6e6390;
+  --pink: #e5483c; /* rojo del titular, aclarado para texto sobre negro */
+  --pink-soft: #efe6d8;
+  --blood: #b33028; /* rojo exacto del flyer: rellenos y cantos */
+  --night: #14121b; /* panel oscuro de los parches */
+  --ink: #0d0b10;
+  --paper: #efe6d8; /* hueso de la máscara */
+  --paper-edge: #b9ad98;
+  --paper-2: #e3d9c8;
+  --font-title: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  --font-accent: 'Archivo', system-ui, sans-serif;
+}
+
+/* Fondo: la noche del flyer — bruma morada arriba (el cielo), negro al centro
+   y un resplandor rojo abajo. */
+html[data-theme='halloween']:not([data-view='teaser']) body {
+  background:
+    radial-gradient(70% 38% at 50% 0%, rgba(78, 60, 120, 0.42), transparent 72%),
+    radial-gradient(40% 26% at 85% 12%, rgba(239, 230, 216, 0.08), transparent 70%),
+    radial-gradient(70% 40% at 50% 100%, rgba(179, 48, 40, 0.22), transparent 70%),
+    linear-gradient(180deg, var(--purple) 0%, var(--purple-deep) 100%);
+  background-attachment: fixed;
+}
+
+/* ---------- Parches: panel de noche con canto de sangre ---------- */
+html[data-theme='halloween'] .tk-patch {
+  color: var(--paper);
+}
+html[data-theme='halloween'] .tk-patch::before,
+html[data-theme='halloween'] .tk-patch--dark::before {
+  background: var(--night);
+  box-shadow:
+    0 5px 0 var(--blood),
+    0 14px 24px rgba(0, 0, 0, 0.6);
+}
+html[data-theme='halloween'] .tk-title,
+html[data-theme='halloween'] .tk-title .l2,
+html[data-theme='halloween'] .tk-byline,
+html[data-theme='halloween'] .tk-date .day,
+html[data-theme='halloween'] .tk-cell .lbl {
+  color: var(--paper);
+}
+
+/* Hero con el titular del flyer: el arte ya viene sobre negro, así que va sin
+   parche ni inclinación — flota sobre la noche como en el flyer. */
+html[data-theme='halloween'] .tk-title-patch--art {
+  transform: none;
+  padding: 0;
+}
+html[data-theme='halloween'] .tk-title-patch--art::before {
+  display: none;
+}
+html[data-theme='halloween'] .tk-title-art img {
+  /* El arte trae alfa (el negro del flyer pasó a transparente), así que
+     flota sobre la bruma del fondo sin caja. */
+  width: clamp(280px, 92vw, 520px);
+}
+html[data-theme='halloween'] .tk-title-patch--art .tk-byline {
+  font-family: var(--font-patch);
+  font-style: normal;
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--paper);
+  margin-top: 6px;
+}
+
+/* ---------- Papel sólido (form, avisos, FAQ): hueso con tinta ---------- */
+html[data-theme='halloween'] .tk-closed-notice {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--blood);
+  box-shadow: 0 5px 0 var(--blood);
+}
+html[data-theme='halloween'] .tk-form {
+  box-shadow:
+    0 8px 0 var(--blood),
+    0 18px 30px rgba(0, 0, 0, 0.55);
+}
+html[data-theme='halloween'] .tk-form input:focus,
+html[data-theme='halloween'] .tk-form select:focus {
+  border-color: var(--blood);
+  box-shadow: 0 0 0 3px var(--blood);
+}
+/* Los links sobre papel usaban el magenta de WWWY3: pasan a rojo oscuro
+   (legible sobre hueso). */
+html[data-theme='halloween'] .tk-closed-notice a,
+html[data-theme='halloween'] .tk-alert--success a,
+html[data-theme='halloween'] .help-faq__a a,
+html[data-theme='halloween'] .help-contact__channel a {
+  color: #8f1f17;
+}
+html[data-theme='halloween'] .tk-alert--error {
+  background: #f6dcd6;
+  border-color: var(--blood);
+  color: #6b140e;
+}
+html[data-theme='halloween'] .help-faq__item {
+  box-shadow: 0 5px 0 var(--blood);
+}

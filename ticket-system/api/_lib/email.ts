@@ -28,7 +28,7 @@ const METHOD_LABEL: Record<string, string> = {
 // Paleta por tema del evento (events.theme). Solo colores inline: los clientes
 // de correo no cargan CSS externo. `wwwy3` conserva el morado/rosa original;
 // cualquier otro tema cae en `mono` (negro + hueso), sin heredar la identidad
-// de WWWY3.
+// de WWWY3. `halloween` sigue el flyer del 31-10 (noche, rojo sangre, hueso).
 interface EmailPalette {
   frame: string;
   header: string;
@@ -63,6 +63,17 @@ const PALETTES: Record<string, EmailPalette> = {
     label: '#6f6857',
     footerText: '#d8d2c4',
     footerMuted: '#9a9383'
+  },
+  halloween: {
+    frame: '#050507',
+    header: '#14121b',
+    accent: '#b33028',
+    accentOnDark: '#e5483c',
+    tint: '#efe6d8',
+    perforation: '#b9ad98',
+    label: '#6f6457',
+    footerText: '#efe6d8',
+    footerMuted: '#8f86a3'
   }
 };
 
