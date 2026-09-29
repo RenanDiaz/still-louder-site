@@ -123,7 +123,6 @@
         "datePublished": "2026-02-06",
         "genre": ["Heavy Metal", "Rock"],
         "inLanguage": "es",
-        "isrcCode": "",
         "byArtist": {
           "@type": "MusicGroup",
           "@id": "https://still-louder.com/#band",
@@ -153,8 +152,7 @@
             "@type": "MusicGroup",
             "@id": "https://still-louder.com/#band"
           },
-          "inLanguage": "es",
-          "iswcCode": ""
+          "inLanguage": "es"
         },
         "inAlbum": {
           "@type": "MusicAlbum",
@@ -168,7 +166,9 @@
         "offers": {
           "@type": "AggregateOffer",
           "availability": "https://schema.org/InStock",
-          "offerCount": "5",
+          "lowPrice": "0",
+          "priceCurrency": "USD",
+          "offerCount": "3",
           "offers": [
             {
               "@type": "Offer",
@@ -217,7 +217,7 @@
         "name": "Still Louder",
         "alternateName": "Still Louder Band",
         "url": "https://still-louder.com/",
-        "logo": "https://still-louder.com/images/album_covers/skirlaz.jpeg",
+        "logo": "https://still-louder.com/images/still_louder_logo.png",
         "image": "https://still-louder.com/images/album_covers/skirlaz.jpeg",
         "genre": ["Heavy Metal", "Rock"],
         "foundingDate": "2009",
@@ -229,11 +229,6 @@
             "addressCountry": "PA",
             "addressRegion": "Chiriquí",
             "addressLocality": "David"
-          },
-          "geo": {
-            "@type": "GeoCoordinates",
-            "latitude": "9.1450",
-            "longitude": "-79.9870"
           }
         },
         "sameAs": [
@@ -242,19 +237,8 @@
           "https://www.youtube.com/@StillLouder",
           "https://www.tiktok.com/@stilllouder.pa",
           "https://open.spotify.com/artist/5BLVv7MvjmdCCWYFVlwY83",
-          "https://music.apple.com/pa/artist/still-louder/1829334535",
-          "https://www.deezer.com/artist/...",
-          "https://music.amazon.com/artists/..."
-        ],
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "contactType": "Fan Engagement",
-          "availableLanguage": ["es", "en"]
-        },
-        "memberOf": {
-          "@type": "Organization",
-          "name": "Independent Artists"
-        }
+          "https://music.apple.com/pa/artist/still-louder/1829334535"
+        ]
       }
     </script>
 
@@ -300,7 +284,7 @@
         "@context": "https://schema.org",
         "@type": "MusicEvent",
         "name": "Still Louder's Halloween Party ft. Fábula Sarcástica & Elefreak",
-        "image": "https://still-louder.com/assets/images/shows/halloween-party-2026-10-31.jpg",
+        "image": "https://still-louder.com/images/shows/halloween-party-2026-10-31.jpg",
         "startDate": "2026-10-31T20:00:00-05:00",
         "eventStatus": "https://schema.org/EventScheduled",
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
@@ -354,14 +338,6 @@
         "inLanguage": "es",
         "publisher": {
           "@id": "https://still-louder.com/#band"
-        },
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": {
-            "@type": "EntryPoint",
-            "urlTemplate": "https://www.google.com/search?q=site:still-louder.com+{search_term_string}"
-          },
-          "query-input": "required name=search_term_string"
         }
       }
     </script>
@@ -404,7 +380,14 @@
           <a href="#conectar" class="nav-link" data-section="conectar">Conectar</a>
           <a href="#contacto" class="nav-link" data-section="contacto">Contacto</a>
         </nav>
-        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menú">
+        <button
+          class="mobile-menu-btn"
+          id="mobile-menu-btn"
+          type="button"
+          aria-label="Menú"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+        >
           <span></span>
           <span></span>
           <span></span>

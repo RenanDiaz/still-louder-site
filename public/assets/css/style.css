@@ -43,7 +43,7 @@ body {
   z-index: var(--z-tooltip);
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-accent);
-  color: var(--color-text-dark);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
   text-decoration: none;
   border-radius: var(--border-radius-md);
@@ -190,12 +190,18 @@ body {
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-normal);
+  transition:
+    opacity var(--transition-normal),
+    visibility var(--transition-normal);
 }
 
+/* visibility flips at once on open so main.js can focus the first link */
 .mobile-menu.active {
   opacity: 1;
   visibility: visible;
+  transition:
+    opacity var(--transition-normal),
+    visibility 0s;
 }
 
 .mobile-nav {
@@ -313,7 +319,7 @@ body {
 .hero-subtitle {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-widest);
   margin-bottom: var(--spacing-sm);
@@ -857,7 +863,7 @@ body {
   font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wider);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   margin-top: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
 }
@@ -939,7 +945,7 @@ body {
 .shows-past__date {
   flex-shrink: 0;
   font-size: var(--font-size-sm);
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
 }
@@ -1063,7 +1069,7 @@ body {
 }
 
 .about-text em {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-style: normal;
   display: block;
   padding-left: var(--spacing-md);
@@ -1337,7 +1343,7 @@ body {
 }
 
 .faq-item__a a {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 /* ============================================
@@ -1409,7 +1415,7 @@ body {
 }
 
 .contact-form__alt a {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 /* Honeypot: kept in the DOM for bots but removed from view and tab order. */
@@ -1483,6 +1489,11 @@ a:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
+}
+
+/* Sections focused by the in-page anchor handler (main.js) are not controls */
+[tabindex='-1']:focus {
+  outline: none;
 }
 
 /* ============================================

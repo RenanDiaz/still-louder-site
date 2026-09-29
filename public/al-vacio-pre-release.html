@@ -18,7 +18,7 @@
       name="robots"
       content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
     />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0d1216" />
 
     <!-- Geo Tags for Panama -->
     <meta name="geo.region" content="PA" />
@@ -61,12 +61,18 @@
     />
     <meta property="og:url" content="https://still-louder.com/al-vacio-pre-release" />
     <meta property="og:site_name" content="Still Louder" />
-    <meta property="og:image" content="https://i.imgur.com/CoA13WN.jpg" />
-    <meta property="og:image:secure_url" content="https://i.imgur.com/CoA13WN.jpg" />
+    <meta
+      property="og:image"
+      content="https://still-louder.com/images/album_covers/al-vacio.jpeg"
+    />
+    <meta
+      property="og:image:secure_url"
+      content="https://still-louder.com/images/album_covers/al-vacio.jpeg"
+    />
     <meta property="og:image:alt" content="Portada del sencillo Al Vacío de Still Louder" />
     <meta property="og:image:type" content="image/jpeg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="1200" />
+    <meta property="og:image:width" content="760" />
+    <meta property="og:image:height" content="760" />
 
     <!-- Music-specific Open Graph -->
     <meta property="music:musician" content="https://still-louder.com/" />
@@ -81,7 +87,10 @@
       name="twitter:description"
       content="Escucha el pre-lanzamiento de 'Al Vacío' de Still Louder. Disfruta la música, comparte tu opinión y síguenos en redes sociales."
     />
-    <meta name="twitter:image" content="https://i.imgur.com/CoA13WN.jpg" />
+    <meta
+      name="twitter:image"
+      content="https://still-louder.com/images/album_covers/al-vacio.jpeg"
+    />
     <meta name="twitter:image:alt" content="Portada del sencillo Al Vacío de Still Louder" />
     <meta name="twitter:site" content="@StillLouder" />
     <meta name="twitter:creator" content="@StillLouder" />
@@ -93,7 +102,7 @@
         "@type": "MusicRecording",
         "name": "Al Vacío",
         "url": "https://still-louder.com/al-vacio-pre-release",
-        "image": "https://i.imgur.com/CoA13WN.jpg",
+        "image": "https://still-louder.com/images/album_covers/al-vacio.jpeg",
         "datePublished": "2025-07-28",
         "genre": ["Rock", "Alternative Rock"],
         "inLanguage": "es",
@@ -148,17 +157,18 @@
         "@id": "https://still-louder.com/#band",
         "name": "Still Louder",
         "url": "https://still-louder.com/",
-        "logo": "https://i.imgur.com/CoA13WN.jpg",
-        "image": "https://i.imgur.com/CoA13WN.jpg",
-        "genre": ["Rock", "Alternative Rock"],
-        "foundingDate": "2020",
+        "logo": "https://still-louder.com/images/still_louder_logo.png",
+        "image": "https://still-louder.com/images/album_covers/al-vacio.jpeg",
+        "genre": ["Heavy Metal", "Rock"],
+        "foundingDate": "2009",
         "foundingLocation": {
           "@type": "Place",
-          "name": "Panamá",
+          "name": "Chiriquí, Panamá",
           "address": {
             "@type": "PostalAddress",
             "addressCountry": "PA",
-            "addressLocality": "Panamá"
+            "addressRegion": "Chiriquí",
+            "addressLocality": "David"
           }
         },
         "sameAs": [
@@ -228,23 +238,22 @@
 
   <body>
     <!-- Skip to main content link for keyboard navigation -->
-    <a
-      href="#main-content"
-      class="skip-link"
-      style="position: absolute; left: -9999px; z-index: 999"
-      >Saltar al contenido principal</a
-    >
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
     <main id="main-content" role="main">
       <div class="overlay">
-        <img
-          src="https://i.imgur.com/CoA13WN.jpg"
-          alt="Portada del sencillo Al Vacío de Still Louder"
-          class="cover-image"
-          width="320"
-          height="320"
-          loading="eager"
-        />
+        <picture>
+          <source srcset="assets/images/album_covers/al-vacio.avif" type="image/avif" />
+          <source srcset="assets/images/album_covers/al-vacio.webp" type="image/webp" />
+          <img
+            src="assets/images/album_covers/al-vacio.jpeg"
+            alt="Portada del sencillo Al Vacío de Still Louder"
+            class="cover-image"
+            width="760"
+            height="760"
+            loading="eager"
+          />
+        </picture>
 
         <h1>Still Louder - Al Vacío</h1>
 
@@ -344,6 +353,7 @@
           <form
             id="commentForm"
             class="comment-form"
+            method="post"
             aria-label="Formulario para enviar comentarios"
           >
             <label for="nameInput" class="sr-only">Tu nombre</label>
@@ -378,6 +388,7 @@
               Enviar comentario
             </button>
           </form>
+          <p id="commentStatus" class="comentario-mensaje" role="status"></p>
           <div
             id="commentsDisplay"
             class="comments-list"
@@ -455,38 +466,18 @@
             </div>
           </div>
         </section>
-
-        <footer class="footer-text" role="contentinfo">
-          <p>&copy; 2025 Still Louder. Todos los derechos reservados.</p>
-        </footer>
       </div>
     </main>
+
+    <footer class="site-footer" role="contentinfo">
+      <p>&copy; 2025 Still Louder. Todos los derechos reservados.</p>
+    </footer>
 
     <!-- Service Worker Registration -->
     <script type="module" src="/assets/js/sw-register.js"></script>
 
     <!-- Main Script -->
     <script type="module" src="/assets/js/al-vacio-pre-release/script.js"></script>
-
-    <!-- Accessibility enhancement for skip link -->
-    <script>
-      // Make skip link visible on focus
-      const skipLink = document.querySelector('.skip-link');
-      if (skipLink) {
-        skipLink.addEventListener('focus', function () {
-          this.style.left = '10px';
-          this.style.top = '10px';
-          this.style.padding = '10px';
-          this.style.backgroundColor = '#000';
-          this.style.color = '#fff';
-          this.style.textDecoration = 'none';
-          this.style.border = '2px solid #fff';
-        });
-        skipLink.addEventListener('blur', function () {
-          this.style.left = '-9999px';
-        });
-      }
-    </script>
 
     <!-- Analytics tracking for social clicks -->
     <script>

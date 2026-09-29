@@ -158,16 +158,17 @@ These are sent through `gtag` only if `gtag` is defined. All use `event_category
 
 - `name` "Still Louder - Skirlaz", `short_name` "Still Louder", `lang: es`.
 - `start_url: "/?source=pwa"`, `scope: "/"`, `display: standalone`, `orientation: portrait-primary`.
-- `background_color` and `theme_color` are both `#0d1216`. This matches `index.html`
-  and `offline.html`; the pre-release page's `theme-color` is `#000000`.
+- `background_color` and `theme_color` are both `#0d1216`. This matches the
+  `theme-color` of `index.html`, `offline.html` and the pre-release page.
 - **Icons**: `/assets/favicon-96x96.png` (96, any), `/assets/web-app-manifest-192x192.png`
   and `-512x512.png` (`any maskable`), `/assets/apple-touch-icon.png` (180, any).
 - **Screenshots**: `/assets/screenshot-mobile.png` (390x844, narrow) and
   `/assets/screenshot-desktop.png` (1920x1080, wide).
 - **Shortcuts**: Spotify, Apple Music and YouTube (`/index.html?action=spotify|apple|youtube`),
   plus Pre-lanzamiento (`/al-vacio-pre-release.html`). `main.js` reads `?action=`,
-  sends `pwa_shortcut`, and after 500 ms opens the platform URL in a new tab.
-  That URL comes from a local `platformMap` in `main.js`, not from `config.js`.
+  sends `pwa_shortcut`, and after 500 ms opens the platform URL in a new tab
+  (`noopener,noreferrer`). The URLs come from `CONFIG.platforms`; the
+  `action` keys map `apple` to `appleMusic`.
 - `share_target`: GET to `/share` with `title`/`text`/`url`.
 
 ## Manual test checklist

@@ -1,3 +1,5 @@
+import CONFIG from '../config.js';
+
 // Seguimiento de clics en social links
 const socialLinks = document.querySelectorAll('.social-links a[aria-label]');
 if (typeof window.gtag === 'function') {
@@ -13,13 +15,19 @@ if (typeof window.gtag === 'function') {
   });
 }
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('comentario-form');
-  const btn = document.getElementById('enviar-comentario');
-  const textarea = document.getElementById('comentario');
-  const mensaje = document.getElementById('comentario-mensaje');
-  // Los IDs no coinciden con el formulario actual de la página (#commentForm), así que
-  // este handler no se engancha. El guard evita que el error corte el resto del init.
-  if (form && btn && textarea && mensaje) {
+  const form = document.getElementById('commentForm');
+  const nameInput = document.getElementById('nameInput');
+  const textarea = document.getElementById('commentInput');
+  const btn = form?.querySelector('button[type="submit"]');
+  const mensaje = document.getElementById('commentStatus');
+  if (form && nameInput && textarea && btn && mensaje) {
+    const { formUrl, nameField, commentField } = CONFIG.comments;
+
+    const showMessage = (text, isError = false) => {
+      mensaje.textContent = text;
+      mensaje.classList.toggle('comentario-mensaje--error', isError);
+    };
+
     // Enviar con Ctrl+Enter
     textarea.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -28,35 +36,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      const nombre = nameInput.value.trim();
       const comentario = textarea.value.trim();
-      if (!comentario) {
-        mensaje.style.display = 'block';
-        mensaje.style.color = '#f44336';
-        mensaje.textContent = 'Por favor, escribe un comentario antes de enviar.';
+      if (!nombre || !comentario) {
+        showMessage('Por favor, escribe tu nombre y un comentario antes de enviar.', true);
         return;
       }
       btn.disabled = true;
-      mensaje.style.display = 'none';
-      const formUrl =
-        'https://docs.google.com/forms/d/e/1FAIpQLSe8YfvuBNMBNjpclU3-0d0O_N5429TlJ4QWPpLwv_o0uh8n0A/formResponse';
+      showMessage('');
       const formData = new FormData();
-      formData.append('entry.1365306044', comentario);
+      if (nameField === commentField) {
+        // Mismo campo en el Google Form: se compone un solo valor (como el form de contacto)
+        formData.append(
+          commentField,
+          `Comentario (Al Vacío)\nNombre: ${nombre}\n\nComentario:\n${comentario}`
+        );
+      } else {
+        formData.append(nameField, nombre);
+        formData.append(commentField, comentario);
+      }
+      // no-cors: Google Forms no manda headers CORS; la respuesta es opaca pero el envío se registra
       fetch(formUrl, {
         method: 'POST',
         mode: 'no-cors',
         body: formData
       })
         .then(() => {
-          textarea.value = '';
-          mensaje.style.display = 'block';
-          mensaje.style.color = '#4caf50';
-          mensaje.textContent = '¡Gracias por tu comentario!';
-          btn.disabled = false;
+          form.reset();
+          showMessage('¡Gracias por tu comentario!');
         })
         .catch(() => {
-          mensaje.style.display = 'block';
-          mensaje.style.color = '#f44336';
-          mensaje.textContent = 'Ocurrió un error al enviar. Intenta de nuevo.';
+          showMessage('Ocurrió un error al enviar. Intenta de nuevo.', true);
+        })
+        .finally(() => {
           btn.disabled = false;
         });
     });
