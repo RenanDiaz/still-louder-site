@@ -14,6 +14,10 @@
   --color-accent: #c0282e;
   --color-accent-hover: #e0454b;
   --color-accent-glow: rgba(192, 40, 46, 0.4);
+  /* Accent as TEXT on the dark backgrounds: #c0282e is only 3.2:1 on --color-bg-primary.
+     This lighter tint of the same hue is 5.8:1 (4.9:1 on --color-bg-tertiary), WCAG AA.
+     Keep --color-accent for fills, borders and buttons. */
+  --color-accent-text: #e06b70;
 
   /* Secondary accents from the cover (chrome/teal logo, bandages) */
   --color-teal: #5fb3bd;
