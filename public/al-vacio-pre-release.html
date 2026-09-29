@@ -18,7 +18,7 @@
       name="robots"
       content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
     />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0d1216" />
 
     <!-- Geo Tags for Panama -->
     <meta name="geo.region" content="PA" />
@@ -228,12 +228,7 @@
 
   <body>
     <!-- Skip to main content link for keyboard navigation -->
-    <a
-      href="#main-content"
-      class="skip-link"
-      style="position: absolute; left: -9999px; z-index: 999"
-      >Saltar al contenido principal</a
-    >
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
     <main id="main-content" role="main">
       <div class="overlay">
@@ -455,38 +450,18 @@
             </div>
           </div>
         </section>
-
-        <footer class="footer-text" role="contentinfo">
-          <p>&copy; 2025 Still Louder. Todos los derechos reservados.</p>
-        </footer>
       </div>
     </main>
+
+    <footer class="site-footer" role="contentinfo">
+      <p>&copy; 2025 Still Louder. Todos los derechos reservados.</p>
+    </footer>
 
     <!-- Service Worker Registration -->
     <script type="module" src="/assets/js/sw-register.js"></script>
 
     <!-- Main Script -->
     <script type="module" src="/assets/js/al-vacio-pre-release/script.js"></script>
-
-    <!-- Accessibility enhancement for skip link -->
-    <script>
-      // Make skip link visible on focus
-      const skipLink = document.querySelector('.skip-link');
-      if (skipLink) {
-        skipLink.addEventListener('focus', function () {
-          this.style.left = '10px';
-          this.style.top = '10px';
-          this.style.padding = '10px';
-          this.style.backgroundColor = '#000';
-          this.style.color = '#fff';
-          this.style.textDecoration = 'none';
-          this.style.border = '2px solid #fff';
-        });
-        skipLink.addEventListener('blur', function () {
-          this.style.left = '-9999px';
-        });
-      }
-    </script>
 
     <!-- Analytics tracking for social clicks -->
     <script>

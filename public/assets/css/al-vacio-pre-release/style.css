@@ -12,8 +12,8 @@
 }
 
 .skip-link:focus {
-  left: 10px !important;
-  top: 10px !important;
+  left: 10px;
+  top: 10px;
 }
 
 /* Accessibility: Screen Reader Only class */
@@ -115,6 +115,14 @@ body {
   max-width: 95vw;
   width: 420px;
   box-sizing: border-box;
+}
+
+/* Page footer, outside <main> and the .overlay card */
+.site-footer {
+  margin-top: 16px;
+  color: #ccc;
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 .cover-image {
