@@ -87,7 +87,7 @@ export const CONFIG = {
         ticketsUrl: 'https://ventas.ticketpluspty.com/event/stratovarius-xg5o64'
       },
       // 31 oct: fecha propia, venta directa en el ticket-system (evento
-      // `31-10`, ver docs/features/entradas-31-10.md). Preventa $10 (primeras
+      // `halloween-party`, ver docs/features/entradas-31-10.md). Preventa $10 (primeras
       // 100) desde el 1 oct a las 00:00; general $12.
       oct31: {
         name: "Still Louder's Halloween Party",
@@ -97,7 +97,7 @@ export const CONFIG = {
         venue: 'Hops Food & Drinks',
         city: 'David, Chiriquí',
         presaleStartISO: '2026-10-01T00:00:00-05:00',
-        ticketsUrl: 'https://entradas.still-louder.com/31-10'
+        ticketsUrl: 'https://entradas.still-louder.com/halloween-party'
       }
     },
     // Canal donde se anuncian las fechas (destino del CTA mientras no hay venta).

@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 //   /entradas  -> public buyer flow for ANY event (slug from the path or
 //                 ?evento=; none = the server's "current" event). The event's
 //                 status picks the view (teaser / countdown / form / archive).
-//   /31-10     -> same app as /entradas (src/entradas/main.tsx); the file only
+//   /halloween-party -> same app as /entradas (src/entradas/main.tsx); the file only
 //                 exists so the link preview carries the show's own meta tags
 //   /ayuda     -> public help / FAQ + contact (static, no backend)
 //   /admin     -> staff back office (mark paid, stats, stage 2)
@@ -27,7 +27,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         entradas: resolve(__dirname, 'entradas.html'),
-        show3110: resolve(__dirname, '31-10.html'),
+        halloween: resolve(__dirname, 'halloween-party.html'),
         ayuda: resolve(__dirname, 'ayuda.html'),
         admin: resolve(__dirname, 'admin.html'),
         validar: resolve(__dirname, 'validar.html'),

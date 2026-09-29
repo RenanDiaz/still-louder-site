@@ -8,6 +8,9 @@
   "crons": [
     { "path": "/api/admin/orders/cleanup", "schedule": "0 6 * * *" }
   ],
+  "redirects": [
+    { "source": "/31-10", "destination": "/halloween-party", "statusCode": 301 }
+  ],
   "rewrites": [
     { "source": "/api/admin/:path*", "destination": "/api/admin?path=:path*" },
     { "source": "/when-we-were-young-3", "destination": "/entradas" },

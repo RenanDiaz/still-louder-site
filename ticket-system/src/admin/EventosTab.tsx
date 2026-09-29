@@ -50,7 +50,7 @@ const THEMES = [
 ];
 
 const ERROR_MESSAGES: Record<string, string> = {
-  invalid_slug: 'Slug inválido: solo minúsculas, números y guiones (p. ej. 31-10).',
+  invalid_slug: 'Slug inválido: solo minúsculas, números y guiones (p. ej. halloween-party).',
   invalid_code: 'Código inválido: 3 a 8 letras mayúsculas o números (p. ej. SL3110).',
   invalid_name: 'El nombre debe tener entre 2 y 120 caracteres.',
   invalid_short_name: 'El nombre corto debe tener entre 2 y 24 caracteres.',
@@ -296,7 +296,7 @@ export function EventosTab({
         </div>
         <p className="muted" style={{ fontSize: 13 }}>
           La página pública de cada evento es <code>/entradas?evento=&lt;slug&gt;</code> (o su ruta propia, como{' '}
-          <code>/31-10</code>). <code>/entradas</code> a secas muestra el evento en venta más próximo.
+          <code>/halloween-party</code>). <code>/entradas</code> a secas muestra el evento en venta más próximo.
         </p>
       </div>
 
@@ -371,7 +371,7 @@ function EventForm({
           required: true,
           pattern: '[a-z0-9]+(-[a-z0-9]+)*',
           disabled: identityLocked,
-          placeholder: '31-10'
+          placeholder: 'halloween-party'
         })}
         {field('code', 'Código del QR', {
           required: true,

@@ -2,7 +2,7 @@ import type { PublicEvent } from '../shared/api';
 import { BAND_NAME, SOCIAL, formatDotDate } from '../shared/config';
 
 /**
- * Vista TEASER de un evento (status = 'teaser'), p. ej. /31-10 antes de abrir
+ * Vista TEASER de un evento (status = 'teaser'), p. ej. /halloween-party antes de abrir
  * la venta.
  *
  * REVELAR LO MÍNIMO: la banda, la fecha y una sola acción. Nada de nombre del
