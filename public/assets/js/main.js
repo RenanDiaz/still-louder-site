@@ -469,17 +469,18 @@ const initPWAShortcuts = () => {
       event_label: action
     });
 
+    // Keys are the manifest shortcut ?action= values (site.webmanifest)
+    const { platforms } = APP_CONFIG;
     const platformMap = {
-      spotify: 'https://open.spotify.com/track/7jc86BEyQt8sdJsEbqtllU?si=1c59b85003e84b02',
-      apple: 'https://music.apple.com/pa/album/skirlaz/1871380684?i=1871380685&l=en-GB',
-      youtube: 'https://youtu.be/ukpbbWdqh_A'
+      spotify: platforms.spotify.url,
+      apple: platforms.appleMusic.url,
+      youtube: platforms.youtube.url
     };
 
-    if (platformMap[action]) {
+    if (Object.hasOwn(platformMap, action)) {
       setTimeout(() => {
-        window.open(platformMap[action], '_blank');
-      }, 500);
-    }
+        window.open(platformMap[action], '_blank', 'noopener,noreferrer');
+      }
   }
 };
 
