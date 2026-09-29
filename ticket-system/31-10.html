@@ -7,9 +7,9 @@
     <!--
       Meta del show del 31-10 (lugar y cartel ya son públicos). La página es la
       misma app de /entradas: el estado del evento decide si se ve el teaser o
-      la venta. og:image pendiente del flyer oficial (1200x630): al tenerlo,
-      subirlo a public/, agregar og:image(+width/height) y twitter:image, y
-      cargar su URL en "Imagen OG" del evento en el admin (la usa Wallet).
+      la venta. og:image = flyer oficial centrado sobre negro a 1200x630
+      (public/og-31-10.jpg). La misma URL va en "Imagen OG" del evento en el
+      admin (la usa Wallet como hero).
     -->
     <meta name="description" content="Still Louder's Halloween Party ft. Fábula Sarcástica &amp; Elefreak. Sábado 31 de octubre, 8:00 p. m., en Hops Food &amp; Drinks (David, Chiriquí). Preventa $10 desde el 1 de octubre, directo con la banda." />
     <meta name="theme-color" content="#050506" />
@@ -22,11 +22,18 @@
     <meta property="og:url" content="https://entradas.still-louder.com/31-10" />
     <meta property="og:title" content="Still Louder&#39;s Halloween Party · 31 de octubre" />
     <meta property="og:description" content="Still Louder's Halloween Party ft. Fábula Sarcástica &amp; Elefreak. Sábado 31 de octubre, 8:00 p. m., en Hops Food &amp; Drinks (David, Chiriquí). Preventa $10 desde el 1 de octubre, directo con la banda." />
+    <meta property="og:image" content="https://entradas.still-louder.com/og-31-10.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Flyer de Still Louder's Halloween Party en Hops Food &amp; Drinks, con Fábula Sarcástica y Elefreak como invitados especiales." />
 
     <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Still Louder&#39;s Halloween Party · 31 de octubre" />
     <meta name="twitter:description" content="Still Louder's Halloween Party ft. Fábula Sarcástica &amp; Elefreak. Sábado 31 de octubre, 8:00 p. m., en Hops Food &amp; Drinks (David, Chiriquí). Preventa $10 desde el 1 de octubre, directo con la banda." />
+    <meta name="twitter:image" content="https://entradas.still-louder.com/og-31-10.jpg" />
+    <meta name="twitter:image:alt" content="Flyer de Still Louder's Halloween Party en Hops Food &amp; Drinks, con Fábula Sarcástica y Elefreak como invitados especiales." />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -40,8 +47,8 @@
     se resuelve por el path (slug '31-10') y su `status` decide la vista —
     'teaser' dibuja la pantalla mínima de abajo, 'on_sale' el flujo de compra.
     El archivo existe solo para que el preview del enlace (meta de arriba) sea
-    el del show y no el genérico de /entradas; actualizar estas meta cuando el
-    evento tenga nombre/arte (D1/D11 en docs/features/entradas-31-10.md).
+    el del show y no el genérico de /entradas (nombre D1 y arte D11 ya
+    cargados, ver docs/features/entradas-31-10.md).
   -->
   <body>
     <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">

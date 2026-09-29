@@ -300,6 +300,7 @@
         "@context": "https://schema.org",
         "@type": "MusicEvent",
         "name": "Still Louder's Halloween Party ft. Fábula Sarcástica & Elefreak",
+        "image": "https://still-louder.com/assets/images/shows/halloween-party-2026-10-31.jpg",
         "startDate": "2026-10-31T20:00:00-05:00",
         "eventStatus": "https://schema.org/EventScheduled",
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
@@ -712,13 +713,10 @@
         · 11 oct 2026 — teloneros de Stratovarius (Aurora at Soho). Show
           anunciado con flyer, hora y venta EXTERNA por Ticketplus: el CTA sale
           del sitio (data-shows-link="stratovarius_tickets" para analytics).
-        · 31 oct 2026 — fecha propia en modo COMING SOON. Lo ÚNICO público es
-          el día: nada de lugar, cartel, ni de lo que se estrena esa noche (aún
-          no hay diseño ni paleta). La fecha sola es el gancho, así que la
-          tarjeta no lleva headline y el .shows-card__date es su encabezado.
-          Al anunciar de verdad: ampliar el copy y, cuando abra la venta,
-          cambiar el CTA por el botón de compra apuntando a
-          CONFIG.shows.upcoming.oct31.ticketsUrl (assets/js/config.js).
+        · 31 oct 2026 — Still Louder's Halloween Party, fecha propia con
+          flyer oficial (--featured) y venta DIRECTA en el ticket-system: el
+          CTA apunta a CONFIG.shows.upcoming.oct31.ticketsUrl
+          (assets/js/config.js). Conserva --next por el pulso del punto.
 
         Cuenta regresiva: cada .shows-card__countdown con data-countdown la
         rellena initShowsCountdown() (assets/js/main.js); el texto del HTML es
@@ -815,65 +813,88 @@
               </div>
             </article>
 
-            <article class="shows-card shows-card--next glass-card reveal-up">
-              <p class="shows-card__status">
-                <span class="shows-card__dot" aria-hidden="true"></span>
-                Fecha propia · preventa desde el 1 oct
-              </p>
-
-              <h3 class="shows-card__title">Still Louder&rsquo;s Halloween Party</h3>
-              <p class="shows-card__role">ft. Fábula Sarcástica &amp; Elefreak</p>
-
-              <p class="shows-card__date shows-card__date--sm">
-                <time datetime="2026-10-31T20:00:00-05:00">31 · 10 · 2026</time>
-              </p>
-              <p class="shows-card__countdown" data-countdown="2026-10-31T20:00:00-05:00">
-                Sábado 31 de octubre
-              </p>
-
-              <ul class="shows-card__meta">
-                <li>Hops Food &amp; Drinks · David, Chiriquí</li>
-                <li>8:00 p.m.</li>
-              </ul>
-
-              <p class="shows-card__text">
-                Nuestra noche de Halloween, con Fábula Sarcástica y Elefreak como invitados
-                especiales. Preventa de <strong>$10</strong> para las primeras 100 entradas desde el
-                1 de octubre; después, <strong>$12</strong>.
-              </p>
-
-              <a
-                href="https://entradas.still-louder.com/31-10"
-                class="btn btn-shows"
-                data-shows-link="oct31_tickets"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Entradas para Still Louder's Halloween Party, 31 de octubre en Hops Food &amp; Drinks (se abre en nueva ventana)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path
-                    d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"
+            <article class="shows-card shows-card--featured shows-card--next glass-card reveal-up">
+              <div class="shows-card__poster">
+                <picture>
+                  <source
+                    srcset="assets/images/shows/halloween-party-2026-10-31.avif"
+                    type="image/avif"
                   />
-                  <line x1="13" y1="7" x2="13" y2="17" stroke-dasharray="2 2" />
-                </svg>
-                Entradas
-              </a>
-              <p class="shows-card__note">
-                Venta directa con la banda en entradas.still-louder.com — sin intermediarios. Pagas
-                con Yappy, tarjeta o efectivo y el QR te llega por correo.
-              </p>
+                  <source
+                    srcset="assets/images/shows/halloween-party-2026-10-31.webp"
+                    type="image/webp"
+                  />
+                  <img
+                    src="assets/images/shows/halloween-party-2026-10-31.jpg"
+                    alt="Flyer: Still Louder's Halloween Party en Hops Food &amp; Drinks. Invitados especiales: Fábula Sarcástica y Elefreak."
+                    width="720"
+                    height="1280"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
+              </div>
+
+              <div class="shows-card__body">
+                <p class="shows-card__status">
+                  <span class="shows-card__dot" aria-hidden="true"></span>
+                  Fecha propia · preventa desde el 1 oct
+                </p>
+
+                <h3 class="shows-card__title">Still Louder&rsquo;s Halloween Party</h3>
+                <p class="shows-card__role">ft. Fábula Sarcástica &amp; Elefreak</p>
+
+                <p class="shows-card__date shows-card__date--sm">
+                  <time datetime="2026-10-31T20:00:00-05:00">31 · 10 · 2026</time>
+                </p>
+                <p class="shows-card__countdown" data-countdown="2026-10-31T20:00:00-05:00">
+                  Sábado 31 de octubre
+                </p>
+
+                <ul class="shows-card__meta">
+                  <li>Hops Food &amp; Drinks · David, Chiriquí</li>
+                  <li>8:00 p.m.</li>
+                </ul>
+
+                <p class="shows-card__text">
+                  Nuestra noche de Halloween, con Fábula Sarcástica y Elefreak como invitados
+                  especiales. Preventa de <strong>$10</strong> para las primeras 100 entradas desde
+                  el 1 de octubre; después, <strong>$12</strong>.
+                </p>
+
+                <a
+                  href="https://entradas.still-louder.com/31-10"
+                  class="btn btn-shows"
+                  data-shows-link="oct31_tickets"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Entradas para Still Louder's Halloween Party, 31 de octubre en Hops Food &amp; Drinks (se abre en nueva ventana)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"
+                    />
+                    <line x1="13" y1="7" x2="13" y2="17" stroke-dasharray="2 2" />
+                  </svg>
+                  Entradas
+                </a>
+                <p class="shows-card__note">
+                  Venta directa con la banda en entradas.still-louder.com — sin intermediarios.
+                  Pagas con Yappy, tarjeta o efectivo y el QR te llega por correo.
+                </p>
+              </div>
             </article>
           </div>
 

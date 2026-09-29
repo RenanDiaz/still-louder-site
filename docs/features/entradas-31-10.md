@@ -68,8 +68,8 @@ el spec está completo con esos valores.
 | D7 | Ventana de venta | `presale_start`: **la noche del 11 oct** (anunciar en tarima y abrir esa misma noche, 2026-10-11T22:00-05:00) · `presale_end`: 2026-10-31T00:00-05:00 · `sales_end`: 2026-11-01T02:00-05:00 · `event_end`: 2026-11-01T06:00-05:00 | Si se abre antes del 11, el teaser pierde sentido: decidir con marketing. |
 | D8 | Métodos de pago | Yappy + Tarjeta (CuantoApp) + Efectivo, como WWWY3 | Requiere links de CuantoApp `CUANTOAPP_PAYMENT_URL_1..10` con los precios nuevos (la comisión es por transacción). |
 | D9 | Cortesías y campaña de regalo | Habilitadas (ya existen); N de regalos pendiente | Sin trabajo extra si multi-evento está hecho. |
-| D10 | Tema visual | Pendiente. Mientras no haya arte: tema `mono` (negro + hueso, `Anton`/`Archivo`) derivado del teaser actual | Explícitamente NO el morado de WWWY3. |
-| D11 | Arte OG (1200×630) y flyer | Pendiente | Sin él, el enlace se comparte sin imagen (como hoy). |
+| D10 | Tema visual | **Hecho**: tema `halloween` (`src/entradas/themes/halloween.css`) sacado del flyer — noche negra con bruma morada, rojo sangre `#b33028` y hueso de la máscara; titular del flyer como hero (`public/halloween-title.webp`, con alfa), parches oscuros con canto rojo, form/avisos en papel hueso, luna + murciélago como adornos y paleta propia en el correo. La migración `0012` pasa el 31-10 a este tema | Explícitamente NO el morado de WWWY3. |
+| D11 | Arte OG (1200×630) y flyer | **Hecho**: flyer oficial (9:16) en la tarjeta de #shows del sitio y `ticket-system/public/og-31-10.jpg` (flyer centrado sobre negro) como og/twitter:image de `/31-10` | La migración `0012` carga esa URL en `og_image_url` (hero de Wallet); regenerar la "Clase de Google Wallet" del evento para que la tome. |
 | D12 | Hora de puertas | Pendiente | Solo copy. |
 | D13 | Entradas de cortesía para banda invitada / prensa | Pendiente | Solo operativa. |
 

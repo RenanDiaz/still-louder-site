@@ -209,7 +209,10 @@ async function main() {
   // album cover) — here we only emit the webp/avif siblings.
   console.log('\n=== Optimizing Show Flyers ===\n');
   const showsDir = path.join(publicDir, 'assets', 'images', 'shows');
-  const flyers = [{ file: 'stratovarius-panama-2026-10-11.jpg', maxWidth: 720 }];
+  const flyers = [
+    { file: 'stratovarius-panama-2026-10-11.jpg', maxWidth: 720 },
+    { file: 'halloween-party-2026-10-31.jpg', maxWidth: 720 }
+  ];
   for (const { file, maxWidth } of flyers) {
     const imgPath = path.join(showsDir, file);
     const exists = await fs.access(imgPath).then(() => true).catch(() => false);

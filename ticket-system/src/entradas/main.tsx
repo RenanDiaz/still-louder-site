@@ -5,6 +5,7 @@ import App from './App';
 // App from the event) decide which rules apply — see each file's header.
 import './theme.css';
 import './themes/mono.css';
+import './themes/halloween.css';
 import './teaser.css';
 
 createRoot(document.getElementById('root')!).render(

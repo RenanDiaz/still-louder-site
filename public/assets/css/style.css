@@ -975,7 +975,8 @@ body {
     justify-content: flex-start;
   }
 
-  .shows-card--next {
+  /* Solo la coming soon sin flyer va angosta; con poster usa el ancho completo. */
+  .shows-card--next:not(.shows-card--featured) {
     max-width: 640px;
     margin: 0 auto;
     width: 100%;

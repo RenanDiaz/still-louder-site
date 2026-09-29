@@ -410,7 +410,9 @@ Louder's Halloween Party* ft. Fábula Sarcástica & Elefreak (slug `31-10`,
 código `SL3110`), Hops Food & Drinks (David, Chiriquí), aforo 230, preventa $10
 para las primeras 100 y general $12. Hasta el 1 oct 00:00 `/31-10` muestra la
 cuenta regresiva y el servidor rechaza órdenes (`sales_not_open`); a esa hora
-el formulario se abre solo. Ver `docs/features/entradas-31-10.md`.
+el formulario se abre solo. La migración **`0012`** le asigna el tema
+`halloween` (sacado del flyer oficial) y el flyer como imagen OG/Wallet. Ver
+`docs/features/entradas-31-10.md`.
 
 ## Notas operativas
 

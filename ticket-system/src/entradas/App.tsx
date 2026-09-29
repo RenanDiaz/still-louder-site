@@ -308,7 +308,7 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
 
   return (
     <div className="tk-page">
-      <Decorations />
+      <Decorations theme={event.theme} />
       <div className="tk-wrap">
         {/* Hero: arte del flyer oficial sobre parche de papel inclinado. Sigue
             siendo el h1 de la página: el alt lleva el texto que antes era visible. */}
@@ -521,7 +521,30 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
 }
 
 /** Estrellas y rayos decorativos (puramente ornamentales). */
-function Decorations() {
+function Decorations({ theme }: { theme: string }) {
+  if (theme === 'halloween') {
+    // Luna llena y murciélago del flyer, en vez de la estrella/rayo de WWWY3
+    // (el rayo en --ink desaparecería sobre la noche).
+    return (
+      <>
+        <div className="tk-deco" style={{ top: 64, right: -2, transform: 'rotate(8deg)' }} aria-hidden="true">
+          <svg width="46" height="46" viewBox="0 0 24 24" focusable="false">
+            <circle cx="12" cy="12" r="10" style={{ fill: 'var(--paper)' }} />
+            <circle cx="8.5" cy="9" r="1.6" style={{ fill: 'var(--paper-edge)' }} />
+            <circle cx="14.5" cy="14.5" r="2.2" style={{ fill: 'var(--paper-edge)' }} />
+          </svg>
+        </div>
+        <div className="tk-deco" style={{ top: 262, left: -8, transform: 'rotate(-12deg)' }} aria-hidden="true">
+          <svg width="52" height="26" viewBox="0 0 32 16" focusable="false">
+            <path
+              style={{ fill: 'var(--blood)' }}
+              d="M16 4l1.4-2 .6 2.4c2-1 4.6-1 6.6.6C26.4 3 29.6 3.6 32 6c-2.4 0-3.6 1.4-4 3.6-1.6-1.2-3.4-1-4.6.6-1.2-1.8-3.4-2.2-5.2-.8L16 13l-2.2-3.6c-1.8-1.4-4-1-5.2.8-1.2-1.6-3-1.8-4.6-.6C3.6 7.4 2.4 6 0 6c2.4-2.4 5.6-3 7.4-1 2-1.6 4.6-1.6 6.6-.6l.6-2.4z"
+            />
+          </svg>
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <div className="tk-deco" style={{ top: 70, left: -6, transform: 'rotate(-15deg)' }} aria-hidden="true">
@@ -559,18 +582,26 @@ function PresaleNotOpenNotice({ event }: { event: PublicEvent }) {
 }
 
 /**
- * Hero: WWWY3 keeps its flyer art (theme `wwwy3`); any other event gets its
- * name as a typographic title on the paper patch until it has art of its own.
- * Either way it's the page's h1.
+ * Title art cut from each event's official flyer, keyed by theme. A theme with
+ * art gets it as the hero (on the paper patch for WWWY3; bare on the night for
+ * Halloween, see themes/halloween.css); any other event gets its name as a
+ * typographic title on the patch. Either way it's the page's h1.
  */
+const TITLE_ART: Record<string, { src: string; width: number; height: number; showTagline: boolean }> = {
+  wwwy3: { src: '/wwwy3-title.webp', width: 984, height: 543, showTagline: false },
+  halloween: { src: '/halloween-title.webp', width: 884, height: 226, showTagline: true }
+};
+
 function EventHero({ event }: { event: PublicEvent }) {
-  if (event.theme === 'wwwy3') {
+  const art = TITLE_ART[event.theme];
+  if (art) {
     return (
       <div className="tk-title-block tk-reveal">
         <div className="tk-patch tk-title-patch tk-title-patch--art">
           <h1 className="tk-title-art">
-            <img src="/wwwy3-title.webp" alt={`${BAND_NAME} presenta: ${event.name}`} width={984} height={543} />
+            <img src={art.src} alt={`${BAND_NAME} presenta: ${event.name}`} width={art.width} height={art.height} />
           </h1>
+          {art.showTagline && event.tagline && <div className="tk-byline">{event.tagline}</div>}
         </div>
       </div>
     );
@@ -718,7 +749,7 @@ function Confirmation({
   const isYappy = data.payment.method === 'yappy';
   return (
     <div className="tk-page">
-      <Decorations />
+      <Decorations theme={event.theme} />
       <div className="tk-wrap">
         <p className="tk-kicker tk-reveal">★ ¡nos vemos {event.venue ? `en ${event.venue}` : 'en el show'}! ♥ ★</p>
 
