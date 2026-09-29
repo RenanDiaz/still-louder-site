@@ -2,7 +2,7 @@
 
 Official website for **Still Louder**, a Panamanian rock band: current single
 (**"Skirlaz"**), streaming links, upcoming shows, band info, FAQ, social links,
-store and a contact form. Static, fast, accessible, installable (PWA).
+store and a contact form. Static, fast and accessible.
 
 🌐 **Live:** https://still-louder.com/ · 🎟️ **Tickets:** https://entradas.still-louder.com
 
@@ -61,7 +61,8 @@ npm run preview    # serve the production build
 - **CSS:** design tokens in [`variables.css`](public/assets/css/variables.css),
   styles in `style.css`.
 - **Service worker** (`public/sw.js`) for offline/caching — bump its
-  `CACHE_VERSION` when shipping HTML/CSS/JS changes.
+  `CACHE_VERSION` when shipping HTML/CSS/JS changes. ⚠️ It currently does
+  **not** ship in the build (see [`docs/main-site/pwa.md`](docs/main-site/pwa.md#known-issues)).
 - **Contact form** posts to a Google Form (no backend).
 - **Analytics:** Google Analytics 4.
 

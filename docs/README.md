@@ -35,6 +35,8 @@ Where each document lives and what it covers. Start with the root
 - Reference docs describe the **current** state. Don't add per-phase
   "implementation summary" reports — the PR description and git history are
   the changelog. The old phase reports (`PLAN_DE_MEJORAS.md`,
-  `FASE_1_SUMMARY.md`, `PHASE*_…md`, `SUMMARY.md`, `QUICKSTART.md`, checklists)
+  `FASE_1_SUMMARY.md`, `PHASE*_…md`, `SUMMARY.md`, `QUICKSTART.md`,
+  `PWA_IMPLEMENTATION.md`, `SECURITY_SUMMARY.md`, `SEO_ACCESSIBILITY_SUMMARY.md`,
+  `*TESTING_CHECKLIST.md`)
   were consolidated into the docs above and removed; recover them from git
   history if needed (`git log --diff-filter=D --name-only -- '*.md'`).

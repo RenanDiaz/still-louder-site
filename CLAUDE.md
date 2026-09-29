@@ -228,6 +228,13 @@ still-louder-site/
 and `public/assets/` is treated as the static dir. Paths in HTML are
 root-relative to `public/`. Keep this in mind before restructuring directories.
 
+**Known build gap (unfixed):** only the two HTML inputs and `public/assets/`
+reach `dist/`. Files sitting directly in `public/` (`sw.js`, `offline.html`,
+`robots.txt`, `sitemap.xml`, `.well-known/security.txt`) are **not deployed**,
+and classic `<script src="assets/js/...">` tags 404 in production (publicDir
+files land at `dist/js/...`). So the PWA/offline support does not work in
+production today. Details: `docs/main-site/pwa.md` → Known issues.
+
 ---
 
 ## Development Workflow
