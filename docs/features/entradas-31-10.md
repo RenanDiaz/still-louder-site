@@ -69,7 +69,7 @@ el spec está completo con esos valores.
 | D8 | Métodos de pago | Yappy + Tarjeta (CuantoApp) + Efectivo, como WWWY3 | Requiere links de CuantoApp `CUANTOAPP_PAYMENT_URL_1..10` con los precios nuevos (la comisión es por transacción). |
 | D9 | Cortesías y campaña de regalo | Habilitadas (ya existen); N de regalos pendiente | Sin trabajo extra si multi-evento está hecho. |
 | D10 | Tema visual | Pendiente. Mientras no haya arte: tema `mono` (negro + hueso, `Anton`/`Archivo`) derivado del teaser actual | Explícitamente NO el morado de WWWY3. |
-| D11 | Arte OG (1200×630) y flyer | Pendiente | Sin él, el enlace se comparte sin imagen (como hoy). |
+| D11 | Arte OG (1200×630) y flyer | **Hecho**: flyer oficial (9:16) en la tarjeta de #shows del sitio y `ticket-system/public/og-31-10.jpg` (flyer centrado sobre negro) como og/twitter:image de `/31-10` | Falta cargar `https://entradas.still-louder.com/og-31-10.jpg` en "Imagen OG" del evento (admin → Eventos) para el hero de Wallet. |
 | D12 | Hora de puertas | Pendiente | Solo copy. |
 | D13 | Entradas de cortesía para banda invitada / prensa | Pendiente | Solo operativa. |
 
