@@ -49,5 +49,10 @@
   margin-top: 8px;
   font-size: 0.95em;
   color: #4caf50;
+}
+.comentario-mensaje:empty {
   display: none;
+}
+.comentario-mensaje--error {
+  color: #f44336;
 }
