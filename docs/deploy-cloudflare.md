@@ -62,46 +62,89 @@ npm run preview:cloudflare   # build + wrangler dev (frontend + API + cron local
 npm run deploy:cloudflare    # build + wrangler deploy
 ```
 
-### Secrets (equivalente a las env vars de Vercel)
+### Variables de entorno: `vars` vs. secrets
 
-Todas las variables de `api/_lib/env.ts` se cargan como **secrets** del Worker
-(nunca `vars` en el jsonc, que es público en el repo):
+Las variables de Vercel se reparten en dos lugares del Worker. `process.env`
+ve ambas por igual (`nodejs_compat`), así que el código de `api/` no cambia:
+
+- **`vars` en `wrangler.jsonc`**: solo valores **no sensibles** que dependen
+  del dominio o del entorno. Quedan versionadas junto al bloque `routes`, y
+  así no se desincronizan del host que sirve el Worker. El jsonc es público
+  en el repo: nada que sea credencial va aquí.
+- **Secrets** (`wrangler secret put`): todo lo demás.
+
+Un mismo nombre **no puede** ser var y secret a la vez: el deploy falla. Si ya
+existía como secret, bórralo antes (`npx wrangler secret delete <NOMBRE>`).
+
+#### `vars` (en `ticket-system/wrangler.jsonc`)
+
+| Variable | Valor | Nota |
+|---|---|---|
+| `PUBLIC_BASE_URL` | `https://entradas.still-louder.com` | El backend deriva de aquí la URL del IPN de Yappy y los enlaces del correo. |
+| `YAPPY_BTN_DOMAIN` | `https://entradas.still-louder.com` | Tiene que coincidir con el dominio registrado en el portal de Yappy. |
+| `YAPPY_BTN_ENV` | `prod` | Sin esto el default es `test` (sandbox). |
+| `EMAIL_FROM` | `Still Louder <entradas@stilllouder.space>` | Cambiar a `still-louder.com` solo después de verificar el dominio en Resend (ver paso 4 del cutover). |
+
+`wrangler dev` también las aplica. Para no apuntar al Yappy de producción en
+local, `.dev.vars` (que tiene prioridad sobre `vars`) debe definir
+`YAPPY_BTN_ENV=test`.
+
+#### Secrets
 
 ```bash
 cd ticket-system
-# Requeridas
+# Requeridas: si falta una, toda la API responde 500 internal_error
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put TICKET_HMAC_SECRET
+npx wrangler secret put TICKET_HMAC_SECRET     # openssl rand -hex 32 (ver nota abajo)
 npx wrangler secret put ADMIN_PASSWORD
 npx wrangler secret put STAFF_PASSWORD
 npx wrangler secret put YAPPY_BTN_MERCHANT_ID
 npx wrangler secret put YAPPY_BTN_SECRET_KEY
-# Recomendadas / opcionales (mismas semánticas que en Vercel)
-npx wrangler secret put CRON_SECRET            # sin esto el cron diario NO corre
-npx wrangler secret put PUBLIC_BASE_URL        # debe ser el dominio que sirve el Worker
-npx wrangler secret put YAPPY_BTN_ENV
-npx wrangler secret put YAPPY_BTN_DOMAIN
-npx wrangler secret put YAPPY_BTN_CDN_URL        # override del CDN del web component
-npx wrangler secret put EMAIL_FROM
+# Imprescindible en Cloudflare (en el código es opcional)
+npx wrangler secret put CRON_SECRET            # openssl rand -hex 16; sin esto scheduled() se salta la limpieza
+# Opcionales: activan una función, sin ellas no se rompe nada
 npx wrangler secret put EMAIL_REPLY_TO
 npx wrangler secret put ORDER_NOTIFICATION_EMAIL
-npx wrangler secret put SUPPORT_PASSWORD
-npx wrangler secret put CUANTOAPP_PAYMENT_URL    # sin esto la opción CuantoApp queda sin link
-npx wrangler secret put CUANTOAPP_PAYMENT_URL_1  # ... _2 .. _10: un link por cantidad
+npx wrangler secret put SUPPORT_PASSWORD         # sin esto solo ADMIN_PASSWORD entra a /support
+npx wrangler secret put CUANTOAPP_PAYMENT_URL    # fallback si falta el link de una cantidad
+npx wrangler secret put CUANTOAPP_PAYMENT_URL_1  # ... _2 .. _10: un link por cantidad (máx. 10 por orden)
+# Reversos Yappy (sin key/secret/seed el reembolso queda como marca manual)
 npx wrangler secret put YAPPY_API_KEY
 npx wrangler secret put YAPPY_API_SECRET_KEY
 npx wrangler secret put YAPPY_API_SEED
-npx wrangler secret put YAPPY_API_CHANNEL
-npx wrangler secret put YAPPY_API_BASE
-# Google Wallet (opt-in, fase 3)
+npx wrangler secret put YAPPY_API_CHANNEL        # default 'API' — confirmar con Yappy
+npx wrangler secret put YAPPY_API_BASE           # default según YAPPY_BTN_ENV
+npx wrangler secret put YAPPY_BTN_CDN_URL        # override del CDN del web component; solo si el default no carga
+# Google Wallet (opt-in; sin las tres el botón no aparece)
 npx wrangler secret put GOOGLE_WALLET_ISSUER_ID
 npx wrangler secret put GOOGLE_WALLET_SA_EMAIL
-npx wrangler secret put GOOGLE_WALLET_SA_PRIVATE_KEY
+npx wrangler secret put GOOGLE_WALLET_SA_PRIVATE_KEY   # pegar con los \n escapados, igual que en Vercel
 ```
 
-Para desarrollo local, `wrangler dev` lee un archivo `ticket-system/.dev.vars`
+Para cargar muchas de una vez: `npx wrangler secret bulk secrets.json` (un
+objeto `{ "NOMBRE": "valor" }`; borrar el archivo después, nunca commitearlo).
+
+Notas:
+
+- **`TICKET_HMAC_SECRET`**: son 32 bytes aleatorios y no se derivan de nada.
+  Es uno solo para todos los eventos, así que rotarlo invalida el QR de
+  **toda** entrada ya emitida: los correos enviados y los pases de Google
+  Wallet. El QR no se guarda en la BD, así que reenviar el correo lo regenera
+  con la firma nueva. Solo rotarlo cuando no haya entradas vivas de ningún
+  evento, o asumiendo que hay que reenviar todos los correos. Mientras
+  Vercel y Cloudflare convivan, **el valor tiene que ser el mismo en los dos**.
+- **CuantoApp**: el código usa `??`, así que un `CUANTOAPP_PAYMENT_URL_<n>`
+  definido **vacío** no cae al fallback. O se llena o no se crea.
+- **No migrar** estas variables que quedan en el dashboard de Vercel: ningún
+  código las lee. `VENUE_ADDRESS` y `EVENT_START_ISO` hoy viven en la tabla
+  `events`. `GOOGLE_WALLET_CLASS_SUFFIX` se retiró: la clase es
+  `${issuerId}.${events.code}` en minúscula. `YAPPY_MERCHANT_ID` y
+  `YAPPY_SECRET_KEY` son de una integración anterior; hoy se usan
+  `YAPPY_BTN_*` y `YAPPY_API_*`.
+
+Para desarrollo local, `wrangler dev` lee `ticket-system/.dev.vars`
 (formato `NOMBRE=valor`, gitignorado).
 
 ### Piezas que replican vercel.json
@@ -123,9 +166,10 @@ Para desarrollo local, `wrangler dev` lee un archivo `ticket-system/.dev.vars`
   él el bundler usa el build de browser de `qrcode` (renderiza con `<canvas>`)
   y `toBuffer()` no existe. Verificado: el PNG del QR se genera bien en el
   runtime de Workers.
-- Al mover producción: actualizar `PUBLIC_BASE_URL`/`YAPPY_BTN_DOMAIN` y el
-  dominio registrado en el portal de Yappy si cambia el dominio que sirve; la
-  URL del IPN la deriva el backend de `PUBLIC_BASE_URL`.
+- Si cambia el dominio que sirve el Worker: actualizar `routes` **y** las
+  `vars` `PUBLIC_BASE_URL`/`YAPPY_BTN_DOMAIN` en `wrangler.jsonc` en el mismo
+  commit, y el dominio registrado en el portal de Yappy. La URL del IPN la
+  deriva el backend de `PUBLIC_BASE_URL`.
 - Dominio: `entradas.still-louder.com` (bloque `routes`).
 - CI opcional: conectar el repo con **Workers Builds** (dashboard → Workers →
   Create → connect repo), un proyecto por app, con root directory `/` y
@@ -146,6 +190,9 @@ RESEND_API_KEY=<resend>
 YAPPY_BTN_MERCHANT_ID=<merchant>
 YAPPY_BTN_SECRET_KEY=<base64>
 CRON_SECRET=cron-local
+YAPPY_BTN_ENV=test
+PUBLIC_BASE_URL=http://127.0.0.1:8787
+YAPPY_BTN_DOMAIN=http://127.0.0.1:8787
 EOF
 npm run preview:cloudflare
 # El cron se prueba, con `wrangler dev` ya corriendo, con:
@@ -175,13 +222,13 @@ unos minutos la primera vez).
 ### 2. Secrets del ticket system
 
 Copiar **los mismos valores** de Vercel (Project → Settings → Environment
-Variables → Production) con `wrangler secret put` (lista completa arriba),
-**excepto** estos dos, que cambian con el dominio:
-
-```
-PUBLIC_BASE_URL=https://entradas.still-louder.com
-YAPPY_BTN_DOMAIN=https://entradas.still-louder.com
-```
+Variables → Production) con `wrangler secret put`. La lista completa está en
+[Variables de entorno](#variables-de-entorno-vars-vs-secrets), incluidas las
+obsoletas que no hay que copiar. `PUBLIC_BASE_URL`, `YAPPY_BTN_DOMAIN`,
+`YAPPY_BTN_ENV` y `EMAIL_FROM` **no** van como secret: ya están como `vars`
+en `wrangler.jsonc` con los valores del dominio nuevo, y se aplicaron con el
+deploy del paso 1. `CRON_SECRET` sí hay que crearlo aunque en Vercel no lo
+hayas usado: sin él, el cron del Worker no corre.
 
 `npx wrangler secret list` para confirmar que no falta ninguno. Un secret
 requerido faltante hace que toda la API responda `500 internal_error`.
