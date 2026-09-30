@@ -5,8 +5,9 @@
 //
 // Deploy:   npm run deploy:cloudflare      (build + wrangler deploy)
 // Preview:  npm run preview:cloudflare     (build + wrangler dev)
-// Secrets:  every env var in api/_lib/env.ts must be set with
-//           `wrangler secret put <NAME>` — see docs/deploy-cloudflare.md (repo root).
+// Env:      non-sensitive, domain-bound values live in "vars" below; everything
+//           else is a secret (`wrangler secret put <NAME>`). A name can't be both.
+//           See docs/deploy-cloudflare.md (repo root) for the full list.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "still-louder-tickets",
@@ -46,10 +47,21 @@
     "enabled": true
   },
 
+  // Non-sensitive config only (this file is public). Secrets go through
+  // `wrangler secret put`. Locally, .dev.vars overrides these — set
+  // YAPPY_BTN_ENV=test there so `wrangler dev` never hits Yappy prod.
+  "vars": {
+    "PUBLIC_BASE_URL": "https://entradas.still-louder.com",
+    "YAPPY_BTN_DOMAIN": "https://entradas.still-louder.com",
+    "YAPPY_BTN_ENV": "prod",
+    // Switch to still-louder.com only once that domain is verified in Resend.
+    "EMAIL_FROM": "Still Louder <entradas@stilllouder.space>"
+  },
+
   // Custom domain. Requires the still-louder.com zone on this Cloudflare
   // account; deploy creates the DNS record + certificate. PUBLIC_BASE_URL and
-  // YAPPY_BTN_DOMAIN (secrets) and the domain registered in the Yappy portal
-  // MUST match this host, or the Yappy button / IPN fail.
+  // YAPPY_BTN_DOMAIN (vars above) and the domain registered in the Yappy
+  // portal MUST match this host, or the Yappy button / IPN fail.
   "workers_dev": true,
   "routes": [
     { "pattern": "entradas.still-louder.com", "custom_domain": true }
