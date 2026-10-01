@@ -91,10 +91,15 @@ existía como secret, bórralo antes (`npx wrangler secret delete <NOMBRE>`).
 | `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL` | — | La credencial es `GOOGLE_WALLET_SA_PRIVATE_KEY` (secret). |
 | `CUANTOAPP_PAYMENT_URL_1..10` | links de CuantoApp | Un producto oculto por cantidad; cambiar los links = commit + deploy. |
 
-**`wrangler deploy` REEMPLAZA las vars del Worker por este bloque**: una
-variable creada solo en el dashboard se borra en el siguiente deploy (manual o
-de Workers Builds). Toda var nueva va en `wrangler.jsonc`. Los secrets no se
-tocan en un deploy.
+**`"keep_vars": true` en `wrangler.jsonc` es obligatorio.** wrangler 4.x
+despliega un Worker existente por la API de Versions y solo hereda los secrets
+si `keep_vars` está activo (o con `--secrets-file`). Sin él, cada deploy
+(manual o de Workers Builds) publica una versión **sin ningún secret** y toda
+la API responde 500 — pasó el 1-oct-2026; se recuperó con
+`wrangler secret bulk`. Con `keep_vars`, las vars del archivo siguen ganando
+sobre las del dashboard: toda var se cambia en `wrangler.jsonc`, no en el
+dashboard. Una var que se quite del archivo sigue en el Worker hasta borrarla
+en el dashboard.
 
 `wrangler dev` también las aplica. Para no apuntar al Yappy de producción en
 local, `.dev.vars` (que tiene prioridad sobre `vars`) debe definir
