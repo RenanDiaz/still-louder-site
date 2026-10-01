@@ -36,7 +36,7 @@ interface CreateOrderBody {
 // que le mostramos, y el admin marca el precio de preventa como agotado al
 // cerrarse esa etapa.
 function cuantoappLinkFor(quantity: number): string {
-  return process.env[`CUANTOAPP_PAYMENT_URL_${quantity}`] ?? process.env.CUANTOAPP_PAYMENT_URL ?? '';
+  return process.env[`CUANTOAPP_PAYMENT_URL_${quantity}`] || process.env.CUANTOAPP_PAYMENT_URL || '';
 }
 
 function paymentInstructions(method: PaymentMethod, totalCents: number, quantity: number) {

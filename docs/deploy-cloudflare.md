@@ -81,9 +81,20 @@ existía como secret, bórralo antes (`npx wrangler secret delete <NOMBRE>`).
 | Variable | Valor | Nota |
 |---|---|---|
 | `PUBLIC_BASE_URL` | `https://entradas.still-louder.com` | El backend deriva de aquí la URL del IPN de Yappy y los enlaces del correo. |
+| `SUPABASE_URL` | `https://ymvygyvidzxtwobpmral.supabase.co` | URL pública del proyecto; la credencial es `SUPABASE_SERVICE_ROLE_KEY` (secret). |
+| `EMAIL_FROM` | `Still Louder <entradas@still-louder.com>` | Dominio verificado en Resend. |
+| `EMAIL_REPLY_TO` | `stilllouder.pa@gmail.com` | Sin esto el correo no invita a responder. |
 | `YAPPY_BTN_DOMAIN` | `https://entradas.still-louder.com` | Tiene que coincidir con el dominio registrado en el portal de Yappy. |
 | `YAPPY_BTN_ENV` | `prod` | Sin esto el default es `test` (sandbox). |
-| `EMAIL_FROM` | `Still Louder <entradas@stilllouder.space>` | Cambiar a `still-louder.com` solo después de verificar el dominio en Resend (ver paso 4 del cutover). |
+| `YAPPY_BTN_MERCHANT_ID` | id del comercio | Identificador, no credencial (la credencial es `YAPPY_BTN_SECRET_KEY`). |
+| `YAPPY_API_BASE` | `https://api-integration-business.yappy.cloud/v1` | Host de la API de reversos. |
+| `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL` | — | La credencial es `GOOGLE_WALLET_SA_PRIVATE_KEY` (secret). |
+| `CUANTOAPP_PAYMENT_URL_1..10` | links de CuantoApp | Un producto oculto por cantidad; cambiar los links = commit + deploy. |
+
+**`wrangler deploy` REEMPLAZA las vars del Worker por este bloque**: una
+variable creada solo en el dashboard se borra en el siguiente deploy (manual o
+de Workers Builds). Toda var nueva va en `wrangler.jsonc`. Los secrets no se
+tocan en un deploy.
 
 `wrangler dev` también las aplica. Para no apuntar al Yappy de producción en
 local, `.dev.vars` (que tiene prioridad sobre `vars`) debe definir
@@ -94,32 +105,24 @@ local, `.dev.vars` (que tiene prioridad sobre `vars`) debe definir
 ```bash
 cd ticket-system
 # Requeridas: si falta una, toda la API responde 500 internal_error
-npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put TICKET_HMAC_SECRET     # openssl rand -hex 32 (ver nota abajo)
 npx wrangler secret put ADMIN_PASSWORD
 npx wrangler secret put STAFF_PASSWORD
-npx wrangler secret put YAPPY_BTN_MERCHANT_ID
 npx wrangler secret put YAPPY_BTN_SECRET_KEY
 # Imprescindible en Cloudflare (en el código es opcional)
 npx wrangler secret put CRON_SECRET            # openssl rand -hex 16; sin esto scheduled() se salta la limpieza
 # Opcionales: activan una función, sin ellas no se rompe nada
-npx wrangler secret put EMAIL_REPLY_TO
-npx wrangler secret put ORDER_NOTIFICATION_EMAIL
+npx wrangler secret put ORDER_NOTIFICATION_EMAIL # correos personales: secret para no publicarlos en el repo
 npx wrangler secret put SUPPORT_PASSWORD         # sin esto solo ADMIN_PASSWORD entra a /support
-npx wrangler secret put CUANTOAPP_PAYMENT_URL    # fallback si falta el link de una cantidad
-npx wrangler secret put CUANTOAPP_PAYMENT_URL_1  # ... _2 .. _10: un link por cantidad (máx. 10 por orden)
 # Reversos Yappy (sin key/secret/seed el reembolso queda como marca manual)
 npx wrangler secret put YAPPY_API_KEY
 npx wrangler secret put YAPPY_API_SECRET_KEY
 npx wrangler secret put YAPPY_API_SEED
 npx wrangler secret put YAPPY_API_CHANNEL        # default 'API' — confirmar con Yappy
-npx wrangler secret put YAPPY_API_BASE           # default según YAPPY_BTN_ENV
 npx wrangler secret put YAPPY_BTN_CDN_URL        # override del CDN del web component; solo si el default no carga
-# Google Wallet (opt-in; sin las tres el botón no aparece)
-npx wrangler secret put GOOGLE_WALLET_ISSUER_ID
-npx wrangler secret put GOOGLE_WALLET_SA_EMAIL
+# Google Wallet (opt-in; sin la clave el botón no aparece)
 npx wrangler secret put GOOGLE_WALLET_SA_PRIVATE_KEY   # pegar con los \n escapados, igual que en Vercel
 ```
 
@@ -224,10 +227,8 @@ unos minutos la primera vez).
 Copiar **los mismos valores** de Vercel (Project → Settings → Environment
 Variables → Production) con `wrangler secret put`. La lista completa está en
 [Variables de entorno](#variables-de-entorno-vars-vs-secrets), incluidas las
-obsoletas que no hay que copiar. `PUBLIC_BASE_URL`, `YAPPY_BTN_DOMAIN`,
-`YAPPY_BTN_ENV` y `EMAIL_FROM` **no** van como secret: ya están como `vars`
-en `wrangler.jsonc` con los valores del dominio nuevo, y se aplicaron con el
-deploy del paso 1. `CRON_SECRET` sí hay que crearlo aunque en Vercel no lo
+obsoletas que no hay que copiar. Lo que está en el bloque `vars` de
+`wrangler.jsonc` **no** va como secret: se aplicó con el deploy del paso 1. `CRON_SECRET` sí hay que crearlo aunque en Vercel no lo
 hayas usado: sin él, el cron del Worker no corre.
 
 `npx wrangler secret list` para confirmar que no falta ninguno. Un secret
@@ -249,12 +250,9 @@ Vercel/`entradas.stilllouder.space` hasta que se apruebe.
 
 ### 4. Correo (Resend)
 
-`EMAIL_FROM` sigue siendo `entradas@stilllouder.space` (dominio ya verificado
-en Resend) — **no cambiarlo** en el cutover. Pasar a
-`entradas@still-louder.com` es un paso aparte: agregar el dominio en Resend,
-crear en Cloudflare DNS los registros SPF/DKIM que indique, esperar
-"Verified" y recién ahí cambiar el secret. Mientras se use el remitente viejo,
-**no borrar** los registros DNS de Resend de `stilllouder.space`.
+Hecho: `EMAIL_FROM` es `entradas@still-louder.com` (dominio verificado en
+Resend, registros SPF/DKIM en Cloudflare DNS). Mantener los registros DNS de
+Resend de `stilllouder.space` mientras haya correos viejos en circulación.
 
 ### 5. Smoke test en producción (Cloudflare)
 

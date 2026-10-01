@@ -12,7 +12,8 @@ function required(name: string): string {
 }
 
 function optional(name: string, fallback = ''): string {
-  return process.env[name] ?? fallback;
+  // `||`, not `??`: a var saved empty in the dashboard must fall back too.
+  return process.env[name] || fallback;
 }
 
 export const env = {

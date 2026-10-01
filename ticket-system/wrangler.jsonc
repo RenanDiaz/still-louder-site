@@ -50,12 +50,34 @@
   // Non-sensitive config only (this file is public). Secrets go through
   // `wrangler secret put`. Locally, .dev.vars overrides these — set
   // YAPPY_BTN_ENV=test there so `wrangler dev` never hits Yappy prod.
+  // `wrangler deploy` REPLACES the Worker's vars with this block: a var set
+  // only in the dashboard is deleted on the next deploy. Add new vars here.
+  // ORDER_NOTIFICATION_EMAIL (personal addresses) is a secret, not a var.
   "vars": {
     "PUBLIC_BASE_URL": "https://entradas.still-louder.com",
+    "SUPABASE_URL": "https://ymvygyvidzxtwobpmral.supabase.co",
+    "EMAIL_FROM": "Still Louder <entradas@still-louder.com>",
+    "EMAIL_REPLY_TO": "stilllouder.pa@gmail.com",
+
     "YAPPY_BTN_DOMAIN": "https://entradas.still-louder.com",
     "YAPPY_BTN_ENV": "prod",
-    // Switch to still-louder.com only once that domain is verified in Resend.
-    "EMAIL_FROM": "Still Louder <entradas@stilllouder.space>"
+    "YAPPY_BTN_MERCHANT_ID": "68173a60-9e07-49d2-9951-43d5f023248b",
+    "YAPPY_API_BASE": "https://api-integration-business.yappy.cloud/v1",
+
+    "GOOGLE_WALLET_ISSUER_ID": "3388000000023160530",
+    "GOOGLE_WALLET_SA_EMAIL": "still-louder-wallet@still-louder.iam.gserviceaccount.com",
+
+    // One hidden CuantoApp product per quantity (see .env.example for amounts).
+    "CUANTOAPP_PAYMENT_URL_1": "https://cuanto.app/still_louder/w/8e58f0",
+    "CUANTOAPP_PAYMENT_URL_2": "https://cuanto.app/still_louder/w/95caec",
+    "CUANTOAPP_PAYMENT_URL_3": "https://cuanto.app/still_louder/w/6eca92",
+    "CUANTOAPP_PAYMENT_URL_4": "https://cuanto.app/still_louder/w/9075a5",
+    "CUANTOAPP_PAYMENT_URL_5": "https://cuanto.app/still_louder/w/420f3a",
+    "CUANTOAPP_PAYMENT_URL_6": "https://cuanto.app/still_louder/w/288ce0",
+    "CUANTOAPP_PAYMENT_URL_7": "https://cuanto.app/still_louder/w/e15fbf",
+    "CUANTOAPP_PAYMENT_URL_8": "https://cuanto.app/still_louder/w/97a2ed",
+    "CUANTOAPP_PAYMENT_URL_9": "https://cuanto.app/still_louder/w/e6595d",
+    "CUANTOAPP_PAYMENT_URL_10": "https://cuanto.app/still_louder/w/90cc59"
   },
 
   // Custom domain. Requires the still-louder.com zone on this Cloudflare
