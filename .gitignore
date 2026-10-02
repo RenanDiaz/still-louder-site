@@ -13,6 +13,9 @@
 # Node modules and dependencies
 node_modules/
 package-lock.json
+# The ticket system pins its deploy toolchain (wrangler): Workers Builds
+# must install the exact same versions every time.
+!ticket-system/package-lock.json
 yarn.lock
 pnpm-lock.yaml
 

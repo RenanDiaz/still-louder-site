@@ -37,8 +37,11 @@ Worker de **solo assets**: no hay código de servidor, `dist/` se sirve directo.
 ```bash
 npm install
 npm run preview:cloudflare   # build + wrangler dev (prueba local)
-npm run deploy:cloudflare    # build + wrangler deploy
+npm run upload:cloudflare    # build + wrangler versions upload (sin tráfico) — así se libera
+npm run deploy:cloudflare    # build + wrangler deploy (directo a producción; evitar en venta)
 ```
+
+Para liberar a producción ver [Releases seguros](#releases-seguros-versiones-y-secrets).
 
 - Los headers de seguridad y caching de `vercel.json` viven en
   `public/assets/_headers` (Vite copia `public/assets/` → raíz de `dist/`, que
@@ -91,15 +94,17 @@ existía como secret, bórralo antes (`npx wrangler secret delete <NOMBRE>`).
 | `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL` | — | La credencial es `GOOGLE_WALLET_SA_PRIVATE_KEY` (secret). |
 | `CUANTOAPP_PAYMENT_URL_1..10` | links de CuantoApp | Un producto oculto por cantidad; cambiar los links = commit + deploy. |
 
-**`"keep_vars": true` en `wrangler.jsonc` es obligatorio.** wrangler 4.x
-despliega un Worker existente por la API de Versions y solo hereda los secrets
-si `keep_vars` está activo (o con `--secrets-file`). Sin él, cada deploy
-(manual o de Workers Builds) publica una versión **sin ningún secret** y toda
-la API responde 500 — pasó el 1-oct-2026; se recuperó con
-`wrangler secret bulk`. Con `keep_vars`, las vars del archivo siguen ganando
-sobre las del dashboard: toda var se cambia en `wrangler.jsonc`, no en el
-dashboard. Una var que se quite del archivo sigue en el Worker hasta borrarla
-en el dashboard.
+**`"keep_vars": true` en `wrangler.jsonc`**: las vars de texto agregadas en el
+dashboard sobreviven a un deploy, pero las del archivo siguen ganando. Toda var
+se cambia en `wrangler.jsonc`, no en el dashboard. Una var que se quite del
+archivo sigue en el Worker hasta borrarla en el dashboard. (En wrangler ≤ 4.142,
+`wrangler deploy` además solo heredaba los secrets con `keep_vars`; las
+versiones nuevas los heredan siempre. Igual no alcanza: ver
+[Releases seguros](#releases-seguros-versiones-y-secrets).)
+
+Las variables de **Settings → Build → Variables** del dashboard solo existen
+durante el build. El Worker no las ve en runtime y el ticket system no lee
+ninguna en build, así que ahí no hacen nada.
 
 `wrangler dev` también las aplica. Para no apuntar al Yappy de producción en
 local, `.dev.vars` (que tiene prioridad sobre `vars`) debe definir
@@ -157,6 +162,63 @@ Notas:
 Para desarrollo local, `wrangler dev` lee `ticket-system/.dev.vars`
 (formato `NOMBRE=valor`, gitignorado).
 
+### Releases seguros (versiones y secrets)
+
+Cada upload (`wrangler deploy`, `wrangler versions upload`, Workers Builds)
+crea una **versión** del Worker que copia los secrets de la **última versión
+subida**, no de la activa. Basta una versión sin secrets para romper la
+cadena: todas las siguientes salen sin secrets aunque el código y las vars
+estén bien, y la API responde 500. Un rollback no lo arregla, porque solo
+cambia la versión activa.
+
+Pasó el 1 y el 2-oct-2026: un build de rama de Workers Builds subió una versión
+vacía (`ceff0208`) y desde ahí todas las versiones salieron sin los 13 secrets,
+incluida la del merge de #82, que hubo que revertir en plena venta.
+
+**Cómo liberar** (Workers Builds con deploy command
+`npx wrangler versions upload`, o a mano):
+
+```bash
+cd ticket-system
+npm run upload:cloudflare            # versión nueva, 0% de tráfico; imprime ID y Preview URL
+npx wrangler versions view <id>      # DEBE listar todos los secrets (hoy 13). Si no: no promover
+curl -s <preview-url>/api/presale/status   # 200 con datos reales
+npx wrangler versions deploy <id>@100% -y
+```
+
+**Configuración del proyecto en Workers Builds** (`still-louder-tickets`):
+
+- Deploy command: `npx wrangler versions upload`, para que un push a `main`
+  no salga directo a producción.
+- Branch control: builds de ramas que no son `main` **desactivados**. Cada
+  push de rama sube una versión al mismo Worker y es la forma más fácil de
+  romper la cadena.
+- `package-lock.json` está commiteado: el build instala siempre la misma
+  wrangler. Actualizarla es un commit (`npm install -D wrangler@<versión>`).
+
+**Recuperar la cadena** (la última versión no tiene secrets):
+
+`wrangler secret put` falla con "the latest version of your Worker isn't
+currently deployed" después de un rollback, y `wrangler versions secret put`
+parte de la última versión, que es la rota. Lo que sí funciona es subir una
+versión con **todos** los secrets en archivo:
+
+```bash
+cd ticket-system
+# secrets.json = { "NOMBRE": "valor", ... } con TODOS los secrets (gitignorado; borrarlo al terminar)
+npm run build && npx wrangler versions upload --secrets-file secrets.json
+npx wrangler versions view <id>      # todos los secrets + todas las vars
+# probar la Preview URL, luego:
+npx wrangler versions deploy <id>@100% -y
+rm secrets.json
+```
+
+Los valores salen de Vercel (`vercel env pull` en el proyecto del ticket
+system) o del gestor de contraseñas. `TICKET_HMAC_SECRET` tiene que ser
+**exactamente** el mismo, o los QR emitidos dejan de validar. Si `CRON_SECRET`
+no se recupera, sirve uno nuevo (`openssl rand -hex 16`): solo lo usa el cron
+del propio Worker.
+
 ### Piezas que replican vercel.json
 
 | En Vercel | En Cloudflare |
@@ -183,8 +245,10 @@ Para desarrollo local, `wrangler dev` lee `ticket-system/.dev.vars`
 - Dominio: `entradas.still-louder.com` (bloque `routes`).
 - CI opcional: conectar el repo con **Workers Builds** (dashboard → Workers →
   Create → connect repo), un proyecto por app, con root directory `/` y
-  `ticket-system/` respectivamente; build `npm install && npm run build`,
-  deploy `npx wrangler deploy`.
+  `ticket-system/` respectivamente; build `npm install && npm run build`.
+  Deploy `npx wrangler deploy` en el sitio principal; en el ticket system,
+  `npx wrangler versions upload` con los builds de ramas desactivados (ver
+  [Releases seguros](#releases-seguros-versiones-y-secrets)).
 
 ### Smoke test local
 

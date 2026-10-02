@@ -3,6 +3,9 @@ dist/
 .vercel/
 .wrangler/
 .dev.vars*
+# wrangler secret bulk / --secrets-file inputs: real credentials, never commit
+secrets*.json
+*.secrets.env
 .env
 .env.local
 *.log
