@@ -8,3 +8,7 @@
 
 # Old public path of the Halloween Party show (still on flyers/links).
 /31-10 /halloween-party 301
+
+# Root: real HTTP redirect so crawlers (Facebook, WhatsApp) reach the page
+# with the OG tags; index.html's meta-refresh stays as a fallback.
+/ /entradas 301
