@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Anton;src:url(../../public/fonts/anton-latin.woff2)}
+@font-face{font-family:Archivo;src:url(../../public/fonts/archivo-latin.woff2)}
+@font-face{font-family:Marker;src:url(../../public/fonts/permanentmarker-latin.woff2)}
+@font-face{font-family:DMSerif;font-style:italic;src:url(../../public/fonts/dmserifdisplay-italic-latin.woff2)}
+*{margin:0;box-sizing:border-box}
+body{width:1200px;height:630px;overflow:hidden;background:#0d1216;position:relative;font-family:Archivo}
+.photo{position:absolute;right:0;top:0;width:660px;height:630px;background:url(../../../public/assets/images/photoshoot/skirlaz/IMG_2433.jpg) center 8%/cover no-repeat;filter:grayscale(1) brightness(.78) contrast(1.05)}
+.photo::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0d1216 0%,rgba(13,18,22,.6) 15%,rgba(13,18,22,0) 40%),linear-gradient(0deg,rgba(13,18,22,.5),rgba(13,18,22,0) 40%)}
+.left{position:absolute;left:0;top:0;width:560px;height:630px;background:linear-gradient(90deg,#0d1216 0%,#0d1216 88%,rgba(13,18,22,0) 100%);padding:70px 0 0 64px}
+.bar{position:absolute;left:0;top:0;width:10px;height:630px;background:#c0282e}
+.kicker{font-family:DMSerif;font-style:italic;color:#e06b70;font-size:34px}
+.band{font-family:Marker;color:#fff;font-size:58px;margin-top:6px;line-height:1.1}
+.title{font-family:Anton;color:#fff;font-size:92px;line-height:1.02;text-transform:uppercase;margin-top:6px;letter-spacing:.5px}
+.title span{color:#c0282e}
+.meta{font-family:Anton;color:#d7dbe0;font-size:30px;letter-spacing:1px;margin-top:22px;text-transform:uppercase}
+.cta{display:flex;align-items:center;gap:22px;margin-top:34px}
+.btn{white-space:nowrap;font-family:Anton;background:#c0282e;color:#fff;font-size:28px;padding:10px 24px;border-radius:8px;letter-spacing:1px;text-transform:uppercase}
+.url{white-space:nowrap;color:#e8eaed;font-size:22px;position:relative;z-index:2}
+</style></head><body>
+<div class="photo"></div>
+<div class="left"><div class="bar"></div>
+<div class="kicker">Directo con la banda</div>
+<div class="band">Still Louder</div>
+<div class="title">Entradas<br><span>en vivo</span></div>
+<div class="meta">Yappy · Tarjeta · Efectivo</div>
+<div class="cta"><div class="btn">Compra tu entrada</div><div class="url">entradas.still-louder.com</div></div>
+</div></body></html>
+<!-- Source of ticket-system/public/og-image.jpg (generic /entradas preview). Mirrors the main site's CURRENT design: keep colors in sync with public/assets/css/variables.css (--color-bg-primary, --color-accent, --color-accent-text) and the current band photo. Render: node ticket-system/design/og-image/render.mjs. Not deployed (not a Vite input). -->
