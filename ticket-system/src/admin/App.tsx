@@ -29,6 +29,7 @@ import {
 } from '../shared/api';
 import { TIER_LABELS } from '../shared/config';
 import { EventosTab } from './EventosTab';
+import { CuantoappTab } from './CuantoappTab';
 
 const STORAGE_KEY = 'sl_admin_pw';
 // Last event picked in the selector (persists across sessions on this device).
@@ -167,7 +168,7 @@ function Gate({
   );
 }
 
-type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin' | 'eventos';
+type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin' | 'cuantoapp' | 'eventos';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'resumen', label: 'Resumen' },
@@ -175,6 +176,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'entradas', label: 'Entradas' },
   { key: 'regalos', label: 'Regalos' },
   { key: 'checkin', label: 'Check-in' },
+  { key: 'cuantoapp', label: 'CuantoApp' },
   { key: 'eventos', label: 'Eventos' }
 ];
 
@@ -283,6 +285,7 @@ function Dashboard({ password, onLogout }: { password: string; onLogout: () => v
           {tab === 'entradas' && <EntradasTab key={event.id} password={password} event={event} />}
           {tab === 'regalos' && <RegalosTab key={event.id} password={password} event={event} />}
           {tab === 'checkin' && <CheckinTab key={event.id} password={password} event={event} />}
+          {tab === 'cuantoapp' && <CuantoappTab key={event.id} password={password} event={event} />}
         </>
       )}
     </div>

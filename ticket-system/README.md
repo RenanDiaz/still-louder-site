@@ -17,7 +17,7 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 | Ruta        | Quién        | Qué hace                                                        |
 | ----------- | ------------ | --------------------------------------------------------------- |
 | `/entradas` | Público      | Compra de **cualquier evento**: el slug sale del path (`/halloween-party`, `/when-we-were-young-3` por rewrite) o de `?evento=<slug>`; sin slug = el evento "actual". El `status` del evento decide la vista (teaser / cuenta regresiva / formulario / agotado / "ya pasó"). |
-| `/admin`    | Admin        | Selector de evento + pestaña **Eventos** (crear/editar/transición de estado). Todo lo demás, scopeado al evento elegido: reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV. |
+| `/admin`    | Admin        | Selector de evento + pestaña **Eventos** (crear/editar/transición de estado). Todo lo demás, scopeado al evento elegido: reportes, órdenes (pagar/cancelar/reenviar correo), entradas (anular/restaurar), cortesías, check-in en vivo, toggle Etapa 2, export CSV, comprobación de links de CuantoApp. |
 | `/validar`  | Staff/puerta | Escáner de QR con resultado verde/rojo + sonido.                |
 | `/support`  | Soporte      | **Solo lectura**: buscar órdenes por email/teléfono/nombre/# de orden, ver su estado y sus entradas, y reenviar el correo con el QR. Sin acceso a mutaciones (pagar, cancelar, anular, cortesías, Etapa 2) ni a las estadísticas de ventas. |
 | `/ayuda`    | Público      | FAQ + canales oficiales de contacto; la copia sale del evento actual (`/api/presale/status`). Sin datos del usuario. El reenvío del QR **no** vive aquí a propósito — lo hace el staff desde `/support` cuando el comprador escribe. |
@@ -71,7 +71,7 @@ ticket-system/
 │   ├── entradas/             # compra/teaser de cualquier evento (+ Teaser.tsx, theme.css, themes/)
 │   ├── ayuda/                # FAQ + contacto (público)
 │   ├── regalo/               # reclamo de regalo (público, oculto)
-│   ├── admin/                # panel (+ EventosTab.tsx)
+│   ├── admin/                # panel (+ EventosTab.tsx, CuantoappTab.tsx)
 │   ├── support/              # soporte (solo lectura)
 │   └── validar/              # escáner de puerta
 ├── supabase/migrations/
@@ -400,7 +400,9 @@ correo y el pase de Wallet usan la misma paleta.
    si el preview del enlace debe tener sus propias meta).
 4. Google Wallet: con el evento seleccionado, **"Clase de Google Wallet"**.
 5. CuantoApp: los links `CUANTOAPP_PAYMENT_URL_1..10` son globales — si los
-   precios cambian, actualizar los productos en CuantoApp.
+   precios cambian, actualizar los productos en CuantoApp. La pestaña
+   **CuantoApp** del admin muestra, con el evento elegido, el link de cada
+   cantidad y el monto exacto que debe cobrar: abrir cada uno y comparar.
 6. **Abrir venta** (`on_sale`). El código y el slug se bloquean en cuanto hay
    entradas emitidas.
 7. Al terminar el show: **Archivar**.

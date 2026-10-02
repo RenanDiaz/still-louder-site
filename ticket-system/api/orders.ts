@@ -11,6 +11,7 @@ import {
 } from './_lib/events.js';
 import { MAX_QUANTITY_PER_ORDER, priceBreakdown, reservationMinutesFor } from './_lib/pricing.js';
 import { sendOrderNotificationEmail } from './_lib/email.js';
+import { cuantoappLinkFor } from './_lib/cuantoapp.js';
 import type { Order, PaymentMethod, PresaleStatus, Tier } from './_lib/types.js';
 
 const TIERS: Tier[] = ['preventa', 'general'];
@@ -25,18 +26,6 @@ interface CreateOrderBody {
   tier?: string;
   quantity?: number;
   payment_method?: string;
-}
-
-// CuantoApp es manual: cada cantidad (1–10) tiene su propio producto OCULTO en
-// el catálogo, con el precio ya "grossed-up" (porque el fijo de $0.35 es por
-// transacción, no por entrada). El operador crea esos productos una vez y pega
-// sus links en CUANTOAPP_PAYMENT_URL_<n>; aquí elegimos el que corresponde a la
-// cantidad. CUANTOAPP_PAYMENT_URL (sin sufijo) queda como fallback. El producto
-// puede llevar dos precios (preventa/general): el comprador paga el monto exacto
-// que le mostramos, y el admin marca el precio de preventa como agotado al
-// cerrarse esa etapa.
-function cuantoappLinkFor(quantity: number): string {
-  return process.env[`CUANTOAPP_PAYMENT_URL_${quantity}`] || process.env.CUANTOAPP_PAYMENT_URL || '';
 }
 
 function paymentInstructions(method: PaymentMethod, totalCents: number, quantity: number) {

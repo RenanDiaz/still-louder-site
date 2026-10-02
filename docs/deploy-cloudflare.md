@@ -143,8 +143,10 @@ Notas:
   con la firma nueva. Solo rotarlo cuando no haya entradas vivas de ningún
   evento, o asumiendo que hay que reenviar todos los correos. Mientras
   Vercel y Cloudflare convivan, **el valor tiene que ser el mismo en los dos**.
-- **CuantoApp**: el código usa `??`, así que un `CUANTOAPP_PAYMENT_URL_<n>`
-  definido **vacío** no cae al fallback. O se llena o no se crea.
+- **CuantoApp**: el código usa `||`, así que un `CUANTOAPP_PAYMENT_URL_<n>`
+  definido **vacío** cae al fallback `CUANTOAPP_PAYMENT_URL` (o a ningún link,
+  si ese también está vacío). Después de cada deploy, revisar la pestaña
+  **CuantoApp** del admin: marca faltantes, fallbacks y links duplicados.
 - **No migrar** estas variables que quedan en el dashboard de Vercel: ningún
   código las lee. `VENUE_ADDRESS` y `EVENT_START_ISO` hoy viven en la tabla
   `events`. `GOOGLE_WALLET_CLASS_SUFFIX` se retiró: la clase es

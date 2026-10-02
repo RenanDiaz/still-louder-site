@@ -309,6 +309,26 @@ export function ensureWalletClass(
   });
 }
 
+export type CuantoappLinkSource = 'specific' | 'fallback' | 'missing';
+
+export interface CuantoappLinkRow {
+  quantity: number;
+  envVar: string;
+  url: string;
+  source: CuantoappLinkSource;
+  /** Monto exacto (con recargo) que debe cobrar ese producto, por tipo. */
+  amounts: { preventa: number; general: number };
+}
+
+export interface CuantoappLinksResponse {
+  prices: { preventa: number; general: number };
+  links: CuantoappLinkRow[];
+}
+
+export function fetchCuantoappLinks(password: string, eventId: string): Promise<CuantoappLinksResponse> {
+  return request(withEvent('/api/admin/cuantoapp', eventId), { headers: authHeader(password) });
+}
+
 export function cancelOrder(
   password: string,
   orderId: string
