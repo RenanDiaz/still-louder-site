@@ -5,7 +5,8 @@ import { methodNotAllowed, parseBody, sendHtml, sendJson, withErrorHandling } fr
 import { issueOrder, resendOrderEmail, IssueError } from './_lib/issue.js';
 import { refundOrder, RefundError } from './_lib/refund.js';
 import { buildRefundReceiptHtml } from './_lib/receipt.js';
-import { MAX_QUANTITY_PER_ORDER } from './_lib/pricing.js';
+import { MAX_QUANTITY_PER_ORDER, priceBreakdown } from './_lib/pricing.js';
+import { listCuantoappLinks } from './_lib/cuantoapp.js';
 import { ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
 import { tokenToDataUrl } from './_lib/qr.js';
 import { env } from './_lib/env.js';
@@ -56,6 +57,7 @@ import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_l
 //   POST /api/admin/gifts/:id/close             close an active campaign early
 //   GET  /api/admin/orders/:id              one order + its tickets (support)
 //   POST /api/admin/wallet/google/ensure-class create the Google Wallet event class (idempotent)
+//   GET  /api/admin/cuantoapp?event=           CuantoApp links per quantity + the amount each must charge
 //
 // Everything is admin-gated except:
 //   - orders/cleanup, which also accepts the cron secret (daily Vercel Cron, GET);
@@ -199,6 +201,12 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
     const event = await requireEvent(req, res);
     if (!event) return;
     return ensureWalletClass(res, event);
+  }
+  if (route === 'cuantoapp') {
+    if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
+    const event = await requireEvent(req, res);
+    if (!event) return;
+    return listCuantoapp(res, event);
   }
 
   return sendJson(res, 404, { error: 'not_found' });
@@ -801,6 +809,24 @@ async function ensureWalletClass(res: VercelResponse, event: EventRow): Promise<
   }
   const result = await ensureEventTicketClass(event);
   return sendJson(res, 200, result);
+}
+
+// --- CuantoApp -------------------------------------------------------------------
+
+// Read-only check of the card-payment setup: for each quantity, the link the
+// buyer would get (same resolution as api/orders.ts) next to the exact amount
+// that CuantoApp product must charge for this event's prices. CuantoApp has no
+// API to read a product's price, so the admin opens each link and compares.
+async function listCuantoapp(res: VercelResponse, event: EventRow): Promise<void> {
+  const prices = await getTierPrices(event.id);
+  const rows = listCuantoappLinks().map((link) => ({
+    ...link,
+    amounts: {
+      preventa: priceBreakdown(prices.preventa, link.quantity, 'cuantoapp').totalCents,
+      general: priceBreakdown(prices.general, link.quantity, 'cuantoapp').totalCents
+    }
+  }));
+  return sendJson(res, 200, { prices, links: rows });
 }
 
 // --- Events ----------------------------------------------------------------------
