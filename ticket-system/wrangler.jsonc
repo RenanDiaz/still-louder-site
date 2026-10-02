@@ -3,7 +3,9 @@
 //   - static assets: the Vite multi-page build in dist/
 //   - /api/*: the existing Vercel-style handlers, adapted by cloudflare/worker.ts
 //
-// Deploy:   npm run deploy:cloudflare      (build + wrangler deploy)
+// Release:  npm run upload:cloudflare      (build + versions upload, no traffic)
+//           then `wrangler versions deploy <id>@100%` — see docs/deploy-cloudflare.md
+// Deploy:   npm run deploy:cloudflare      (build + wrangler deploy, straight to prod)
 // Preview:  npm run preview:cloudflare     (build + wrangler dev)
 // Env:      non-sensitive, domain-bound values live in "vars" below; everything
 //           else is a secret (`wrangler secret put <NAME>`). A name can't be both.
@@ -53,13 +55,16 @@
   // The vars below always win over the dashboard: change them here, not there.
   // ORDER_NOTIFICATION_EMAIL (personal addresses) is a secret, not a var.
   //
-  // keep_vars is REQUIRED, not cosmetic. Since wrangler 4.x deploys an existing
-  // Worker through the Versions API, and it only sends keep_bindings for
-  // secrets when keep_vars (or --secrets-file) is set
-  // (`keepSecrets: keepVars || !!secretsFile`). Without it every deploy —
-  // manual or Workers Builds — ships a version with ZERO secrets and the whole
-  // API answers 500. Side effect: a var removed from this block survives in
-  // the Worker until deleted in the dashboard.
+  // keep_vars: plain-text vars added in the dashboard survive a deploy (the
+  // ones below still win). wrangler <= 4.142 also keyed secret inheritance on
+  // it for `wrangler deploy`; newer versions always keep secrets.
+  //
+  // Secrets are copied from the LATEST UPLOADED version, not the deployed
+  // one. One upload without secrets (e.g. a branch preview build) breaks the
+  // chain: every later version ships with zero secrets and the API answers
+  // 500. Release with `npm run upload:cloudflare` and check
+  // `wrangler versions view <id>` lists every secret before promoting it.
+  // Recovery: docs/deploy-cloudflare.md, "Releases seguros".
   "keep_vars": true,
   "vars": {
     "PUBLIC_BASE_URL": "https://entradas.still-louder.com",

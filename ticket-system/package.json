@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.api.json --noEmit && tsc -p tsconfig.cloudflare.json --noEmit",
     "preview:cloudflare": "npm run build && wrangler dev",
-    "deploy:cloudflare": "npm run build && wrangler deploy"
+    "deploy:cloudflare": "npm run build && wrangler deploy",
+    "upload:cloudflare": "npm run build && wrangler versions upload"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
