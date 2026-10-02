@@ -9,7 +9,8 @@
     { "path": "/api/admin/orders/cleanup", "schedule": "0 6 * * *" }
   ],
   "redirects": [
-    { "source": "/31-10", "destination": "/halloween-party", "statusCode": 301 }
+    { "source": "/31-10", "destination": "/halloween-party", "statusCode": 301 },
+    { "source": "/", "destination": "/entradas", "statusCode": 301 }
   ],
   "rewrites": [
     { "source": "/api/admin/:path*", "destination": "/api/admin?path=:path*" },
