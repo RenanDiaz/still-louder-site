@@ -3,9 +3,10 @@
 //   - static assets: the Vite multi-page build in dist/
 //   - /api/*: the existing Vercel-style handlers, adapted by cloudflare/worker.ts
 //
-// Release:  npm run upload:cloudflare      (build + versions upload, no traffic)
-//           then `wrangler versions deploy <id>@100%` — see docs/deploy-cloudflare.md
-// Deploy:   npm run deploy:cloudflare      (build + wrangler deploy, straight to prod)
+// Release:  npm run release:cloudflare     (build + scripts/release-cloudflare.mjs:
+//           upload, check secrets, smoke-test preview, promote, smoke-test prod)
+// Verify:   npm run upload:cloudflare      (same, without promoting)
+// Never `wrangler deploy` here — see docs/deploy-cloudflare.md, "Releases seguros".
 // Preview:  npm run preview:cloudflare     (build + wrangler dev)
 // Env:      non-sensitive, domain-bound values live in "vars" below; everything
 //           else is a secret (`wrangler secret put <NAME>`). A name can't be both.
@@ -62,8 +63,7 @@
   // Secrets are copied from the LATEST UPLOADED version, not the deployed
   // one. One upload without secrets (e.g. a branch preview build) breaks the
   // chain: every later version ships with zero secrets and the API answers
-  // 500. Release with `npm run upload:cloudflare` and check
-  // `wrangler versions view <id>` lists every secret before promoting it.
+  // 500. `npm run release:cloudflare` refuses to promote such a version.
   // Recovery: docs/deploy-cloudflare.md, "Releases seguros".
   "keep_vars": true,
   "vars": {

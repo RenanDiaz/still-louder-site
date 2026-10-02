@@ -37,11 +37,11 @@ Worker de **solo assets**: no hay código de servidor, `dist/` se sirve directo.
 ```bash
 npm install
 npm run preview:cloudflare   # build + wrangler dev (prueba local)
-npm run upload:cloudflare    # build + wrangler versions upload (sin tráfico) — así se libera
-npm run deploy:cloudflare    # build + wrangler deploy (directo a producción; evitar en venta)
+npm run deploy:cloudflare    # build + wrangler deploy
 ```
 
-Para liberar a producción ver [Releases seguros](#releases-seguros-versiones-y-secrets).
+Sin secrets, así que el problema de la cadena de secrets del ticket system no
+aplica aquí.
 
 - Los headers de seguridad y caching de `vercel.json` viven en
   `public/assets/_headers` (Vite copia `public/assets/` → raíz de `dist/`, que
@@ -62,8 +62,12 @@ cd ticket-system
 npm install
 npm run typecheck            # incluye tsconfig.cloudflare.json
 npm run preview:cloudflare   # build + wrangler dev (frontend + API + cron local)
-npm run deploy:cloudflare    # build + wrangler deploy
+npm run release:cloudflare   # build + release con verificación (ver "Releases seguros")
+npm run upload:cloudflare    # igual, pero sin promover: sube y verifica nada más
 ```
+
+`deploy:cloudflare` es un alias de `release:cloudflare`: en el ticket system
+nada sale a producción con `wrangler deploy` a secas.
 
 ### Variables de entorno: `vars` vs. secrets
 
@@ -175,21 +179,41 @@ Pasó el 1 y el 2-oct-2026: un build de rama de Workers Builds subió una versi�
 vacía (`ceff0208`) y desde ahí todas las versiones salieron sin los 13 secrets,
 incluida la del merge de #82, que hubo que revertir en plena venta.
 
-**Cómo liberar** (Workers Builds con deploy command
-`npx wrangler versions upload`, o a mano):
+Volvió a pasar el 2-oct con el merge de #84: los 4 pushes de la rama del PR
+(builds de rama todavía activos) dejaron la cadena vacía y `wrangler deploy`
+de Workers Builds la promovió directo a producción.
+
+**Cómo liberar**: `scripts/release-cloudflare.mjs`, nunca `wrangler deploy`.
 
 ```bash
 cd ticket-system
-npm run upload:cloudflare            # versión nueva, 0% de tráfico; imprime ID y Preview URL
-npx wrangler versions view <id>      # DEBE listar todos los secrets (hoy 13). Si no: no promover
-curl -s <preview-url>/api/presale/status   # 200 con datos reales
-npx wrangler versions deploy <id>@100% -y
+npm run release:cloudflare           # build + upload + verificación + promoción
+npm run upload:cloudflare            # lo mismo sin promover (imprime el comando para hacerlo)
 ```
+
+El script:
+
+1. Sube una versión con 0% de tráfico (`wrangler versions upload`).
+2. **No la promueve** si le falta un secret requerido (`REQUIRED_SECRETS` en
+   el script: los `required()` de `api/_lib/env.ts` + `CRON_SECRET`) o
+   cualquier secret que tenga la versión activa. Producción no se toca.
+3. Hace smoke test de `/api/presale/status` en la Preview URL (200 o 404
+   `event_not_found` = llegó a Supabase; sin secrets responde 500).
+4. La promueve al 100%, repite el smoke test contra producción y, si falla,
+   vuelve a poner el deployment anterior.
+
+Si se agrega un secret requerido nuevo, sumarlo a `REQUIRED_SECRETS`.
+
+Si falla en el paso 2, la versión rechazada igual queda como la última
+subida y la siguiente hereda sus secrets (ninguno): hay que recuperar la
+cadena con `--secrets-file` (abajo).
 
 **Configuración del proyecto en Workers Builds** (`still-louder-tickets`):
 
-- Deploy command: `npx wrangler versions upload`, para que un push a `main`
-  no salga directo a producción.
+- Build command: `npm ci && npm run build`.
+- Deploy command: `node scripts/release-cloudflare.mjs`. Un push a `main`
+  sale a producción solo si pasa la verificación; si no, el build falla y
+  producción queda como estaba. **Nunca** `npx wrangler deploy`.
 - Branch control: builds de ramas que no son `main` **desactivados**. Cada
   push de rama sube una versión al mismo Worker y es la forma más fácil de
   romper la cadena.
@@ -206,10 +230,7 @@ versión con **todos** los secrets en archivo:
 ```bash
 cd ticket-system
 # secrets.json = { "NOMBRE": "valor", ... } con TODOS los secrets (gitignorado; borrarlo al terminar)
-npm run build && npx wrangler versions upload --secrets-file secrets.json
-npx wrangler versions view <id>      # todos los secrets + todas las vars
-# probar la Preview URL, luego:
-npx wrangler versions deploy <id>@100% -y
+npm run build && node scripts/release-cloudflare.mjs --secrets-file secrets.json
 rm secrets.json
 ```
 
@@ -247,7 +268,7 @@ del propio Worker.
   Create → connect repo), un proyecto por app, con root directory `/` y
   `ticket-system/` respectivamente; build `npm install && npm run build`.
   Deploy `npx wrangler deploy` en el sitio principal; en el ticket system,
-  `npx wrangler versions upload` con los builds de ramas desactivados (ver
+  `node scripts/release-cloudflare.mjs` con los builds de ramas desactivados (ver
   [Releases seguros](#releases-seguros-versiones-y-secrets)).
 
 ### Smoke test local

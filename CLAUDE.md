@@ -555,6 +555,13 @@ when touching either app:
   `ticket-system/api/` must also be registered in the router in
   `ticket-system/cloudflare/worker.ts`. Its headers/rewrites are likewise
   duplicated in `ticket-system/public/_headers` and `_redirects`.
+- The ticket system is released **only** through
+  `ticket-system/scripts/release-cloudflare.mjs` (`npm run release:cloudflare`,
+  also the Workers Builds deploy command), never `wrangler deploy`: each Worker
+  version inherits secrets from the last *uploaded* one, so a secret-less upload
+  silently empties every later version, and the script refuses to promote such a
+  version. A new secret the API cannot run without must also be
+  added to `REQUIRED_SECRETS` in that script.
 
 ---
 
