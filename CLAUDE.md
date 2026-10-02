@@ -40,6 +40,21 @@ The rest of this document describes the **main site** unless stated otherwise.
   Vercel deployments. To use the same asset in both (e.g. the favicon), the
   file must be **copied** into each app's own `public/` directory and referenced
   with that app's root-relative paths.
+- **Brand-derived assets follow the main site's current design.** Generic
+  (non-event) brand assets of the ticket system must match the main site's
+  current visual identity — palette (`public/assets/css/variables.css`), band
+  photo and logo. Today that means:
+  - `ticket-system/public/og-image.jpg` — link preview of `/entradas` (and the
+    Google Wallet hero fallback in `api/_lib/google-wallet.ts`). Source:
+    `ticket-system/design/og-image/og-image.html`, render with
+    `render.mjs` in the same folder.
+
+  **When the main site's design changes (new release/era, palette, photo,
+  logo), these assets must be regenerated in the same change** — and bump the
+  `?v=N` on their `og:image`/`twitter:image` URLs so WhatsApp & co. drop the
+  cached preview. Add any new asset of this kind to the list above.
+  Event-specific art (e.g. `og-31-10.jpg`, event `og_image_url`, `src/entradas/themes/`)
+  follows its event's flyer, not this rule.
 
 ---
 

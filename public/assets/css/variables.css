@@ -1,6 +1,10 @@
 /**
  * Design System - CSS Variables
  * Modern design tokens for Still Louder website
+ *
+ * Changing the site's look (palette, era, band photo, logo)? The ticket system's
+ * generic brand assets copy it and must be regenerated too — see "Brand-derived
+ * assets" in CLAUDE.md (e.g. ticket-system/design/og-image/).
  */
 
 :root {
