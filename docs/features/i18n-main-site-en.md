@@ -20,6 +20,8 @@ con la versión en español sin esfuerzo manual de memoria.
 
 - Traducir `ticket-system/` (`/entradas`, `/ayuda`, emails, Wallet).
 - Traducir `al-vacio-pre-release.html` (legacy).
+- Traducir los comunicados (`docs/features/comunicados.md`, D2). Ver Decisión 7
+  para cómo se muestran en `/en`.
 - Detección automática de idioma con redirect (mala para SEO y para quien
   comparte un link; ver Decisión 3).
 - Un press kit / EPK. Es el siguiente paso natural para prensa, pero es contenido
@@ -127,6 +129,34 @@ quedan como están, pero en `en.html` el texto del botón o el `aria-label` lo
 avisa: *"Get tickets (Spanish-only site)"*. Así no se engaña a nadie con un
 flujo que no puede seguir.
 
+### 7. Comunicados: siguen en español, pero `/en` también los muestra
+
+`docs/features/comunicados.md` (D2) deja los comunicados **solo en español** y
+este spec no lo cambia. Lo que sí se exige es que un comunicado importante
+(por ejemplo, una cancelación) también llegue a quien entra por `/en`:
+
+- **Banner:** el hook `transformIndexHtml` del plugin de comunicados inyecta el
+  banner en `index.html` **y** en `en.html`. En `en.html` el texto que pone la
+  página va en inglés (`aria-label="Official statement"`, etiqueta *"Official
+  statement (in Spanish)"*, enlace *"Read statement"*, `aria-label` del ✕
+  *"Dismiss statement"*). `title` y `summary` quedan en español, con
+  `lang="es"` en su contenedor para que el lector de pantalla los pronuncie
+  bien. Se usa la misma llave de `localStorage`, así que cerrarlo en un idioma
+  lo cierra en los dos.
+- **Footer:** el enlace a `/comunicados` también se inyecta en `en.html` como
+  *"Statements (Spanish)"*, con `hreflang="es"`.
+- **Páginas de comunicado** (`/comunicados/*`): sin selector de idioma ni
+  versión `/en`. Su plantilla es una tercera copia del header/footer. El
+  selector de idioma no se agrega ahí: llevaría a una página que no existe.
+- **Paridad:** el banner y el enlace del footer se inyectan en el build y no
+  están en el HTML fuente, así que `check-i18n.js` no los ve ni los necesita
+  ver. Lo cubre el criterio 13.
+
+**Orden de implementación:** lo que se mergee segundo carga con el cambio del
+plugin. Si i18n va primero, el spec de comunicados ya tiene que tratar
+`en.html` cuando se implemente. Si comunicados va primero, la PR de i18n
+extiende el hook de `transformIndexHtml` a `en.html`.
+
 ## Alcance por archivo
 
 | Archivo | Cambio |
@@ -136,6 +166,7 @@ flujo que no puede seguir.
 | `vite.config.js` | Entrada `en: '/en.html'`. |
 | `public/assets/js/i18n.js` | **Nuevo** (Decisión 4). |
 | `public/assets/js/config.js`, `main.js`, `share.js`, `ui-utils.js`, `error-handler.js`, `sw-register.js` | Strings por idioma (Decisión 4) y form (Decisión 5). |
+| `scripts/comunicados/plugin.js` | Solo si comunicados ya está implementado: banner + enlace de footer también en `en.html` (Decisión 7). |
 | `public/assets/css/style.css` | Estilo del selector (`.lang-switch`), con tokens de `variables.css`. |
 | `public/assets/sitemap.xml` | Entrada `/en` y `xhtml:link rel="alternate" hreflang` en **ambas** URLs (namespace `xmlns:xhtml`). |
 | `public/assets/sw.js` | Agregar `/en` a `PRECACHE_URLS` y subir `CACHE_VERSION`. Ojo: `addAll` es todo o nada, así que `/en` tiene que existir en `dist/` antes de mergear. |
@@ -178,6 +209,10 @@ rewrites ni CSP nuevas), `site.webmanifest`, `ticket-system/`.
     `analytics.js`. Además, el selector manda el evento `language_switch` con
     `{ from, to }`.
 12. Lighthouse de `/en` (mobile): SEO y Accesibilidad ≥ a los de `/`.
+13. Si existe `docs/features/comunicados.md` implementado: con un comunicado
+    fijado y vigente, `/en` muestra el banner con el texto de la página en
+    inglés y el contenido en español (`lang="es"`), y el footer de `/en`
+    enlaza a `/comunicados`. Cerrarlo en `/en` también lo oculta en `/`.
 
 ## Traducción
 
