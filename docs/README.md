@@ -11,6 +11,7 @@ Where each document lives and what it covers. Start with the root
 | [`main-site/pwa.md`](main-site/pwa.md) | Service worker, caching strategies, manifest, offline page, PWA test checklist |
 | [`main-site/security.md`](main-site/security.md) | Security headers / CSP (Vercel + Cloudflare mirrors), links, forms, verification |
 | [`main-site/seo-accessibility.md`](main-site/seo-accessibility.md) | Metadata, structured data, sitemap/robots, a11y conventions, verification |
+| [`features/i18n-main-site-en.md`](features/i18n-main-site-en.md) | Spec: English version of the landing at `/en` (press / international listeners) — proposed |
 | [`features/comunicados.md`](features/comunicados.md) | Spec: official band statements (`/comunicados`, build-time Markdown pages + home banner) — not implemented |
 
 ## Ticket system (`ticket-system/`)
