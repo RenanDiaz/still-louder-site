@@ -9,12 +9,12 @@ written from the code. Remaining gaps are listed under **Known issues**.
 |---|---|---|
 | `public/assets/sw.js` | Service worker: precache, runtime caching, offline fallback, message API | `/sw.js` (verbatim) |
 | `public/assets/js/sw-register.js` | Registers the SW, shows the update banner and install prompt, and emits the analytics events. Self-contained IIFE, loaded as `<script type="module">` | Bundled with a hash into `/assets/js/` |
-| `public/assets/offline.html` | Offline fallback page (inline CSS/JS, retry button, auto-reloads when back online) | `/offline.html` (verbatim; both hosts serve it at `/offline` too) |
+| `public/assets/offline.html` | Offline fallback page (inline CSS/JS, retry button, auto-reloads when back online) | `/offline.html` (verbatim; Cloudflare serves it at `/offline` too) |
 | `public/assets/site.webmanifest` | Web app manifest | `/site.webmanifest` (verbatim, unhashed) |
 | `public/index.html`, `public/al-vacio-pre-release.html` | Link the manifest (`<link rel="manifest" href="/site.webmanifest">`) and load `sw-register.js` with `<script type="module" src="/assets/js/sw-register.js">` | Built entries |
 | `public/assets/js/main.js` | `initPWAShortcuts()` handles `?action=` from manifest shortcuts | Bundled |
 | `vite.config.js` | `root: 'public'`, `publicDir: 'assets'`, inputs are only `index.html` and `al-vacio-pre-release.html` | — |
-| `vercel.json`, `public/assets/_headers` | `Cache-Control: no-cache` for `/sw.js` in both | — |
+| `public/assets/_headers` | `Cache-Control: no-cache` for `/sw.js` | `/_headers` (read by Cloudflare) |
 
 Vite reminder: files in `public/assets/` (the publicDir) are copied **to the
 root of `dist/`** with no `assets/` prefix, while files Vite processes from HTML
@@ -84,16 +84,16 @@ URL `index.html` loads (`Inter:wght@400;500;600;700&family=Bebas+Neue`).
 
 Only URLs that exist **unhashed** in `dist/` belong here. Hashed CSS/JS bundles
 change name on every build, so the runtime cache picks them up instead. Clean-URL
-pages (`/index.html`, `/al-vacio-pre-release.html`) are left out on purpose: both
-hosts redirect them, and a redirected response cannot answer a navigation.
+pages (`/index.html`, `/al-vacio-pre-release.html`) are left out on purpose:
+Cloudflare (`html_handling`) redirects them, and a redirected response cannot answer a navigation.
 
 `cache.addAll()` is all-or-nothing. If **any** URL fails (404, network error,
 CSP block), the install promise rejects, the SW never activates, and the browser
 tries again on the next update check. After touching this list, run
 `npm run build` and confirm every entry exists in `dist/`.
 
-`/offline.html` is cached separately by `cacheOfflinePage()`. Vercel
-(`cleanUrls`) and Cloudflare (`html_handling`) answer it with a redirect to
+`/offline.html` is cached separately by `cacheOfflinePage()`. Cloudflare
+(`html_handling`) answers it with a redirect to
 `/offline`; the SW follows it and stores the body as a fresh `Response`, because
 a redirected response served to a navigation request makes the browser fail the
 navigation.
@@ -224,7 +224,7 @@ files into publicDir; see git history.
 3. **Debug logging in production.** `debug: true` (`sw-register.js:13`) and the
    unconditional `console.log` calls throughout `sw.js` go against the no-`console.log` convention.
 4. **Shortcut URLs** used to point at `/index.html?action=…` and
-   `/al-vacio-pre-release.html`, which both hosts redirect to clean URLs. They
+   `/al-vacio-pre-release.html`, which redirect to clean URLs. They
    now use `/?action=…` directly and the pre-release shortcut was dropped with
    the "A Las 10" rework.
 5. **Duplicate unhashed JS/CSS in `dist/`.** publicDir copies every file under

@@ -71,7 +71,7 @@ nueva**, no un fork del código.
 | Estados de evento | `draft` → `teaser` → `on_sale` → `archived`. | Reemplaza las fechas-interruptor de `event.ts` como estado explícito; las fechas siguen mandando dentro de `on_sale`. |
 | Passwords admin/staff/soporte | Globales, sin cambio. | Es la misma banda operando todos los shows. |
 | Tema visual | Por evento: `events.theme` (slug de un CSS en `src/entradas/themes/`). WWWY3 conserva el morado como tema `wwwy3`. | Cumple lo que el teaser dejó escrito: el 31-10 no hereda la identidad de WWWY3. |
-| Funciones serverless | **Cero archivos nuevos** bajo `api/` (seguimos en 11/12). Rutas de eventos del admin van dentro de `api/admin.ts`; los datos públicos del evento salen por `presale/status`. | Límite duro de Vercel Hobby. |
+| Funciones serverless | **Cero archivos nuevos** bajo `api/` (seguimos en 11/12). Rutas de eventos del admin van dentro de `api/admin.ts`; los datos públicos del evento salen por `presale/status`. | Límite duro de Vercel Hobby (ya no aplica en Cloudflare; `api/admin.ts` sigue agrupando las rutas admin y todo archivo nuevo bajo `api/` se registra en `cloudflare/worker.ts`). |
 
 ## Modelo de datos — `supabase/migrations/0011_events.sql`
 
@@ -205,7 +205,7 @@ La variante de copy para `gift` se conserva.
 ### `/entradas` (compra)
 
 - Único entry de compra. Resuelve el slug: `/entradas` → sin `event` (actual);
-  cualquier otro path → su último segmento. Rewrites en `vercel.json` y
+  cualquier otro path → su último segmento. Rewrites en
   `public/_redirects`: `/when-we-were-young-3 → /entradas`, `/31-10 → /entradas`
   (y los slugs futuros). **`31-10.html` y `src/teaser/` se eliminan** al aplicar
   este spec: el teaser pasa a ser el estado `teaser` del evento en la misma app
@@ -295,7 +295,7 @@ se muestra en rojo con el nombre del evento del QR, distinto de `forged`.
 
 ## Verificación end-to-end sugerida
 
-Con `vercel dev` y la migración aplicada a un proyecto Supabase de prueba
+Con `npm run preview:cloudflare` (wrangler dev) y la migración aplicada a un proyecto Supabase de prueba
 (clonar el de producción antes de tocar el real):
 
 1. Migrar → correr 1 y 2 de los criterios.

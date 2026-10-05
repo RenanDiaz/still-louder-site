@@ -72,15 +72,14 @@ Full architecture, conventions and common tasks: [`CLAUDE.md`](CLAUDE.md).
 
 ## Deployment
 
-Production is moving from **Vercel** to **Cloudflare Workers** on
-`still-louder.com`; Vercel stays configured as the rollback path until the
-cutover is done. Security/caching headers are **duplicated** in `vercel.json`
-(Vercel) and `public/assets/_headers` (Cloudflare) — change both.
+The site runs on **Cloudflare Workers** (assets-only Worker) at
+`still-louder.com`. Security/caching headers live in
+`public/assets/_headers` (shipped as `dist/_headers`).
 
-- Vercel: auto-deploys from `main`.
-- Cloudflare: `npm run deploy:cloudflare` (config in `wrangler.jsonc`).
+- Deploy: `npm run deploy:cloudflare` (config in `wrangler.jsonc`).
+- Local preview of the Worker: `npm run preview:cloudflare`.
 
-Step-by-step guide and cutover plan: [`docs/deploy-cloudflare.md`](docs/deploy-cloudflare.md).
+Step-by-step guide: [`docs/deploy-cloudflare.md`](docs/deploy-cloudflare.md).
 
 ---
 

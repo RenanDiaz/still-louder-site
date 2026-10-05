@@ -1,6 +1,5 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from '../_lib/supabase.js';
-import { methodNotAllowed, sendJson, withErrorHandling } from '../_lib/http.js';
+import { type ApiRequest, type ApiResponse, methodNotAllowed, sendJson, withErrorHandling } from '../_lib/http.js';
 import { getTierPrices, publicEvent, resolvePublicEvent } from '../_lib/events.js';
 import type { PresaleStatus } from '../_lib/types.js';
 
@@ -8,7 +7,7 @@ import type { PresaleStatus } from '../_lib/types.js';
 // Returns the event's public data (name, venue, dates, status, theme, tier
 // prices) plus the "quedan N" / "agotado" numbers that drive /entradas. The
 // client draws from this; the server still decides what can be sold.
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
 
   const raw = req.query.event;

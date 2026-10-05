@@ -1,7 +1,6 @@
-# Cloudflare `_redirects` — mirror of the non-API rewrites in
-# ticket-system/vercel.json (the /api/admin/:path* rewrite is handled by the
-# Worker router in cloudflare/worker.ts instead). Status 200 = rewrite, the
-# URL stays as typed; 301 = permanent redirect. Only Cloudflare reads this file.
+# Cloudflare `_redirects` — page rewrites and redirects (API routing lives in
+# the Worker router, cloudflare/worker.ts). Status 200 = rewrite, the URL stays
+# as typed; 301 = permanent redirect.
 
 /when-we-were-young-3 /entradas 200
 /regalo/* /regalo 200

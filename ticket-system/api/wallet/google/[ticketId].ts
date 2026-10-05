@@ -1,6 +1,5 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from '../../_lib/supabase.js';
-import { methodNotAllowed, sendJson, withErrorHandling } from '../../_lib/http.js';
+import { type ApiRequest, type ApiResponse, methodNotAllowed, sendJson, withErrorHandling } from '../../_lib/http.js';
 import { makeToken } from '../../_lib/hmac.js';
 import { buildWalletSaveUrl, isGoogleWalletConfigured } from '../../_lib/google-wallet.js';
 
@@ -27,7 +26,7 @@ interface TicketRow {
   events: { code: string } | null;
 }
 
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
   if (!isGoogleWalletConfigured()) return sendJson(res, 404, { error: 'not_available' });
 

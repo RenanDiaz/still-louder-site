@@ -1,34 +1,22 @@
 // =============================================================================
-// Vercel → Cloudflare Workers adapter
+// api/ handler → Cloudflare Workers adapter
 // =============================================================================
-// Runs the existing `api/` handlers — written against Vercel's (req, res)
-// Node-style interface — inside a Cloudflare Worker's fetch()-style runtime,
-// so the SAME backend code deploys to both platforms without a rewrite.
+// The `api/` handlers are written against a Node-style (req, res) pair
+// (ApiRequest / ApiResponse in api/_lib/http.ts). This builds that pair from a
+// Worker fetch() Request and turns what the handler wrote into a Response.
 //
-// It shims exactly the surface the handlers actually use:
-//   req: method, url, headers (lowercased object), query, body,
-//        socket.remoteAddress (gifts.ts rate-limit)
-//   res: status(), statusCode, setHeader()/getHeader(), send(), json(),
-//        end(), headersSent
-//
-// Anything new a handler starts using (streams, res.write, cookies…) must be
-// added here — the typecheck (tsconfig.cloudflare.json) will not catch usage
-// reached only through the loose `VercelRequest`/`VercelResponse` types.
+// It implements exactly the surface declared in ApiRequest / ApiResponse.
+// Anything new a handler needs (streams, res.write, cookies…) must be added
+// to BOTH the types and this adapter.
 // =============================================================================
 
-// `any` on purpose: the real handlers are typed (req: VercelRequest, res:
-// VercelResponse), and function-parameter contravariance would reject them
-// against any narrower shim type.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type VercelStyleHandler = (req: any, res: any) => Promise<void> | void;
+import type { ApiHandler, ApiRequest, ApiResponse } from '../api/_lib/http.js';
 
-// On Vercel these come from the `/(.*)` header block in vercel.json, which also
-// covers /api/*. On Cloudflare that block lives in public/_headers, which only
-// applies to STATIC assets — API responses come from this adapter, so they must
-// be set here or /api/* would answer without them. Only the document-level
-// directives are needed: the one HTML response an API route can return is the
-// admin refund receipt (no inline <script>, so script-src 'self' is fine).
-// KEEP IN SYNC with vercel.json + public/_headers.
+// public/_headers only applies to STATIC assets — API responses come from this
+// adapter, so the security headers must be set here or /api/* would answer
+// without them. Only the document-level directives are needed: the one HTML
+// response an API route can return is the admin refund receipt (no inline
+// <script>, so script-src 'self' is fine). KEEP IN SYNC with public/_headers.
 const API_SECURITY_HEADERS: Record<string, string> = {
   'x-content-type-options': 'nosniff',
   'x-frame-options': 'DENY',
@@ -40,21 +28,10 @@ const API_SECURITY_HEADERS: Record<string, string> = {
     "form-action 'self'; object-src 'none'"
 };
 
-interface ShimResponse {
-  statusCode: number;
-  headersSent: boolean;
-  status(code: number): ShimResponse;
-  setHeader(name: string, value: string | number | readonly string[]): ShimResponse;
-  getHeader(name: string): string | undefined;
-  removeHeader(name: string): void;
-  send(payload?: unknown): ShimResponse;
-  json(payload: unknown): ShimResponse;
-  end(payload?: string | Uint8Array): ShimResponse;
-}
 
-/** Vercel merges route params into req.query; `params` replicates that. */
-export async function runVercelHandler(
-  handler: VercelStyleHandler,
+/** Route params (`params`) are merged into req.query. */
+export async function runHandler(
+  handler: ApiHandler,
   request: Request,
   params: Record<string, string> = {}
 ): Promise<Response> {
@@ -78,8 +55,7 @@ export async function runVercelHandler(
     headers['x-forwarded-for'] = clientIp;
   }
 
-  // Body parsing, matching what @vercel/node gives the handlers: parsed JSON
-  // for application/json, raw string otherwise (parseBody() in _lib/http.ts
+  // Body parsing: parsed JSON for application/json, raw string otherwise (parseBody() in _lib/http.ts
   // re-parses strings, so an ambiguous content-type still works).
   let body: unknown;
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -98,13 +74,12 @@ export async function runVercelHandler(
     }
   }
 
-  const req = {
+  const req: ApiRequest = {
     method: request.method,
     url: url.pathname + url.search,
     headers,
     query,
     body,
-    cookies: {},
     socket: { remoteAddress: clientIp }
   };
 
@@ -113,7 +88,7 @@ export async function runVercelHandler(
   let responseBody: string | Uint8Array | null = null;
   let finished = false;
 
-  const res: ShimResponse = {
+  const res: ApiResponse = {
     get statusCode() {
       return statusCode;
     },
@@ -177,15 +152,14 @@ export async function runVercelHandler(
 
   // Every api/ handler is wrapped in withErrorHandling() and always responds;
   // this is a belt-and-suspenders guard against a handler that returns without
-  // sending (which on Vercel would hang the request until the platform 504s).
+  // sending.
   if (!finished) {
     statusCode = 500;
     resHeaders.set('content-type', 'application/json; charset=utf-8');
     responseBody = JSON.stringify({ error: 'internal_error' });
   }
 
-  // Parity with the platform-level headers vercel.json puts on /api/(.*):
-  // never cache API responses unless the handler opted into caching itself
+  // Never cache API responses unless the handler opted into caching itself
   // (e.g. /api/tickets/qr marks its PNG immutable).
   if (!resHeaders.has('cache-control')) {
     resHeaders.set('cache-control', 'no-store');

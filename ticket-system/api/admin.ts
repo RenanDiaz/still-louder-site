@@ -1,7 +1,14 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
 import { isAdmin, isCron, isSupport } from './_lib/auth.js';
-import { methodNotAllowed, parseBody, sendHtml, sendJson, withErrorHandling } from './_lib/http.js';
+import {
+  type ApiRequest,
+  type ApiResponse,
+  methodNotAllowed,
+  parseBody,
+  sendHtml,
+  sendJson,
+  withErrorHandling
+} from './_lib/http.js';
 import { issueOrder, resendOrderEmail, IssueError } from './_lib/issue.js';
 import { refundOrder, RefundError } from './_lib/refund.js';
 import { buildRefundReceiptHtml } from './_lib/receipt.js';
@@ -22,13 +29,10 @@ import {
 import { randomBytes } from 'node:crypto';
 import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_lib/types.js';
 
-// Single function for EVERY /api/admin/* route. Vercel Hobby caps a deployment
-// at 12 serverless functions, so all admin endpoints share one function instead
-// of one file each. Catch-all filenames ([...path].ts) only work in Next.js —
-// in a plain api/ directory they deploy but never match, so requests 404. This
-// file therefore lives at the fixed path /api/admin and a rewrite in
-// vercel.json maps /api/admin/:path* onto it, passing the sub-path in the
-// `path` query param:
+// Single handler for EVERY /api/admin/* route (historically a Vercel Hobby
+// function-count workaround; kept because one gated entry point is simpler).
+// The Worker router (cloudflare/worker.ts) sends /api/admin/:path* here,
+// passing the sub-path in the `path` query param:
 //
 // Every route that reads or changes per-event data takes `?event=<event id>`
 // and is scoped to it; without it → 400 event_required (never "all events" by
@@ -60,7 +64,7 @@ import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_l
 //   GET  /api/admin/cuantoapp?event=           CuantoApp links per quantity + the amount each must charge
 //
 // Everything is admin-gated except:
-//   - orders/cleanup, which also accepts the cron secret (daily Vercel Cron, GET);
+//   - orders/cleanup, which also accepts the cron secret (daily Worker cron);
 //   - the read-only customer-support routes (GET orders search, GET orders/:id,
 //     POST orders/:id/resend-email), which also accept SUPPORT_PASSWORD via
 //     isSupport(). Support never reaches the mutating routes (mark-paid, cancel,
@@ -74,7 +78,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 // Reads ?event=<id> and loads the event, answering 400/404 itself when it
 // can't. Callers return early on null.
-async function requireEvent(req: VercelRequest, res: VercelResponse): Promise<EventRow | null> {
+async function requireEvent(req: ApiRequest, res: ApiResponse): Promise<EventRow | null> {
   const raw = req.query.event;
   const id = (Array.isArray(raw) ? raw[0] : raw ?? '').trim();
   if (!id) {
@@ -89,7 +93,7 @@ async function requireEvent(req: VercelRequest, res: VercelResponse): Promise<Ev
   return event;
 }
 
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   // The rewrite delivers the sub-path slash-joined in `path`
   // (e.g. "orders/<id>/mark-paid"); split it back into segments.
   const raw = req.query.path;
@@ -220,8 +224,8 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
 // MUST provide a search term — an empty query returns nothing so the whole
 // table is never dumped (this also doubles as the support login check).
 async function listOrders(
-  req: VercelRequest,
-  res: VercelResponse,
+  req: ApiRequest,
+  res: ApiResponse,
   event: EventRow | null
 ): Promise<void> {
   const includeStats = event !== null;
@@ -332,7 +336,7 @@ async function listOrders(
   return sendJson(res, 200, { orders: orders ?? [], stats });
 }
 
-async function markOrderPaid(req: VercelRequest, res: VercelResponse, id: string): Promise<void> {
+async function markOrderPaid(req: ApiRequest, res: ApiResponse, id: string): Promise<void> {
   const body = parseBody<{ payment_ref?: string }>(req);
   const paymentRef = (body.payment_ref ?? '').trim() || null;
 
@@ -356,7 +360,7 @@ async function markOrderPaid(req: VercelRequest, res: VercelResponse, id: string
 // Cancels ONE pending order, freeing its presale cupo instantly (capacity only
 // counts status='pending'). Paid orders cannot be cancelled — revoke their
 // tickets instead, so the audit trail (payment received) stays intact.
-async function cancelOrder(res: VercelResponse, id: string): Promise<void> {
+async function cancelOrder(res: ApiResponse, id: string): Promise<void> {
   const supabase = getSupabase();
   const { data: updated, error } = await supabase
     .from('orders')
@@ -381,9 +385,9 @@ async function cancelOrder(res: VercelResponse, id: string): Promise<void> {
   return sendJson(res, 409, { error: 'order_paid' });
 }
 
-// Best-effort client IP for the Yappy reversal's `client-ip` header. Vercel
-// puts the real chain in x-forwarded-for (client first).
-function clientIpOf(req: VercelRequest): string {
+// Best-effort client IP for the Yappy reversal's `client-ip` header. The
+// adapter fills x-forwarded-for from cf-connecting-ip (client first).
+function clientIpOf(req: ApiRequest): string {
   const fwd = req.headers['x-forwarded-for'];
   const raw = Array.isArray(fwd) ? fwd[0] : fwd;
   const ip = raw?.split(',')[0].trim() || (req.headers['x-real-ip'] as string) || '';
@@ -395,7 +399,7 @@ function clientIpOf(req: VercelRequest): string {
 // the Yappy API call (cash/CuantoApp, or a Yappy charge already settled that the
 // admin reverses by hand). Paid orders are never "cancelled" — this is how the
 // money side is undone while keeping the audit trail.
-async function refund(req: VercelRequest, res: VercelResponse, id: string): Promise<void> {
+async function refund(req: ApiRequest, res: ApiResponse, id: string): Promise<void> {
   const body = parseBody<{ manual?: boolean; refund_ref?: string }>(req);
   const manual = body.manual === true;
   const refundRef = (body.refund_ref ?? '').trim() || null;
@@ -426,7 +430,7 @@ async function refund(req: VercelRequest, res: VercelResponse, id: string): Prom
 // Returns a printable HTML "comprobante de reembolso" for a refunded order.
 // Read-only and idempotent: it renders entirely from the stored order row, so a
 // receipt can be generated at any time, even days after the refund happened.
-async function refundReceipt(res: VercelResponse, id: string): Promise<void> {
+async function refundReceipt(res: ApiResponse, id: string): Promise<void> {
   if (!UUID_RE.test(id)) return sendJson(res, 404, { error: 'order_not_found' });
   const supabase = getSupabase();
 
@@ -444,7 +448,7 @@ async function refundReceipt(res: VercelResponse, id: string): Promise<void> {
   return sendHtml(res, 200, buildRefundReceiptHtml(order, event));
 }
 
-async function resendEmail(res: VercelResponse, id: string): Promise<void> {
+async function resendEmail(res: ApiResponse, id: string): Promise<void> {
   try {
     const result = await resendOrderEmail(id);
     return sendJson(res, 200, { orderId: result.order.id, ticketCount: result.ticketCount });
@@ -460,7 +464,7 @@ async function resendEmail(res: VercelResponse, id: string): Promise<void> {
 
 // One order plus its tickets, for the support detail view. Read-only: support
 // can see ticket statuses (valid / used / void) but cannot change them.
-async function getOrderDetail(res: VercelResponse, id: string): Promise<void> {
+async function getOrderDetail(res: ApiResponse, id: string): Promise<void> {
   if (!UUID_RE.test(id)) return sendJson(res, 404, { error: 'order_not_found' });
   const supabase = getSupabase();
 
@@ -483,7 +487,7 @@ async function getOrderDetail(res: VercelResponse, id: string): Promise<void> {
   return sendJson(res, 200, { order, tickets: tickets ?? [] });
 }
 
-async function cleanupOrders(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function cleanupOrders(req: ApiRequest, res: ApiResponse): Promise<void> {
   // Cron uses GET; the admin button uses POST.
   if (req.method !== 'POST' && req.method !== 'GET') {
     return methodNotAllowed(res, ['POST', 'GET']);
@@ -495,7 +499,7 @@ async function cleanupOrders(req: VercelRequest, res: VercelResponse): Promise<v
 
 // --- Presale -------------------------------------------------------------------
 
-async function toggleStage2(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
+async function toggleStage2(req: ApiRequest, res: ApiResponse, event: EventRow): Promise<void> {
   const body = parseBody<{ active?: boolean; cap?: number }>(req);
   if (typeof body.active !== 'boolean') {
     return sendJson(res, 400, { error: 'invalid_active' });
@@ -537,7 +541,7 @@ interface TicketRow extends Pick<Ticket, 'id' | 'order_id' | 'tier' | 'status' |
   orders: { buyer_name: string; buyer_email: string } | null;
 }
 
-async function listTickets(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
+async function listTickets(req: ApiRequest, res: ApiResponse, event: EventRow): Promise<void> {
   const supabase = getSupabase();
   const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const status = typeof req.query.status === 'string' ? req.query.status : '';
@@ -606,7 +610,7 @@ async function listTickets(req: VercelRequest, res: VercelResponse, event: Event
 // conditional UPDATE — same anti-race pattern as validate_ticket. A used
 // ticket can't transition either way: the person is already inside.
 async function setTicketStatus(
-  res: VercelResponse,
+  res: ApiResponse,
   id: string,
   target: 'void' | 'valid'
 ): Promise<void> {
@@ -651,7 +655,7 @@ interface CourtesyBody {
 // email behave identically to a purchase. Paid courtesy orders consume presale
 // cupo (counted by presale_status/create_order since migration 0004), but the
 // admin is never blocked by the cap: overshooting just shows presale sold out.
-async function createCourtesy(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
+async function createCourtesy(req: ApiRequest, res: ApiResponse, event: EventRow): Promise<void> {
   const body = parseBody<CourtesyBody>(req);
   const buyerName = (body.buyer_name ?? '').trim();
   const buyerEmail = (body.buyer_email ?? '').trim().toLowerCase();
@@ -710,7 +714,7 @@ interface CreateGiftBody {
   max_gifts?: number;
 }
 
-async function createGiftCampaign(req: VercelRequest, res: VercelResponse, event: EventRow): Promise<void> {
+async function createGiftCampaign(req: ApiRequest, res: ApiResponse, event: EventRow): Promise<void> {
   const body = parseBody<CreateGiftBody>(req);
   const maxGifts = Number(body.max_gifts);
   // No hard upper bound on N, but keep it sane.
@@ -733,7 +737,7 @@ async function createGiftCampaign(req: VercelRequest, res: VercelResponse, event
   return sendJson(res, 201, { campaign, url, qrDataUrl });
 }
 
-async function listGiftCampaigns(res: VercelResponse, event: EventRow): Promise<void> {
+async function listGiftCampaigns(res: ApiResponse, event: EventRow): Promise<void> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('gift_campaign')
@@ -751,7 +755,7 @@ async function listGiftCampaigns(res: VercelResponse, event: EventRow): Promise<
   return sendJson(res, 200, { campaigns });
 }
 
-async function getGiftCampaignDetail(res: VercelResponse, id: string): Promise<void> {
+async function getGiftCampaignDetail(res: ApiResponse, id: string): Promise<void> {
   if (!UUID_RE.test(id)) return sendJson(res, 400, { error: 'invalid_id' });
   const supabase = getSupabase();
 
@@ -783,7 +787,7 @@ async function getGiftCampaignDetail(res: VercelResponse, id: string): Promise<v
 
 // Manual early close. Only an active campaign can be closed; exhausted ones are
 // already terminal. Idempotent-ish: closing a non-active campaign just no-ops.
-async function closeGiftCampaign(res: VercelResponse, id: string): Promise<void> {
+async function closeGiftCampaign(res: ApiResponse, id: string): Promise<void> {
   if (!UUID_RE.test(id)) return sendJson(res, 400, { error: 'invalid_id' });
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -803,7 +807,7 @@ async function closeGiftCampaign(res: VercelResponse, id: string): Promise<void>
 // Creates THIS event's Passes Class once (idempotent — see ensureEventTicketClass).
 // Run it after setting the GOOGLE_WALLET_* env vars and before passes can be
 // saved; re-running it when the class already exists is a no-op.
-async function ensureWalletClass(res: VercelResponse, event: EventRow): Promise<void> {
+async function ensureWalletClass(res: ApiResponse, event: EventRow): Promise<void> {
   if (!isGoogleWalletConfigured()) {
     return sendJson(res, 400, { error: 'google_wallet_not_configured' });
   }
@@ -817,7 +821,7 @@ async function ensureWalletClass(res: VercelResponse, event: EventRow): Promise<
 // buyer would get (same resolution as api/orders.ts) next to the exact amount
 // that CuantoApp product must charge for this event's prices. CuantoApp has no
 // API to read a product's price, so the admin opens each link and compares.
-async function listCuantoapp(res: VercelResponse, event: EventRow): Promise<void> {
+async function listCuantoapp(res: ApiResponse, event: EventRow): Promise<void> {
   const prices = await getTierPrices(event.id);
   const rows = listCuantoappLinks().map((link) => ({
     ...link,
@@ -832,7 +836,7 @@ async function listCuantoapp(res: VercelResponse, event: EventRow): Promise<void
 // --- Events ----------------------------------------------------------------------
 
 // Metrics next to each event so the selector/table shows where each show stands.
-async function listEvents(res: VercelResponse): Promise<void> {
+async function listEvents(res: ApiResponse): Promise<void> {
   const supabase = getSupabase();
   const { data: events, error } = await supabase
     .from('events')
@@ -999,7 +1003,7 @@ function isUniqueViolation(error: { code?: string } | null): boolean {
   return error?.code === '23505';
 }
 
-async function createEvent(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function createEvent(req: ApiRequest, res: ApiResponse): Promise<void> {
   const parsed = parseEventBody(parseBody<EventBody>(req));
   if ('error' in parsed) return sendJson(res, 400, { error: parsed.error });
   const { fields, tiers } = parsed;
@@ -1024,7 +1028,7 @@ async function createEvent(req: VercelRequest, res: VercelResponse): Promise<voi
   return sendJson(res, 201, { event: { ...event!, tiers: await getTierPrices(event!.id) } });
 }
 
-async function updateEvent(req: VercelRequest, res: VercelResponse, id: string): Promise<void> {
+async function updateEvent(req: ApiRequest, res: ApiResponse, id: string): Promise<void> {
   const current = await getEventById(id);
   if (!current) return sendJson(res, 404, { error: 'event_not_found' });
   if (current.status === 'archived') return sendJson(res, 409, { error: 'event_archived' });
@@ -1063,7 +1067,7 @@ async function updateEvent(req: VercelRequest, res: VercelResponse, id: string):
   return sendJson(res, 200, { event: { ...updated!, tiers: await getTierPrices(id) } });
 }
 
-async function setEventStatus(req: VercelRequest, res: VercelResponse, id: string): Promise<void> {
+async function setEventStatus(req: ApiRequest, res: ApiResponse, id: string): Promise<void> {
   const body = parseBody<{ status?: string }>(req);
   const target = body.status as EventStatus;
   const current = await getEventById(id);

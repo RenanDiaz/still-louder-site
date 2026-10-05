@@ -1,5 +1,5 @@
+import type { ApiRequest } from './http.js';
 import { timingSafeEqual } from 'node:crypto';
-import type { VercelRequest } from '@vercel/node';
 import { env } from './env.js';
 
 /** Constant-time comparison that doesn't leak length via early return. */
@@ -18,7 +18,7 @@ function safeEqual(a: string, b: string): boolean {
  * Reads the gate password from the request. Accepts either an
  * `Authorization: Bearer <password>` header or an `x-access-password` header.
  */
-function readPassword(req: VercelRequest): string {
+function readPassword(req: ApiRequest): string {
   const auth = req.headers['authorization'];
   if (typeof auth === 'string' && auth.startsWith('Bearer ')) {
     return auth.slice('Bearer '.length).trim();
@@ -28,12 +28,12 @@ function readPassword(req: VercelRequest): string {
   return '';
 }
 
-export function isAdmin(req: VercelRequest): boolean {
+export function isAdmin(req: ApiRequest): boolean {
   const provided = readPassword(req);
   return provided.length > 0 && safeEqual(provided, env.adminPassword);
 }
 
-export function isStaff(req: VercelRequest): boolean {
+export function isStaff(req: ApiRequest): boolean {
   const provided = readPassword(req);
   if (provided.length === 0) return false;
   // Admins can also operate the gate.
@@ -44,15 +44,15 @@ export function isStaff(req: VercelRequest): boolean {
 // SUPPORT_PASSWORD is optional; when it's unset, env.supportPassword is '' and
 // only the admin password passes (a non-empty provided value can never equal '',
 // so support is simply disabled until the env var is configured).
-export function isSupport(req: VercelRequest): boolean {
+export function isSupport(req: ApiRequest): boolean {
   const provided = readPassword(req);
   if (provided.length === 0) return false;
   // Admins can also use the support view.
   return safeEqual(provided, env.supportPassword) || safeEqual(provided, env.adminPassword);
 }
 
-/** True when the request is an authenticated Vercel Cron invocation. */
-export function isCron(req: VercelRequest): boolean {
+/** True when the request is an authenticated cron call (Worker scheduled(); see cloudflare/worker.ts). */
+export function isCron(req: ApiRequest): boolean {
   const secret = env.cronSecret;
   if (!secret) return false;
   const auth = req.headers['authorization'];
