@@ -1,6 +1,6 @@
 # Campañas de promoción por correo
 
-> **Estado (5 oct 2026):** spec, sin implementar.
+> **Estado (5 oct 2026):** Fase 0 implementada (opt-in en la compra); Fases 1–2 sin implementar.
 > Subsistema: `ticket-system/` (los contactos salen de `orders`, el envío reusa
 > Resend y la gestión vive en `/admin`). No toca el sitio principal.
 
@@ -46,8 +46,11 @@ un contacto más sin consentimiento explícito. Debe salir **antes** que el rest
   noticias de Still Louder (música y shows). Puedo darme de baja cuando quiera."*
   **Desmarcada por defecto**, no obligatoria para comprar.
 - Se guarda en la orden (`orders.marketing_opt_in boolean not null default
-  false`, `marketing_opt_in_at timestamptz`). Hay que propagarlo por
-  `create_order`, el flujo Yappy (`api/yappy/create-order.ts`) y `claim_gift`.
+  false`, `marketing_opt_in_at timestamptz`; migración
+  `0015_marketing_opt_in.sql`). Sin tocar `create_order` ni `claim_gift`:
+  `api/orders.ts` y `api/gifts.ts` lo escriben con un `UPDATE` tras el RPC
+  (patrón de `0014`); si falla, queda `false` (la dirección segura). Yappy no
+  cambia: paga una orden ya creada por `api/orders.ts`.
 - Sin envío todavía: solo capturar.
 
 ### Fase 1 — Campañas
@@ -68,7 +71,7 @@ un contacto más sin consentimiento explícito. Debe salir **antes** que el rest
   y revisar su dashboard (la muestra es pequeña).
 - Programar una ola a una hora (si en Fase 1 hace falta).
 
-## Modelo de datos (`supabase/migrations/0015_marketing_campaigns.sql`)
+## Modelo de datos (`supabase/migrations/0016_marketing_campaigns.sql`)
 
 Todas las tablas con RLS habilitado y **sin policies** (solo service-role).
 
@@ -287,7 +290,7 @@ Si en el futuro se quiere **avisar por correo** de un comunicado, hay dos casos:
 
 ## Verificación end-to-end
 
-1. Aplicar `0015_marketing_campaigns.sql`. Con `npm run preview:cloudflare`:
+1. Aplicar `0016_marketing_campaigns.sql`. Con `npm run preview:cloudflare`:
 2. Admin → Campañas → Contactos: se sincronizan; etiquetar 3 correos propios
    como `allegado`.
 3. Nueva campaña, escalonado, olas de 2 → prueba a tu correo → congelar.
