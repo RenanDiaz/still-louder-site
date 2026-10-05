@@ -33,6 +33,11 @@ export interface Order {
   order_ref: string | null;
   // transactionId returned by Yappy's payment-wc (audit/reconciliation).
   yappy_transaction_id: string | null;
+  // GA4 ids of the buying browser (migration 0014) and the stamp that makes
+  // the server-side `purchase` fire once — see api/_lib/ga.ts.
+  ga_client_id: string | null;
+  ga_session_id: string | null;
+  ga_purchase_sent_at: string | null;
 }
 
 export interface Ticket {

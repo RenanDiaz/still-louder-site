@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { getPresaleStatus, type PublicEvent } from '../shared/api';
+import { setAnalyticsContext, track, trackPageView } from '../shared/analytics';
 import { BAND_NAME, SOCIAL, formatEventDay, formatEventTime } from '../shared/config';
 
 // Cara pública de soporte al cliente (/ayuda): preguntas frecuentes + canales
@@ -184,9 +185,25 @@ export default function App() {
 
   useEffect(() => {
     getPresaleStatus()
-      .then((r) => setEvent(r.event))
+      .then((r) => {
+        setEvent(r.event);
+        setAnalyticsContext({ event_slug: r.event.slug, event_status: r.event.status });
+      })
       .catch(() => setEvent(null))
-      .finally(() => setLoaded(true));
+      .finally(() => {
+        setLoaded(true);
+        trackPageView();
+      });
+  }, []);
+
+  // click_help: any click on the official DM channel (several links on the page).
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.('a[href]');
+      if (link && link.getAttribute('href') === SOCIAL.instagramDm) track('click_help', { channel: 'instagram' });
+    };
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
   }, []);
 
   useEffect(() => {
@@ -247,6 +264,10 @@ export default function App() {
           <p className="help-contact__note">
             Ahí también anunciamos las próximas fechas. La venta es siempre directa con la banda: no
             vendemos por intermediarios.
+          </p>
+          <p className="help-contact__note">
+            Usamos Google Analytics para medir visitas a esta página y a la de entradas. No compartimos
+            tu nombre, correo ni teléfono con Google.
           </p>
         </section>
 

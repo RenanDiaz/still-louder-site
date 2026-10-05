@@ -172,8 +172,14 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 - **Admin/staff auth**: every protected endpoint checks `ADMIN_PASSWORD` /
   `STAFF_PASSWORD` with timing-safe comparison (`api/_lib/auth.ts`).
 - The ticket-system CSP (`ticket-system/public/_headers`; `/api/*` responses get
-  theirs from `cloudflare/adapter.ts`) intentionally allows Supabase, Yappy and
-  Firebase endpoints — keep it in sync when adding external calls.
+  theirs from `cloudflare/adapter.ts`) intentionally allows Supabase, Yappy,
+  Firebase and Google Analytics endpoints — keep it in sync when adding
+  external calls.
+- **Analytics** (`docs/features/analytics-entradas.md`): GA4 loads only on the
+  public surfaces (`/entradas`, event pages, `/ayuda`) via
+  `src/shared/analytics.ts`, never on staff pages or `/regalo`. `purchase` is
+  sent server-side (Measurement Protocol, `api/_lib/ga.ts`) from `issue.ts`,
+  once per order and best-effort. Never send PII to GA.
 
 ---
 

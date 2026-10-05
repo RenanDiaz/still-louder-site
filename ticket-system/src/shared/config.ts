@@ -7,6 +7,10 @@
 
 export const BAND_NAME = 'Still Louder';
 
+// GA4 — misma propiedad que el main site (public/assets/js/config.js). Es
+// público; el secreto del Measurement Protocol vive solo en el servidor.
+export const GA_MEASUREMENT_ID = 'G-ZZ4XG8CD88';
+
 // Canales oficiales de la banda. El Instagram es el canal principal; el enlace
 // usa ig.me/m/ para abrir un mensaje directo (DM) en vez del perfil.
 export const SOCIAL = {

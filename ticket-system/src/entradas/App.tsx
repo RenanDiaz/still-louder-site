@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createOrder,
   getOrderStatus,
@@ -22,6 +22,7 @@ import {
   priceBreakdown,
   type TierKey
 } from '../shared/config';
+import { getGaIds, setAnalyticsContext, track, trackPageView } from '../shared/analytics';
 import { Countdown } from './Countdown';
 import { Teaser } from './Teaser';
 import { YappyButton } from './YappyButton';
@@ -68,7 +69,13 @@ export default function App() {
 
   useEffect(() => {
     getPresaleStatus(slug)
-      .then(setData)
+      .then((r) => {
+        // One page_view per load, once the event is known — here and not in an
+        // effect, so it precedes the children's view_item (shared/analytics.ts).
+        setAnalyticsContext({ event_slug: r.event.slug, event_status: r.event.status });
+        trackPageView();
+        setData(r);
+      })
       .catch((err: Error & { status?: number }) => setLoadError(err.status === 404 ? 'not_found' : 'network'));
   }, [slug]);
 
@@ -221,11 +228,36 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
     if (quantity > maxQuantity) setQuantity(maxQuantity);
   }, [quantity, maxQuantity]);
 
+  // Funnel (docs/features/analytics-entradas.md): view_item when the form is
+  // on screen, form_start on the first interaction — once per load each.
+  const formVisible = salesOpen && !salesEnded && !eventSoldOut && !confirmation;
+  const viewTracked = useRef(false);
+  const formStartTracked = useRef(false);
+  const analyticsItem = (itemTier: string, qty: number, priceCents: number) => ({
+    item_id: `${event.slug}-${itemTier}`,
+    item_name: `${event.shortName} — ${TIER_LABELS[itemTier] ?? itemTier}`,
+    item_category: itemTier,
+    price: priceCents / 100,
+    quantity: qty
+  });
+  useEffect(() => {
+    if (!formVisible || viewTracked.current) return;
+    viewTracked.current = true;
+    track('view_item', { currency: 'USD', value: unitPrice / 100, items: [analyticsItem(tier, 1, unitPrice)] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formVisible]);
+  const handleFormStart = () => {
+    if (formStartTracked.current) return;
+    formStartTracked.current = true;
+    track('form_start');
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setSubmitting(true);
     try {
+      const gaIds = await getGaIds();
       const result = await createOrder({
         event: event.slug,
         buyer_name: name,
@@ -233,11 +265,20 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
         buyer_phone: phone || undefined,
         tier,
         quantity,
-        payment_method: method
+        payment_method: method,
+        ga_client_id: gaIds?.clientId,
+        ga_session_id: gaIds?.sessionId ?? undefined
+      });
+      track('begin_checkout', {
+        currency: 'USD',
+        value: result.totalCents / 100,
+        payment_type: result.payment.method,
+        items: [analyticsItem(result.tier, result.quantity, result.totalCents / result.quantity)]
       });
       setConfirmation(result);
     } catch (err) {
       const code = (err as Error & { code?: string }).code;
+      track('checkout_error', { error_code: code ?? 'network' });
       if (code === 'sales_closed' || code === 'event_not_found') {
         // El servidor dice que el evento ya pasó (nuestro reloj iba atrasado):
         // el formulario se reemplaza por el aviso de cierre.
@@ -384,7 +425,7 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
             <PresaleIndicator presale={presale} presaleEnded={presaleEnded} />
 
             {/* Formulario: temático pero LEGIBLE (sin filtro rasgado en inputs) */}
-            <form className="tk-form tk-reveal" onSubmit={handleSubmit}>
+            <form className="tk-form tk-reveal" onSubmit={handleSubmit} onFocus={handleFormStart}>
               <h2 className="tk-form__title">Compra tus entradas</h2>
 
               {/* La tarifa no se elige: se aplica sola la mejor disponible. */}
@@ -836,6 +877,10 @@ function YappyCheckout({
 }) {
   const [phase, setPhase] = useState<'pay' | 'waiting' | 'paid' | 'expired'>('pay');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (phase === 'expired') track('yappy_expired');
+  }, [phase]);
 
   useEffect(() => {
     if (phase === 'paid' || phase === 'expired') return;
