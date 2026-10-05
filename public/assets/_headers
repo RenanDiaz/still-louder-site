@@ -51,5 +51,8 @@
 /al-vacio-pre-release
   Cache-Control: public, max-age=0, must-revalidate
 
+/links
+  Cache-Control: public, max-age=0, must-revalidate
+
 /offline
   Cache-Control: public, max-age=0, must-revalidate

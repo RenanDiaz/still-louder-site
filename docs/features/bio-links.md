@@ -1,6 +1,6 @@
 # Página de enlaces (`/links`, tipo Linktree)
 
-> **Estado (4 oct 2026):** spec, sin implementar.
+> **Estado (5 oct 2026):** implementado (v1, single en `live`).
 > Subsistema: **sitio principal** (repo root). No toca `ticket-system/`;
 > solo enlaza a él.
 
