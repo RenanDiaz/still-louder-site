@@ -30,7 +30,7 @@ pocos envíos al año, escritos a mano, a una base pequeña.
 | D5 | Audiencia vs. entrega | Son ejes separados. **Audiencia**: todos los elegibles / por etiqueta / por evento / selección manual. **Entrega**: inmediata u **olas**. Las tres opciones de la UI ("todos", "escalonado", "seleccionados") son atajos sobre esos dos ejes. |
 | D6 | Baja (unsubscribe) | Obligatoria en todo correo de campaña: enlace visible + headers `List-Unsubscribe` / `List-Unsubscribe-Post` (one-click, RFC 8058). La baja es global para promociones y **nunca** afecta los correos transaccionales (QR, comprobantes). |
 | D7 | "Poco invasivo" | Sin pixel de apertura ni tracking de clics de Resend. Tope de frecuencia: un contacto no recibe más de **1 campaña cada 14 días** (configurable). Medición solo con UTM hacia el sitio (GA4 ya existe). |
-| D8 | Dominio de envío | Subdominio propio para correo **no transaccional**: `Still Louder <hola@noticias.still-louder.com>`, separado de `entradas@still-louder.com` (QRs), para que una queja de spam no afecte la entrega de entradas. El subdominio es solo DNS de correo (SPF/DKIM/DMARC en Resend), no sirve páginas. Ver "Relación con Comunicados". |
+| D8 | Dominio de envío | Subdominio propio para correo **no transaccional**: `Still Louder <hola@noticias.still-louder.com>`, separado de `entradas@still-louder.com` (QRs), para que una queja de spam no afecte la entrega de entradas. El subdominio es solo DNS de correo (SPF/DKIM/DMARC en Resend), no sirve páginas. Requisito antes del primer envío: verificar `noticias.still-louder.com` en Resend (SPF/DKIM) y publicar DMARC. Ver "Relación con Comunicados". |
 | D9 | Contenido | Asunto + preheader + cuerpo en **Markdown** (render server-side) sobre una plantilla fija con la paleta `mono` de `api/_lib/email.ts`. Sin HTML libre. Una imagen opcional (URL https). |
 | D10 | Olas | **Manuales**: el admin pulsa "Enviar siguiente ola". Sin cron: es a propósito, queremos revisar la reacción entre olas antes de seguir (Cloudflare permitiría programarlas; ver Fase 2). |
 | D11 | Teléfonos / WhatsApp | Fuera de alcance. Solo correo. |
@@ -308,12 +308,6 @@ Si en el futuro se quiere **avisar por correo** de un comunicado, hay dos casos:
   la primera campaña a todos.
 - **P2 — ¿Hay que agregar una política de privacidad?** Hoy ni `/entradas` ni
   el sitio principal enlazan una. La casilla de Fase 0 debería enlazar a una.
-- **P3 — Nombre del subdominio**: D8 propone `noticias.`. Alternativas
-  razonables: `news.` (corto, pero el resto del sitio está en español) o
-  `correo.` (genérico). Descartados: el dominio raíz (comparte reputación con
-  los QRs) y un dominio aparte (parece phishing y hay que mantenerlo).
-  Requisito antes del primer envío: verificar el subdominio en Resend
-  (SPF/DKIM) y publicar DMARC.
 
 ## Fuera de alcance
 
