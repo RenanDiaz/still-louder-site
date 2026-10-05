@@ -1,12 +1,22 @@
 # Nueva era del sitio: "A Las 10"
 
-> **Estado (4 oct 2026):** spec, sin implementar. **"A Las 10" se estrena
-> mañana, 5 de octubre de 2026.** El video de YouTube llega aparte (previsto
-> el 31 oct). No hay pre-save. Faltan los enlaces de plataformas (salen el 5),
-> el archivo de la portada y la foto en vivo (ver "Preguntas abiertas").
+> **Estado (4 oct 2026):** **Fase 1 implementada** en la rama
+> `feat/a-las-10-rework` con la portada (1400×1400) y la foto en vivo
+> (Modesto Miranda, Rock n' Folk, 6 feb 2026, con permiso) en mano; solo faltan las **URLs
+> de plataformas**, que se pegan el 5 de octubre (`config.js`, `#escuchar` y
+> los `offers` del JSON-LD siguen con las de Skirlaz hasta entonces, CA-3).
+> **"A Las 10" se estrena el 5 de octubre de 2026.** El video de YouTube llega
+> aparte (previsto el 31 oct): **Fase 2 pendiente**. No hay pre-save.
 > Subsistema: **sitio principal** (repo root) + el asset de marca genérico del
 > ticket system (`ticket-system/public/og-image.jpg`, regla "Brand-derived
 > assets" de `CLAUDE.md`). Se coordina con `docs/features/bio-links.md`.
+> Decisiones cerradas al implementar: D4 → foto en vivo en el hero (aguanta a
+> 1920 px: 164 KB WebP / 221 KB AVIF); D5 → `IMG_2433` con duotono
+> (`--about-photo-*` en `variables.css`); D6 → paleta en el comentario de era
+> de `variables.css`; D8 → portada 1400×1400 JPEG (234 KB); D11 → se quitan
+> los shortcuts de YouTube **y** del pre-release de Al Vacío; D12 → archivo
+> `live/a-las-10-rock-n-folk-2026-02-06.*`. Los originales viven fuera del repo en
+> `originals/` (gitignored).
 
 ## Problema
 

@@ -8,7 +8,7 @@ export const CONFIG = {
   platforms: {
     spotify: {
       name: 'Spotify',
-      url: 'https://open.spotify.com/track/7jc86BEyQt8sdJsEbqtllU?si=1c59b85003e84b02',
+      url: 'https://open.spotify.com/track/3Bt2Rd8QLuPCd1i4UtgPDn',
       icon: 'spotify',
       color: '#1db954'
     },
@@ -20,7 +20,7 @@ export const CONFIG = {
     },
     youtube: {
       name: 'YouTube',
-      url: 'https://youtu.be/ukpbbWdqh_A',
+      url: 'https://www.youtube.com/@StillLouder',
       icon: 'youtube',
       color: '#ff0000'
     },
@@ -114,12 +114,12 @@ export const CONFIG = {
 
   // Release Information
   release: {
-    title: 'Skirlaz',
+    title: 'A Las 10',
     artist: 'Still Louder',
-    releaseDate: '2026-02-06',
+    releaseDate: '2026-10-05',
     genre: 'Rock',
-    coverImage: '/images/album_covers/skirlaz.jpeg',
-    video: 'https://youtu.be/ukpbbWdqh_A'
+    coverImage: '/images/album_covers/a-las-10.jpeg',
+    video: null
   },
 
   // Site Information
@@ -127,9 +127,9 @@ export const CONFIG = {
     name: 'Still Louder',
     url: 'https://still-louder.com/',
     description:
-      '¡Ya disponible! Escucha "Skirlaz", el nuevo sencillo de Still Louder, y mira el lyric video oficial en todas las plataformas digitales.',
+      '¡Ya disponible! Escucha "A Las 10", el nuevo sencillo de Still Louder, en todas las plataformas digitales.',
     locale: 'es_PA',
-    themeColor: '#0d1216'
+    themeColor: '#140505'
   },
 
   // Comments Form (Google Forms)

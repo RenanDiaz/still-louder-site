@@ -15,8 +15,8 @@ const CONFIG = {
   headerScrollThreshold: 50,
   toastDuration: 3000,
   share: {
-    title: 'Still Louder - Skirlaz',
-    text: 'Escucha "Skirlaz" de Still Louder y mira el lyric video oficial - Rock panameño disponible ahora en todas las plataformas.',
+    title: 'Still Louder - A Las 10',
+    text: 'Escucha "A Las 10", el nuevo sencillo de Still Louder - Rock panameño disponible ahora en todas las plataformas.',
     url: 'https://still-louder.com/'
   },
   analytics: {
@@ -542,7 +542,7 @@ const init = () => {
     // eslint-disable-next-line no-console
     console.log(
       '%c Still Louder - Skirlaz ',
-      'background: #c0282e; color: #fff; font-size: 18px; font-weight: bold; padding: 10px;'
+      'background: #b4301f; color: #fff; font-size: 18px; font-weight: bold; padding: 10px;'
     );
   }
 };

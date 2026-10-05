@@ -43,3 +43,7 @@ yarn-error.log*
 # Optimized image backups
 *-optimized.jpg
 *-optimized.png
+
+# Original/RAW sources of the web images (multi-MB, never deployed).
+# optimize-images.js reads them from their target folder while running; park them here afterwards.
+originals/

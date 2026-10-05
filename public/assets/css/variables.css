@@ -12,27 +12,38 @@
      COLORS
      ============================================ */
 
-  /* Primary Colors - Skirlaz: clinical X-ray blue-gray + anatomical blood red */
-  --color-primary: #0d1216;
+  /* Primary Colors - "A Las 10": candlelit tarot table. Sampled from the cover:
+     darkest wood/shadow #080202–#1b0707, dominant saturated red (candle wax, velvet)
+     #a02619 / #e46d4b, parchment of the card + title #e1c3a7, brass holders #996f56. */
+  --color-primary: #140505;
   --color-secondary: #ffffff;
-  --color-accent: #c0282e;
-  --color-accent-hover: #e0454b;
-  --color-accent-glow: rgba(192, 40, 46, 0.4);
-  /* Accent as TEXT on the dark backgrounds: #c0282e is only 3.2:1 on --color-bg-primary.
-     This lighter tint of the same hue is 5.8:1 (4.9:1 on --color-bg-tertiary), WCAG AA.
+  --color-accent: #b4301f;
+  --color-accent-hover: #d2412f;
+  --color-accent-glow: rgba(180, 48, 31, 0.4);
+  /* Accent as TEXT on the dark backgrounds: #b4301f is only 3.2:1 on --color-bg-primary.
+     This lighter tint of the same hue is 6.9:1 (6.1:1 on --color-bg-tertiary), WCAG AA.
      Keep --color-accent for fills, borders and buttons. */
-  --color-accent-text: #e06b70;
+  --color-accent-text: #e8775f;
 
-  /* Secondary accents from the cover (chrome/teal logo, bandages) */
-  --color-teal: #5fb3bd;
-  --color-bandage: #d9c3a0;
+  /* Secondary accent from the cover: the parchment of the tarot card and the title
+     (11.9:1 on --color-bg-primary). Used as the warm end of the hero title gradient. */
+  --color-parchment: #e1c3a7;
 
   /* Background Colors */
-  --color-bg-primary: #0d1216;
-  --color-bg-secondary: #131a20;
-  --color-bg-tertiary: #1b242b;
-  --color-bg-card: rgba(20, 28, 34, 0.8);
-  --color-bg-overlay: rgba(8, 12, 15, 0.85);
+  --color-bg-primary: #140505;
+  --color-bg-secondary: #1d0909;
+  --color-bg-tertiary: #2a1010;
+  --color-bg-card: rgba(29, 9, 9, 0.8);
+  --color-bg-overlay: rgba(10, 3, 3, 0.85);
+
+  /* Era photo treatments (see docs/features/nuevo-single.md D4/D5). The hero
+     background is the live photo; the #about band photo is desaturated and
+     tinted with the accent so the Skirlaz-session shot sits in this palette. */
+  --hero-bg-filter: brightness(0.4) saturate(0.55) contrast(1.05);
+  --about-photo-filter: grayscale(1) contrast(1.05) brightness(0.95);
+  --about-photo-tint: var(--color-accent);
+  --about-photo-tint-blend: color;
+  --about-photo-tint-opacity: 0.4;
 
   /* Glass Effect */
   --glass-bg: rgba(255, 255, 255, 0.05);
@@ -66,11 +77,15 @@
   /* Gradient Colors */
   --gradient-hero: linear-gradient(
     180deg,
-    rgba(13, 18, 22, 0) 0%,
-    rgba(13, 18, 22, 0.45) 50%,
-    rgba(13, 18, 22, 1) 100%
+    rgba(20, 5, 5, 0) 0%,
+    rgba(20, 5, 5, 0.45) 50%,
+    rgba(20, 5, 5, 1) 100%
   );
-  --gradient-accent: linear-gradient(135deg, var(--color-accent) 0%, #e0454b 100%);
+  --gradient-accent: linear-gradient(
+    135deg,
+    var(--color-accent) 0%,
+    var(--color-accent-hover) 100%
+  );
   --gradient-dark: linear-gradient(
     180deg,
     var(--color-bg-primary) 0%,
@@ -337,7 +352,7 @@
 
 @media (prefers-contrast: high) {
   :root {
-    --color-accent: #e0454b;
+    --color-accent: #d2412f;
     --glass-border: rgba(255, 255, 255, 0.3);
     --border-width-normal: 3px;
   }

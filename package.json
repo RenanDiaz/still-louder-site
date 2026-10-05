@@ -1,7 +1,7 @@
 {
   "name": "still-louder-site",
   "version": "1.0.0",
-  "description": "Still Louder - Al Vacío Official Website",
+  "description": "Still Louder - A Las 10 Official Website",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -34,7 +34,7 @@
   },
   "keywords": [
     "still-louder",
-    "al-vacio",
+    "a-las-10",
     "rock",
     "music",
     "panama"
