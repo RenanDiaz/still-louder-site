@@ -250,20 +250,23 @@ body {
 .hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('/assets/images/photoshoot/skirlaz/IMG_2434.webp');
+  /* Live photo of the band at Rock n' Folk (Modesto Miranda, 6 Feb 2026), decorative. */
+  background-image: url('/assets/images/live/a-las-10-rock-n-folk-2026-02-06.webp');
   background-image: -webkit-image-set(
-    url('/assets/images/photoshoot/skirlaz/IMG_2434.avif') type('image/avif'),
-    url('/assets/images/photoshoot/skirlaz/IMG_2434.webp') type('image/webp')
+    url('/assets/images/live/a-las-10-rock-n-folk-2026-02-06.avif') type('image/avif'),
+    url('/assets/images/live/a-las-10-rock-n-folk-2026-02-06.webp') type('image/webp')
   );
   background-image: image-set(
-    url('/assets/images/photoshoot/skirlaz/IMG_2434.avif') type('image/avif'),
-    url('/assets/images/photoshoot/skirlaz/IMG_2434.webp') type('image/webp')
+    url('/assets/images/live/a-las-10-rock-n-folk-2026-02-06.avif') type('image/avif'),
+    url('/assets/images/live/a-las-10-rock-n-folk-2026-02-06.webp') type('image/webp')
   );
   background-size: cover;
-  background-position: center top;
+  /* 38% keeps the singer centred on portrait crops and leaves the venue's neon
+     sign (right of centre in the photo) out of the phone viewport. */
+  background-position: 38% center;
   background-repeat: no-repeat;
   transform: scale(1.1);
-  filter: brightness(0.4) saturate(0.55) contrast(1.05);
+  filter: var(--hero-bg-filter);
   transition: transform 0.5s ease-out;
 }
 
@@ -332,11 +335,7 @@ body {
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-wide);
   margin-bottom: var(--spacing-sm);
-  background: linear-gradient(
-    135deg,
-    var(--color-text-primary) 0%,
-    var(--color-text-secondary) 100%
-  );
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-parchment) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1041,7 +1040,21 @@ body {
   width: 100%;
   height: auto;
   display: block;
+  /* Era treatment: the band photo is from the Skirlaz session; desaturate it and
+     tint it with the current accent (tokens in variables.css) so it reads as part
+     of the current palette instead of fighting the cover. Static: no motion. */
+  filter: var(--about-photo-filter);
   transition: transform var(--transition-slow);
+}
+
+.about-image-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--about-photo-tint);
+  mix-blend-mode: var(--about-photo-tint-blend);
+  opacity: var(--about-photo-tint-opacity);
+  pointer-events: none;
 }
 
 .about-image:hover .about-image-frame img {

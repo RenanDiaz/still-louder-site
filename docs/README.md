@@ -14,7 +14,7 @@ Where each document lives and what it covers. Start with the root
 | [`features/i18n-main-site-en.md`](features/i18n-main-site-en.md) | Spec: English version of the landing at `/en` (press / international listeners) — proposed |
 | [`features/comunicados.md`](features/comunicados.md) | Spec: official band statements (`/comunicados`, build-time Markdown pages + home banner) — not implemented |
 | [`features/bio-links.md`](features/bio-links.md) | Spec: link-in-bio page at `/links` (Stratovarius + Halloween tickets, new single) — proposed |
-| [`features/nuevo-single.md`](features/nuevo-single.md) | Spec: re-theme the landing for the single "A Las 10" (release 5 Oct 2026, video ≈ 31 Oct) from the cover + one live photo — proposed |
+| [`features/nuevo-single.md`](features/nuevo-single.md) | Spec: re-theme the landing for the single "A Las 10" (release 5 Oct 2026, video ≈ 31 Oct) from the cover + one live photo — Phase 1 implemented, Phase 2 (video) pending |
 
 ## Ticket system (`ticket-system/`)
 

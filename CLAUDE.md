@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the official website for **Still Louder**, a Panamanian rock band. The site is a static, performant landing page: current single ("Skirlaz", `CONFIG.release`), streaming links, upcoming shows (`#shows`, driven by `CONFIG.shows`), about, FAQ, social/store links and a contact form. `al-vacio-pre-release.html` is a legacy page from the previous single "Al Vacío".
+This is the official website for **Still Louder**, a Panamanian rock band. The site is a static, performant landing page: current single ("A Las 10", `CONFIG.release`), streaming links, upcoming shows (`#shows`, driven by `CONFIG.shows`), about, FAQ, social/store links and a contact form. `al-vacio-pre-release.html` is a legacy page from the previous single "Al Vacío".
 
 **Live URL**: https://still-louder.com/
 **Repository**: https://github.com/RenanDiaz/still-louder-site

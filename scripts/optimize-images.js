@@ -168,11 +168,14 @@ async function main() {
     }
   }
 
-  // Process Skirlaz album cover (square, used in hero + social/OG).
-  // The committed source skirlaz.jpeg (640px, ~170KB) doubles as the <img> fallback,
-  // so we only need to emit the modern webp/avif siblings.
+  // Process album covers (square, used in hero + social/OG).
+  // The committed source `<slug>.jpeg` doubles as the <img> fallback and the og:image
+  // (crawlers don't read avif/webp), so we only emit the modern webp/avif siblings.
+  // a-las-10.jpeg is the 1400px original re-encoded with mozjpeg q85 (~235KB);
+  // skirlaz.jpeg is the 640px export of that era.
   console.log('\n=== Optimizing Album Covers ===\n');
   const albumCovers = [
+    { path: path.join(publicDir, 'assets', 'images', 'album_covers', 'a-las-10.jpeg'), maxWidth: 1200 },
     { path: path.join(publicDir, 'assets', 'images', 'album_covers', 'skirlaz.jpeg'), maxWidth: 1200 }
   ];
   for (const { path: imgPath, maxWidth } of albumCovers) {
@@ -195,6 +198,27 @@ async function main() {
   ];
   for (const { file, maxWidth, jpgFallback } of photoshoot) {
     const imgPath = path.join(photoshootDir, file);
+    const exists = await fs.access(imgPath).then(() => true).catch(() => false);
+    if (exists) {
+      await optimizeImage(imgPath, { maxWidth, jpgFallback, skipOptimizedJpg: true });
+    } else {
+      console.log(`Skipping ${file} (RAW not present — using committed derivatives)`);
+    }
+  }
+
+  // Process the live photos (public/assets/images/live/, concert shots as opposed to
+  // the studio session in photoshoot/). The "A Las 10" era uses one as the hero
+  // background (CSS image-set avif + webp, no jpg fallback). The 39MB RAW is NOT
+  // committed: drop it next to the derivatives to regenerate, then park it in
+  // originals/ (gitignored) so it never reaches dist/.
+  console.log('\n=== Optimizing Live Photos ===\n');
+  const liveDir = path.join(publicDir, 'assets', 'images', 'live');
+  const live = [
+    // Photo: Modesto Miranda, Rock n' Folk, 6 Feb 2026 (Skirlaz release show). Used with permission.
+    { file: 'a-las-10-rock-n-folk-2026-02-06.JPEG', maxWidth: 1920, jpgFallback: false }
+  ];
+  for (const { file, maxWidth, jpgFallback } of live) {
+    const imgPath = path.join(liveDir, file);
     const exists = await fs.access(imgPath).then(() => true).catch(() => false);
     if (exists) {
       await optimizeImage(imgPath, { maxWidth, jpgFallback, skipOptimizedJpg: true });

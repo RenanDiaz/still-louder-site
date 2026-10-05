@@ -1,7 +1,7 @@
 # Still Louder — official site
 
 Official website for **Still Louder**, a Panamanian rock band: current single
-(**"Skirlaz"**), streaming links, upcoming shows, band info, FAQ, social links,
+(**"A Las 10"**), streaming links, upcoming shows, band info, FAQ, social links,
 store and a contact form. Static, fast and accessible.
 
 🌐 **Live:** https://still-louder.com/ · 🎟️ **Tickets:** https://entradas.still-louder.com

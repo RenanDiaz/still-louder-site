@@ -1,16 +1,19 @@
 {
-  "name": "Still Louder - Skirlaz",
+  "name": "Still Louder - A Las 10",
   "short_name": "Still Louder",
-  "description": "Escucha 'Skirlaz' y toda la música de Still Louder en todas las plataformas digitales. Rock panameño que trasciende fronteras.",
+  "description": "Escucha 'A Las 10' y toda la música de Still Louder en todas las plataformas digitales. Rock panameño que trasciende fronteras.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0d1216",
-  "theme_color": "#0d1216",
+  "background_color": "#140505",
+  "theme_color": "#140505",
   "lang": "es",
   "dir": "ltr",
-  "categories": ["music", "entertainment"],
+  "categories": [
+    "music",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "/favicon-96x96.png",
@@ -41,33 +44,14 @@
     {
       "name": "Escuchar en Spotify",
       "short_name": "Spotify",
-      "description": "Abre Al Vacío en Spotify",
-      "url": "/index.html?action=spotify"
+      "description": "Abre A Las 10 en Spotify",
+      "url": "/?action=spotify"
     },
     {
       "name": "Escuchar en Apple Music",
       "short_name": "Apple Music",
-      "description": "Abre Al Vacío en Apple Music",
-      "url": "/index.html?action=apple"
-    },
-    {
-      "name": "Ver en YouTube",
-      "short_name": "YouTube",
-      "description": "Mira el video de Al Vacío en YouTube",
-      "url": "/index.html?action=youtube"
-    },
-    {
-      "name": "Pre-lanzamiento",
-      "short_name": "Pre-release",
-      "description": "Accede a la página de pre-lanzamiento",
-      "url": "/al-vacio-pre-release.html",
-      "icons": [
-        {
-          "src": "/favicon-96x96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
+      "description": "Abre A Las 10 en Apple Music",
+      "url": "/?action=apple"
     }
   ],
   "related_applications": [],

@@ -3,7 +3,7 @@
 Scope: the static main site (`public/`, Vite root). The ticket system
 (`ticket-system/`) is a separate app and is not covered here.
 
-Pages: `public/index.html` (home, current single **Skirlaz**, shows, band,
+Pages: `public/index.html` (home, current single **A Las 10**, shows, band,
 FAQ, contact) and `public/al-vacio-pre-release.html` (legacy pre-release page
 for **Al Vacío**). `public/assets/offline.html` is the service-worker fallback only.
 
@@ -28,21 +28,23 @@ meta tags, JSON-LD and the sitemap do not, so they must use `/images/...`.
 - Open Graph: `og:locale=es_PA`, `og:type=music.song`, title, description,
   url, site_name, image (+ `secure_url`, `alt`, `type`, `width`, `height`),
   `music:musician`, `music:release_date`, `music:song`. The home page also has
-  `music:preview_url:youtube`.
+  `music:preview_url:youtube` whenever the current single has an official video
+  ("A Las 10": from Phase 2 of `docs/features/nuevo-single.md`).
 - Twitter: `summary_large_image`, title, description, image and alt,
   `twitter:site`/`creator`. The home page adds `label1/data1` and
   `label2/data2`.
 - Home only: geo tags (`geo.region=PA`, `geo.position`, `ICBM`), `rel="me"` and
   `og:see_also` links to Instagram, Facebook, YouTube and TikTok, and
-  `theme-color #0d1216`.
-- Share image: home uses `/images/album_covers/skirlaz.jpeg` (640x640).
+  `theme-color #140505` (= `--color-bg-primary`; the pre-release page keeps its
+  own `#0d1216`).
+- Share image: home uses `/images/album_covers/a-las-10.jpeg` (1400x1400).
   Pre-release uses `/images/album_covers/al-vacio.jpeg` (760x760).
 
 ### 1.2 Structured data (JSON-LD, inline `<script type="application/ld+json">`)
 
 | Page | Types |
 |---|---|
-| `index.html` | `MusicRecording` (Skirlaz, with `recordingOf` `MusicComposition`, `inAlbum` `MusicAlbum` Single, `offers` `AggregateOffer` of streaming links), `MusicGroup` (`@id` `https://still-louder.com/#band`, sameAs, foundingLocation), two `MusicEvent` blocks (one per upcoming show, with `location` `MusicVenue`, `performer`, `offers`), `WebSite` |
+| `index.html` | `MusicRecording` (A Las 10, with `recordingOf` `MusicComposition`, `inAlbum` `MusicAlbum` Single, `offers` `AggregateOffer` of streaming links), `MusicGroup` (`@id` `https://still-louder.com/#band`, sameAs, foundingLocation), two `MusicEvent` blocks (one per upcoming show, with `location` `MusicVenue`, `performer`, `offers`), `WebSite` |
 | `al-vacio-pre-release.html` | `MusicRecording` (Al Vacío), `MusicGroup` (same `#band` `@id`), `WebPage` with `BreadcrumbList` (Inicio > Al Vacío) |
 
 Other blocks reference the band as `{ "@id": "https://still-louder.com/#band" }`.
@@ -50,7 +52,7 @@ Keep that `@id` stable.
 
 ### 1.3 Sitemap and robots
 
-- `public/assets/sitemap.xml` lists two URLs: `/` (priority 1.0, image = Skirlaz
+- `public/assets/sitemap.xml` lists two URLs: `/` (priority 1.0, image = A Las 10
   cover) and `/al-vacio-pre-release` (priority 0.8, image = Al Vacío cover). It
   uses the `image:` sitemap extension.
 - `public/assets/robots.txt`: a single `User-agent: *` group with `Allow: /`
@@ -69,8 +71,9 @@ Keep that `@id` stable.
    `datePublished`, `recordingOf.name`, `inAlbum.*`, every `offers[].url`,
    and `offerCount`. Fill in `isrcCode`/`iswcCode` or remove them.
 3. `public/index.html` body: hero `<picture>` sources and `alt`, the `<h1>`,
-   the YouTube iframe `src` and `title`, and the `aria-label`s of the
-   platform links.
+   the YouTube iframe `src` and `title` (if the single has a video; otherwise
+   remove the embed and `music:preview_url:youtube`), and the `aria-label`s of
+   the platform links.
 4. `public/assets/js/config.js` (`platforms.*` URLs) and
    `public/assets/links.json`.
 5. `public/assets/sitemap.xml`: `<lastmod>`, `image:loc`, `image:title` and
@@ -130,7 +133,8 @@ contains absolute URLs. Then resubmit the sitemap in Search Console.
   `aria-hidden`.
 - **Images**: all `<img>` have meaningful Spanish `alt`. Flyer alts spell out
   the date, venue and ticket info. Duplicated marquee sponsor logos on the
-  pre-release page are `aria-hidden`. The iframe has a `title`.
+  pre-release page are `aria-hidden`. The video iframe, when the home has one,
+  has a `title`.
 - **Forms** (`#contacto`): every field has a `<label for>`, `autocomplete`
   and `required`. The honeypot is wrapped in `aria-hidden` with
   `tabindex="-1"`. The submit button gets `aria-busy` while sending.

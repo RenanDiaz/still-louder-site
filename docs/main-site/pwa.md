@@ -156,16 +156,17 @@ These are sent through `gtag` only if `gtag` is defined. All use `event_category
 
 ## Manifest (`public/assets/site.webmanifest`)
 
-- `name` "Still Louder - Skirlaz", `short_name` "Still Louder", `lang: es`.
+- `name` "Still Louder - A Las 10", `short_name` "Still Louder", `lang: es`.
 - `start_url: "/?source=pwa"`, `scope: "/"`, `display: standalone`, `orientation: portrait-primary`.
-- `background_color` and `theme_color` are both `#0d1216`. This matches the
+- `background_color` and `theme_color` are both `#140505`. This matches the
   `theme-color` of `index.html`, `offline.html` and the pre-release page.
 - **Icons**: `/assets/favicon-96x96.png` (96, any), `/assets/web-app-manifest-192x192.png`
   and `-512x512.png` (`any maskable`), `/assets/apple-touch-icon.png` (180, any).
 - **Screenshots**: `/assets/screenshot-mobile.png` (390x844, narrow) and
   `/assets/screenshot-desktop.png` (1920x1080, wide).
-- **Shortcuts**: Spotify, Apple Music and YouTube (`/index.html?action=spotify|apple|youtube`),
-  plus Pre-lanzamiento (`/al-vacio-pre-release.html`). `main.js` reads `?action=`,
+- **Shortcuts**: Spotify and Apple Music (`/?action=spotify|apple`). The YouTube
+  shortcut (`?action=youtube`, still handled by `main.js`) returns with the
+  "A Las 10" video (Phase 2 of `docs/features/nuevo-single.md`). `main.js` reads `?action=`,
   sends `pwa_shortcut`, and after 500 ms opens the platform URL in a new tab
   (`noopener,noreferrer`). The URLs come from `CONFIG.platforms`; the
   `action` keys map `apple` to `appleMusic`.
@@ -213,19 +214,19 @@ offline page and manifest not shipped, precache 404s, CSP blocking the SW's
 cross-origin fetches, no `Cache-Control` for `sw.js`) were fixed by moving the
 files into publicDir; see git history.
 
-1. **Stale naming.** The manifest says "Skirlaz" (`site.webmanifest:2`) while its
-   shortcut descriptions say "Al Vacío". The `offline.html` footer reads
-   "© 2025 … PWA v1.0.0" (`offline.html:371`).
+1. **Stale naming.** The `offline.html` footer reads "© 2025 … PWA v1.0.0"
+   (`offline.html:371`). (The manifest name/shortcuts were realigned with the
+   current single in the "A Las 10" rework.)
 2. **Update banner is redundant.** Unconditional `skipWaiting()` at install
    (`sw.js:63`) plus `controllerchange` → `reload()` (`sw-register.js:76-79`) means
    updates apply and reload automatically, and the banner at best flashes. The same
    reload also fires on the first-ever visit, because of `clients.claim()` (`sw.js:90`).
 3. **Debug logging in production.** `debug: true` (`sw-register.js:13`) and the
    unconditional `console.log` calls throughout `sw.js` go against the no-`console.log` convention.
-4. **Shortcut URLs** point at `/index.html?action=…` and `/al-vacio-pre-release.html`.
-   Both hosts serve clean URLs (Vercel `cleanUrls`, Cloudflare `html_handling`),
-   so these redirect. That works for navigation (they are not precached), but
-   `/?action=…` and `/al-vacio-pre-release` would save a round trip.
+4. **Shortcut URLs** used to point at `/index.html?action=…` and
+   `/al-vacio-pre-release.html`, which both hosts redirect to clean URLs. They
+   now use `/?action=…` directly and the pre-release shortcut was dropped with
+   the "A Las 10" rework.
 5. **Duplicate unhashed JS/CSS in `dist/`.** publicDir copies every file under
    `public/assets/js/` and `public/assets/css/` to `/js/...` and `/css/...` even
    though the pages load the hashed bundles. They are dead weight, not broken.

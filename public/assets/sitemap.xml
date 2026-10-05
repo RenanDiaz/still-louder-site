@@ -3,13 +3,13 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://still-louder.com/</loc>
-    <lastmod>2026-09-28</lastmod>
+    <lastmod>2026-10-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://still-louder.com/images/album_covers/skirlaz.jpeg</image:loc>
-      <image:title>Portada del sencillo Skirlaz de Still Louder</image:title>
-      <image:caption>Artwork oficial del sencillo Skirlaz de Still Louder, banda de rock panameña</image:caption>
+      <image:loc>https://still-louder.com/images/album_covers/a-las-10.jpeg</image:loc>
+      <image:title>Portada del sencillo A Las 10 de Still Louder</image:title>
+      <image:caption>Artwork oficial del sencillo A Las 10 de Still Louder, banda de rock panameña</image:caption>
     </image:image>
   </url>
   <url>
