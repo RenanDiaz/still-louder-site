@@ -53,7 +53,7 @@ fuente de tráfico, **sin mandar datos personales a Google**.
 | Cross-domain | **No hace falta linker.** `entradas.` es subdominio de `still-louder.com`; gtag con `cookie_domain: 'auto'` escribe `_ga` en `.still-louder.com` y los dos sitios comparten `client_id`. En GA4 Admin hay que agregar `still-louder.com` a **"Unwanted referrals"** para que la sesión conserve la fuente original (Instagram, etc.). | Rectifico lo que dije en el chat: cross-domain es para dominios distintos, no para subdominios. |
 | Superficies medidas | Solo `entradas.html`, `halloween-party.html` y `ayuda.html`. **No** se toca `admin`, `validar`, `support`, `regalo`, `index` (el redirect). | Lo público y sin secretos en la URL. |
 | Carga del tag | Desde un **módulo** (`src/shared/analytics.ts`) que inyecta `gtag/js`. **Sin `<script>` inline** en el HTML. | La CSP tiene `script-src 'self'` sin `'unsafe-inline'`; el snippet inline estándar quedaría bloqueado. No queremos aflojar la CSP con `'unsafe-inline'`. |
-| Solo en producción | El módulo no carga nada si `location.hostname !== 'entradas.still-louder.com'` (localhost, `*.vercel.app`, `*.workers.dev`, previews). Con `?debug_mode=1` en prod activa `debug_mode` para DebugView. | No contaminar datos con dev/QA. |
+| Solo en producción | El módulo no carga nada si `location.hostname !== 'entradas.still-louder.com'` (localhost, `*.workers.dev`, previews). Con `?debug_mode=1` en prod activa `debug_mode` para DebugView. | No contaminar datos con dev/QA. |
 | Measurement ID en cliente | Constante en `src/shared/config.ts`. | Es público (está en el HTML del main site); no es un secreto. |
 | Evento `purchase` | Lo envía **el servidor** con el **Measurement Protocol** desde `issueOrder()` (`api/_lib/issue.ts`), no el navegador. | Yappy confirma por IPN de servidor a servidor, y efectivo/CuantoApp se confirman en el admin, horas después y desde otro navegador. Un `purchase` en cliente sería falso o no llegaría. Mantiene la invariante de emisión independiente del método de pago (un solo punto). |
 | Atar el `purchase` al visitante | Al crear la orden el cliente manda `ga_client_id` y `ga_session_id` (leídos con `gtag('get', …)`). El servidor los **valida por formato** y los guarda en `orders`. El MP los usa. | Así el `purchase` cae en la sesión y fuente correctas aunque se confirme días después. No son montos: no rompe "server-authoritative pricing". |
@@ -63,7 +63,7 @@ fuente de tráfico, **sin mandar datos personales a Google**.
 | Valor | `value = total_cents / 100` (lo que pagó el comprador, cargo por servicio incluido), `currency: 'USD'`; item = tarifa. | Es el monto real de la transacción. |
 | Fallo del MP | Best-effort: `try/catch` y timeout de 2 s, `console.error`, **nunca** tumba ni demora la emisión/correo. No hay reintento. | Analytics no puede romper la venta. Si se pierde un evento no es grave. |
 | Secreto del MP | `GA_MP_API_SECRET`, server-only, **opcional** (si falta, no se envía nada). **No** va en `REQUIRED_SECRETS` de `release-cloudflare.mjs`. | La API funciona sin él. El script ya protege contra perder un secreto existente ("MISSING vs. the live deployment"). Rectifico lo que dije en el chat. |
-| Funciones serverless | **Cero archivos nuevos bajo `api/`.** El envío vive en `api/_lib/ga.ts`. | Límite de 12 funciones de Vercel Hobby; nada que registrar en `cloudflare/worker.ts`. |
+| Archivos bajo `api/` | **Cero archivos nuevos bajo `api/`.** El envío vive en `api/_lib/ga.ts`. | Nada que registrar en el router de `cloudflare/worker.ts`. |
 | PII | Prohibido mandar a GA nombre, email, teléfono, `order_id` como parámetro libre o tokens de QR. `transaction_id` usa el UUID de la orden: no identifica a nadie fuera de nuestra BD. | Ley 81 de 2019 (Panamá) y los términos de GA4 (prohíben PII). |
 
 ## Eventos
@@ -134,7 +134,7 @@ solo queda sin atribución.
 - `src/shared/api.ts`: `CreateOrderInput` gana `ga_client_id?`, `ga_session_id?`.
 - `src/shared/config.ts`: `GA_MEASUREMENT_ID`.
 
-### CSP — `ticket-system/vercel.json` **y** `ticket-system/public/_headers`
+### CSP — `ticket-system/public/_headers`
 
 Agregar (y nada más):
 
@@ -177,13 +177,12 @@ Ver [Guía de puesta en marcha](#guía-de-puesta-en-marcha).
    marca pagada y el correo sale igual (sin error visible, solo `console.error`).
 8. Con un bloqueador de anuncios, `/entradas` funciona igual: compra completa, sin
    errores en consola atribuibles a analytics, y la orden queda sin `ga_*`.
-9. En `localhost`, `*.vercel.app` y `*.workers.dev` no se hace ninguna request a
+9. En `localhost` y `*.workers.dev` no se hace ninguna request a
    Google (pestaña Network).
 10. `/admin`, `/validar`, `/support`, `/regalo/<token>` no hacen ninguna request a Google.
 11. Ningún hit a GA (cliente ni MP) contiene nombre, email, teléfono ni token de QR
     (revisar los payloads en Network / en el log del MP en dev).
-12. CSP: cero violaciones en consola en `/entradas` y `/ayuda`; `vercel.json` y
-    `_headers` quedan idénticos en la directiva.
+12. CSP: cero violaciones en consola en `/entradas` y `/ayuda`.
 13. `npm run typecheck` y `npm run build` en `ticket-system/` pasan; el conteo de
     funciones bajo `api/` no cambia.
 
@@ -240,9 +239,6 @@ la atribución de esas órdenes.
    `npm run release:cloudflare` lo heredan. **No** hace falta agregarlo a
    `REQUIRED_SECRETS`: es opcional y, una vez cargado, el script ya protege
    contra perderlo ("MISSING vs. the live deployment").
-5. Vercel (rollback): **Settings → Environment Variables** → `GA_MP_API_SECRET`,
-   solo en *Production*. Así, si se vuelve a Vercel, el `purchase` sigue
-   funcionando.
 
 ### 3. Configurar GA4
 
