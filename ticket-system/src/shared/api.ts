@@ -95,6 +95,8 @@ export interface CreateOrderInput {
   // GA4 ids for attributing the server-side `purchase` (src/shared/analytics.ts).
   ga_client_id?: string;
   ga_session_id?: string;
+  // "Quiero recibir noticias" (docs/features/campanas-promocion.md, Fase 0).
+  marketing_opt_in?: boolean;
 }
 
 export interface PriceBreakdown {
@@ -186,6 +188,7 @@ export interface ClaimGiftInput {
   name: string;
   email: string;
   phone?: string;
+  marketing_opt_in?: boolean;
 }
 
 export interface ClaimGiftResponse {

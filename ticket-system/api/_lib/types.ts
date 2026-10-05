@@ -38,6 +38,10 @@ export interface Order {
   ga_client_id: string | null;
   ga_session_id: string | null;
   ga_purchase_sent_at: string | null;
+  // "Quiero recibir noticias" at checkout / gift claim (migration 0015,
+  // docs/features/campanas-promocion.md). Captured only; nothing is sent yet.
+  marketing_opt_in: boolean;
+  marketing_opt_in_at: string | null;
 }
 
 export interface Ticket {

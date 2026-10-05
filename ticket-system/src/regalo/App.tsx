@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { claimGift, fetchGiftCampaign, type GiftCampaignStatusResponse } from '../shared/api';
 import { BAND_NAME, SOCIAL, formatEventDay } from '../shared/config';
+import { NewsOptIn } from '../entradas/NewsOptIn';
 
 // The campaign's event (name, venue, date, theme) comes with the campaign
 // status; the copy below never hardcodes a show.
@@ -92,6 +93,7 @@ function ClaimForm({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [newsOptIn, setNewsOptIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -112,7 +114,8 @@ function ClaimForm({
         token,
         name: name.trim(),
         email: email.trim(),
-        phone: phone.trim() || undefined
+        phone: phone.trim() || undefined,
+        marketing_opt_in: newsOptIn
       });
       onClaimed();
     } catch (err) {
@@ -189,6 +192,8 @@ function ClaimForm({
           onChange={(e) => setPhone(e.target.value)}
           autoComplete="tel"
         />
+
+        <NewsOptIn checked={newsOptIn} onChange={setNewsOptIn} />
 
         {error && (
           <div className="tk-alert tk-alert--error" role="alert">

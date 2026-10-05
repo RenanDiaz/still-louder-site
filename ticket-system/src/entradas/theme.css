@@ -496,6 +496,28 @@ html:not([data-view='teaser']) body::before {
   margin-top: 6px;
 }
 
+/* Casilla de opt-in a noticias (NewsOptIn): texto normal, no etiqueta de campo. */
+.tk-form label.tk-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.tk-form .tk-check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  padding: 0;
+  accent-color: var(--pink);
+  cursor: pointer;
+}
+
 /* Resumen de precio: el comprador siempre ve QUÉ tarifa y CUÁNTO paga antes
    de enviar (sobre todo cuando cae a precio general por preventa agotada). */
 .tk-price-summary {
