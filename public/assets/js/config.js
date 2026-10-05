@@ -8,7 +8,7 @@ export const CONFIG = {
   platforms: {
     spotify: {
       name: 'Spotify',
-      url: 'https://open.spotify.com/track/7jc86BEyQt8sdJsEbqtllU?si=1c59b85003e84b02',
+      url: 'https://open.spotify.com/track/3Bt2Rd8QLuPCd1i4UtgPDn',
       icon: 'spotify',
       color: '#1db954'
     },
