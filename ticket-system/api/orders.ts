@@ -36,6 +36,8 @@ interface CreateOrderBody {
   // GA4 ids of this browser (attribution only; see api/_lib/ga.ts).
   ga_client_id?: string;
   ga_session_id?: string;
+  // "Quiero recibir noticias" checkbox; only a literal `true` counts as consent.
+  marketing_opt_in?: boolean;
 }
 
 function paymentInstructions(method: PaymentMethod, totalCents: number, quantity: number) {
@@ -166,18 +168,25 @@ export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
     throw new Error(`create_order failed: ${error.message}`);
   }
 
-  // Atribución GA4 del `purchase` futuro. Best-effort: ids con formato
-  // inválido se ignoran y un fallo aquí solo deja la orden sin atribución.
+  // Atribución GA4 del `purchase` futuro y opt-in de noticias, en un solo
+  // UPDATE tras el RPC. Best-effort: ids con formato inválido se ignoran, y un
+  // fallo aquí solo deja la orden sin atribución y con opt-in en false (la
+  // dirección segura; docs/features/campanas-promocion.md).
+  const extra: Record<string, string | boolean | null> = {};
   const gaClientId =
     typeof body.ga_client_id === 'string' && GA_CLIENT_ID_RE.test(body.ga_client_id) ? body.ga_client_id : null;
   if (gaClientId) {
-    const gaSessionId =
+    extra.ga_client_id = gaClientId;
+    extra.ga_session_id =
       typeof body.ga_session_id === 'string' && GA_SESSION_ID_RE.test(body.ga_session_id) ? body.ga_session_id : null;
-    const { error: gaError } = await getSupabase()
-      .from('orders')
-      .update({ ga_client_id: gaClientId, ga_session_id: gaSessionId })
-      .eq('id', order!.id);
-    if (gaError) console.error('[orders] ga attribution update failed', gaError);
+  }
+  if (body.marketing_opt_in === true) {
+    extra.marketing_opt_in = true;
+    extra.marketing_opt_in_at = new Date().toISOString();
+  }
+  if (Object.keys(extra).length > 0) {
+    const { error: extraError } = await getSupabase().from('orders').update(extra).eq('id', order!.id);
+    if (extraError) console.error('[orders] ga attribution / opt-in update failed', extraError);
   }
 
   // Aviso interno al operador de que se registró una compra. Best-effort: un

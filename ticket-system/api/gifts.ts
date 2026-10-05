@@ -80,6 +80,8 @@ interface ClaimBody {
   name?: string;
   email?: string;
   phone?: string;
+  // "Quiero recibir noticias" checkbox; only a literal `true` counts as consent.
+  marketing_opt_in?: boolean;
 }
 
 async function claimGift(req: ApiRequest, res: ApiResponse): Promise<void> {
@@ -132,6 +134,15 @@ async function claimGift(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (status === 'already_claimed') return sendJson(res, 409, { error: 'already_claimed' });
 
   if (status === 'claimed' && data?.order_id) {
+    // Opt-in de noticias (migración 0015). Best-effort, antes de emitir para
+    // que la orden ya lo tenga; un fallo deja false (la dirección segura).
+    if (body.marketing_opt_in === true) {
+      const { error: optInError } = await supabase
+        .from('orders')
+        .update({ marketing_opt_in: true, marketing_opt_in_at: new Date().toISOString() })
+        .eq('id', data.order_id);
+      if (optInError) console.error('[gifts] marketing opt-in update failed', optInError);
+    }
     // Reuse the shared, idempotent issuance pipeline: marks the $0 order paid,
     // creates the ticket, and sends the signed-QR email (Resend + Google Wallet).
     const result = await issueOrder(data.order_id);

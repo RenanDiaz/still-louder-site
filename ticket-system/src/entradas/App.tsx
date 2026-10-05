@@ -24,6 +24,7 @@ import {
 } from '../shared/config';
 import { getGaIds, setAnalyticsContext, track, trackPageView } from '../shared/analytics';
 import { Countdown } from './Countdown';
+import { NewsOptIn } from './NewsOptIn';
 import { Teaser } from './Teaser';
 import { YappyButton } from './YappyButton';
 
@@ -127,6 +128,7 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [newsOptIn, setNewsOptIn] = useState(false);
   // Presale is over once its date passes (independent of the async cupo check).
   // State (not a constant) so a server-side `presale_ended` rejection — e.g.
   // a buyer with a skewed clock — can flip it too.
@@ -267,7 +269,8 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
         quantity,
         payment_method: method,
         ga_client_id: gaIds?.clientId,
-        ga_session_id: gaIds?.sessionId ?? undefined
+        ga_session_id: gaIds?.sessionId ?? undefined,
+        marketing_opt_in: newsOptIn
       });
       track('begin_checkout', {
         currency: 'USD',
@@ -482,6 +485,8 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
               {method === 'yappy' && (
                 <p className="tk-hint">El número panameño asociado a tu cuenta de Yappy.</p>
               )}
+
+              <NewsOptIn checked={newsOptIn} onChange={setNewsOptIn} />
 
               <label htmlFor="method">Método de pago</label>
               <select id="method" value={method} onChange={(e) => setMethod(e.target.value as Method)}>
