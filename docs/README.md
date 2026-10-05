@@ -24,6 +24,7 @@ Where each document lives and what it covers. Start with the root
 | [`features/multi-evento.md`](features/multi-evento.md) | Spec: multi-event foundation (`events` table, migration 0011) — implemented |
 | [`features/entradas-31-10.md`](features/entradas-31-10.md) | Spec: Halloween Party sale (31 Oct 2026, slug `halloween-party`) |
 | [`features/gift-qr-campaigns.md`](features/gift-qr-campaigns.md) | Spec: hidden-QR gift ticket campaigns (`/regalo/<token>`) |
+| [`features/campanas-promocion.md`](features/campanas-promocion.md) | Spec: promotional email campaigns to past buyers (all / staggered waves / selected), opt-in at checkout, one-click unsubscribe — not implemented |
 
 ## Deployment (both apps)
 
