@@ -1,6 +1,5 @@
 node_modules/
 dist/
-.vercel/
 .wrangler/
 .dev.vars*
 # wrangler secret bulk / --secrets-file inputs: real credentials, never commit

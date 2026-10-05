@@ -23,8 +23,8 @@ meta tags, JSON-LD and the sitemap do not, so they must use `/images/...`.
   keywords), `meta robots` = `index, follow, max-image-preview:large, ...`.
 - `<link rel="canonical">`: home `https://still-louder.com/`, pre-release
   `https://still-louder.com/al-vacio-pre-release`. There is no `.html`
-  suffix because `cleanUrls` is set in `vercel.json` and
-  `html_handling: auto-trailing-slash` in `wrangler.jsonc`.
+  suffix because `html_handling: auto-trailing-slash` is set in
+  `wrangler.jsonc`.
 - Open Graph: `og:locale=es_PA`, `og:type=music.song`, title, description,
   url, site_name, image (+ `secure_url`, `alt`, `type`, `width`, `height`),
   `music:musician`, `music:release_date`, `music:song`. The home page also has

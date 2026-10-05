@@ -19,8 +19,8 @@ const API_BASE = {
 // Yappy Comercial / Commerce Integration API (reversals) — a DIFFERENT product
 // and host than Botón de Pago V2 above. These base URLs already include `/v1`,
 // so the request paths below append `/session/login` and `/transaction/{id}`
-// WITHOUT a `/v1` prefix. Override with YAPPY_API_BASE (the env var is what we
-// set in Vercel; default to the env-appropriate host so it still works unset).
+// WITHOUT a `/v1` prefix. Override with YAPPY_API_BASE (a var in wrangler.jsonc;
+// default to the env-appropriate host so it still works unset).
 const REFUND_API_BASE = {
   prod: 'https://api-integration-business.yappy.cloud/v1',
   test: 'https://api-integration-business-uat.yappycloud.com/v1'
@@ -239,7 +239,7 @@ async function openRefundSession(): Promise<string> {
   }
 
   const code = json?.status?.code ?? `HTTP_${res.status}`;
-  // TEMP diagnostics (Vercel Logs → filter /api/admin): which step failed and how.
+  // TEMP diagnostics (Workers Logs → filter /api/admin): which step failed and how.
   console.error(`[yappy] session/login url=${url} httpStatus=${res.status} code=${code}`);
   if (code !== 'YP-0000') {
     throw new YappyError(code, `session/login: ${json?.status?.description ?? 'login failed'}`);
@@ -294,7 +294,7 @@ export async function reverseYappyPayment(
 
   const code = json?.status?.code ?? `HTTP_${res.status}`;
   const description = json?.status?.description ?? 'Yappy reversal failed';
-  // TEMP diagnostics (Vercel Logs → filter /api/admin): which step failed and how.
+  // TEMP diagnostics (Workers Logs → filter /api/admin): which step failed and how.
   console.error(`[yappy] transaction PUT url=${url} httpStatus=${res.status} code=${code}`);
   // YP-0000 = reversed. YP-0016 = already reversed: treat as idempotent success
   // (the money is back regardless). Everything else (YP-0014 already settled /

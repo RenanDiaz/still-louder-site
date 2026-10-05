@@ -31,9 +31,9 @@ const PRECACHE_URLS = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap'
 ];
 
-// Vercel (cleanUrls) and Cloudflare (html_handling) redirect /offline.html to
-// /offline. A redirected response cannot answer a navigation request, so the
-// offline page is stored as a fresh, non-redirected Response.
+// Cloudflare (html_handling) redirects /offline.html to /offline. A redirected
+// response cannot answer a navigation request, so the offline page is stored as
+// a fresh, non-redirected Response.
 async function cacheOfflinePage() {
   const response = await fetch(new Request('/offline.html', { cache: 'no-cache' }));
   if (!response.ok) {

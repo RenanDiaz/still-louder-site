@@ -1,6 +1,5 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from '../_lib/supabase.js';
-import { methodNotAllowed, sendJson, withErrorHandling } from '../_lib/http.js';
+import { type ApiRequest, type ApiResponse, methodNotAllowed, sendJson, withErrorHandling } from '../_lib/http.js';
 import { issueOrder, IssueError } from '../_lib/issue.js';
 import { isYappyConfigured, verifyIpnHash } from '../_lib/yappy.js';
 
@@ -21,12 +20,12 @@ import { isYappyConfigured, verifyIpnHash } from '../_lib/yappy.js';
 // itself by timestamp when the reservation expires, and the buyer can retry.
 // =============================================================================
 
-function qp(req: VercelRequest, name: string): string {
+function qp(req: ApiRequest, name: string): string {
   const v = req.query[name];
   return typeof v === 'string' ? v : Array.isArray(v) ? (v[0] ?? '') : '';
 }
 
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
   if (!isYappyConfigured()) return sendJson(res, 503, { error: 'yappy_not_configured' });
 

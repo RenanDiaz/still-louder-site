@@ -1,12 +1,18 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
-import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
+import {
+  type ApiRequest,
+  type ApiResponse,
+  methodNotAllowed,
+  parseBody,
+  sendJson,
+  withErrorHandling
+} from './_lib/http.js';
 import { haveSalesEnded, type EventRow } from './_lib/events.js';
 import { issueOrder } from './_lib/issue.js';
 import type { ClaimGiftRow, GiftCampaignStatus } from './_lib/types.js';
 
-// Public endpoint for the hidden gift campaigns (/regalo/<token>). One function
-// dispatching by method (Vercel Hobby caps a deployment at 12 functions):
+// Public endpoint for the hidden gift campaigns (/regalo/<token>). One handler
+// dispatching by method:
 //
 //   GET  /api/gifts?token=...   campaign status, to render the hidden page
 //   POST /api/gifts             claim a gift (token + name/email/phone in body)
@@ -25,14 +31,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const IP_WINDOW_MS = 60_000;
 const IP_MAX_CLAIMS = 5;
 
-function clientIp(req: VercelRequest): string {
+function clientIp(req: ApiRequest): string {
   const fwd = req.headers['x-forwarded-for'];
   const raw = Array.isArray(fwd) ? fwd[0] : fwd ?? '';
   // x-forwarded-for is a comma-separated list; the client is the first entry.
   return raw.split(',')[0].trim() || (req.socket?.remoteAddress ?? '');
 }
 
-async function getCampaignStatus(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function getCampaignStatus(req: ApiRequest, res: ApiResponse): Promise<void> {
   const raw = req.query.token;
   const token = (Array.isArray(raw) ? raw[0] : raw ?? '').trim();
   // Neutral 404 for missing/unknown token — never reveal whether a campaign exists.
@@ -76,7 +82,7 @@ interface ClaimBody {
   phone?: string;
 }
 
-async function claimGift(req: VercelRequest, res: VercelResponse): Promise<void> {
+async function claimGift(req: ApiRequest, res: ApiResponse): Promise<void> {
   const body = parseBody<ClaimBody>(req);
   const token = (body.token ?? '').trim();
   const name = (body.name ?? '').trim();
@@ -136,7 +142,7 @@ async function claimGift(req: VercelRequest, res: VercelResponse): Promise<void>
   throw new Error(`claim_gift returned unexpected status: ${String(status)}`);
 }
 
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (req.method === 'GET') return getCampaignStatus(req, res);
   if (req.method === 'POST') return claimGift(req, res);
   return methodNotAllowed(res, ['GET', 'POST']);

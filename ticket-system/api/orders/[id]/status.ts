@@ -1,6 +1,5 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from '../../_lib/supabase.js';
-import { methodNotAllowed, sendJson, withErrorHandling } from '../../_lib/http.js';
+import { type ApiRequest, type ApiResponse, methodNotAllowed, sendJson, withErrorHandling } from '../../_lib/http.js';
 
 // =============================================================================
 // GET /api/orders/:id/status — public, scoped to one order
@@ -22,7 +21,7 @@ interface OrderStatusRow {
   events: { slug: string } | null;
 }
 
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
 
   const id = typeof req.query.id === 'string' ? req.query.id : '';

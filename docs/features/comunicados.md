@@ -116,12 +116,12 @@ renderiza `marked` se escapa a nivel de nodos; los nodos `html` se rechazan.
 ### Rutas y hosting
 
 - Vite emite `dist/comunicados/<slug>.html` y `dist/comunicados.html`.
-  `cleanUrls` (Vercel) y `html_handling: auto-trailing-slash` (Cloudflare) los
+  `html_handling: auto-trailing-slash` (Cloudflare) los
   sirven en `/comunicados/<slug>` y `/comunicados`. **No** crear
   `dist/comunicados/index.html`: con `comunicados.html` al lado, la resolución
   de `/comunicados` sería ambigua.
 - **CSP sin cambios**: todo es `'self'`. Si la implementación necesita tocar
-  headers, se cambian en `vercel.json` **y** en `public/assets/_headers`.
+  headers, se cambian en `public/assets/_headers`.
 - Service worker sin cambios: los HTML ya van network-first, así que un
   comunicado nuevo aparece en cuanto hay red. Los comunicados **no** se agregan
   a `PRECACHE_URLS`.
@@ -267,4 +267,4 @@ y el campo `updated`; nunca reescribir el texto original.
 | El header/footer de la plantilla se desfasa del de `index.html` | CA-15 + revisar la plantilla al cambiar la navegación. Si se repite, extraer los parciales a un include que el plugin inyecte en las dos páginas. |
 | El banner se queda tras `pin_until` en navegadores sin JS | Aceptado (ver "Caducidad en el cliente"). |
 | Caché de vista previa de WhatsApp/Facebook después de corregir un comunicado | Paso 6 del flujo; si cambia la imagen, usar un nombre de archivo nuevo. |
-| Un comunicado urgente depende de que el deploy esté sano | El build valida en local (paso 4); Vercel queda como plan B mientras siga vivo el rollback del cutover. |
+| Un comunicado urgente depende de que el deploy esté sano | El build valida en local (paso 4); si algo sale mal en producción, se vuelve a la versión anterior del Worker (`wrangler rollback`). |

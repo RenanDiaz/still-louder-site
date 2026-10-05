@@ -15,8 +15,8 @@ import { resolve } from 'node:path';
 //   /regalo    -> hidden gift-claim form, reached only via a campaign QR token
 // The root index.html just redirects to /entradas.
 //
-// Other event slugs reach the same app via rewrites (vercel.json +
-// public/_redirects, e.g. /when-we-were-young-3 -> /entradas) or, with no
+// Other event slugs reach the same app via rewrites (public/_redirects,
+// e.g. /when-we-were-young-3 -> /entradas) or, with no
 // redeploy at all, via /entradas?evento=<slug>.
 export default defineConfig({
   plugins: [react()],

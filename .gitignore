@@ -1,9 +1,6 @@
 # Ignore OS files
 .DS_Store
 
-# Ignore Vercel build output
-.vercel
-
 # Ignore Cloudflare Wrangler local state
 .wrangler/
 

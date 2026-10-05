@@ -125,7 +125,7 @@ export const env = {
   get googleWalletSaEmail() {
     return optional('GOOGLE_WALLET_SA_EMAIL');
   },
-  // private_key from the service-account JSON. Vercel env values keep the
+  // private_key from the service-account JSON. The secret is stored with the
   // newlines escaped as the two characters "\n"; google-wallet.ts un-escapes
   // them back into a real PEM before signing.
   get googleWalletSaPrivateKey() {

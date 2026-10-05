@@ -1,18 +1,17 @@
 // =============================================================================
 // Cloudflare Worker entry for the ticket system (entradas.still-louder.com)
 // =============================================================================
-// Routes /api/* to the SAME Vercel-style handlers under api/ (through
-// cloudflare/vercel-adapter.ts) and serves the Vite build in dist/ as static
-// assets for everything else. The route table below is the Cloudflare
-// equivalent of Vercel's filesystem routing + the rewrites in vercel.json —
-// A NEW FILE UNDER api/ MUST BE REGISTERED HERE TOO or it will 404 on
-// Cloudflare only.
+// Routes /api/* to the handlers under api/ (through cloudflare/adapter.ts)
+// and serves the Vite build in dist/ as static assets for everything else.
+// There is no filesystem routing: A NEW FILE UNDER api/ MUST BE REGISTERED
+// HERE or it will 404. Page rewrites/redirects live in public/_redirects.
 //
-// The daily cleanup cron (vercel.json "crons") is mirrored by the scheduled()
-// handler + the "triggers.crons" entry in wrangler.jsonc.
+// The daily cleanup cron is the scheduled() handler below + the
+// "triggers.crons" entry in wrangler.jsonc.
 // =============================================================================
 
-import { runVercelHandler } from './vercel-adapter.js';
+import type { ApiHandler } from '../api/_lib/http.js';
+import { runHandler } from './adapter.js';
 
 import adminHandler from '../api/admin.js';
 import giftsHandler from '../api/gifts.js';
@@ -31,7 +30,7 @@ interface Env {
   CRON_SECRET?: string;
 }
 
-const FIXED_ROUTES: Record<string, typeof presaleStatusHandler> = {
+const FIXED_ROUTES: Record<string, ApiHandler> = {
   '/api/gifts': giftsHandler,
   '/api/orders': ordersHandler,
   '/api/presale/status': presaleStatusHandler,
@@ -57,26 +56,25 @@ function jsonResponse(status: number, body: unknown): Response {
 
 async function handleApi(request: Request, pathname: string): Promise<Response> {
   const fixed = FIXED_ROUTES[pathname];
-  if (fixed) return runVercelHandler(fixed, request);
+  if (fixed) return runHandler(fixed, request);
 
-  // /api/admin/<sub/path> — Vercel reaches api/admin.ts via the
-  // vercel.json rewrite that folds the sub-path into ?path=…; here the
-  // router passes it as a route param, which the adapter merges into
-  // req.query exactly like the rewrite does.
-  if (pathname === '/api/admin') return runVercelHandler(adminHandler, request);
+  // /api/admin/<sub/path> — every admin route lives in api/admin.ts, which
+  // dispatches on req.query.path; the router passes the sub-path as that
+  // route param.
+  if (pathname === '/api/admin') return runHandler(adminHandler, request);
   if (pathname.startsWith('/api/admin/')) {
     const sub = pathname.slice('/api/admin/'.length);
-    return runVercelHandler(adminHandler, request, { path: sub });
+    return runHandler(adminHandler, request, { path: sub });
   }
 
   const orderStatus = pathname.match(ORDER_STATUS_RE);
   if (orderStatus) {
-    return runVercelHandler(orderStatusHandler, request, { id: orderStatus[1] });
+    return runHandler(orderStatusHandler, request, { id: orderStatus[1] });
   }
 
   const walletGoogle = pathname.match(WALLET_GOOGLE_RE);
   if (walletGoogle) {
-    return runVercelHandler(walletGoogleHandler, request, { ticketId: walletGoogle[1] });
+    return runHandler(walletGoogleHandler, request, { ticketId: walletGoogle[1] });
   }
 
   return jsonResponse(404, { error: 'not_found' });
@@ -105,9 +103,9 @@ export default {
     return env.ASSETS.fetch(request);
   },
 
-  // Mirror of the Vercel cron: cancel expired pending reservations daily.
-  // Auth reuses the same contract as Vercel Cron — `Authorization: Bearer
-  // CRON_SECRET` — so isCron() in api/_lib/auth.ts works unchanged.
+  // Daily cron: cancel expired pending reservations. Authenticated like any
+  // cron call to the admin route — `Authorization: Bearer CRON_SECRET`, see
+  // isCron() in api/_lib/auth.ts.
   async scheduled(_controller: unknown, env: Env): Promise<void> {
     const secret = env.CRON_SECRET ?? process.env.CRON_SECRET ?? '';
     if (!secret) {
@@ -118,7 +116,7 @@ export default {
       method: 'POST',
       headers: { authorization: `Bearer ${secret}` }
     });
-    const response = await runVercelHandler(adminHandler, request, { path: 'orders/cleanup' });
+    const response = await runHandler(adminHandler, request, { path: 'orders/cleanup' });
     if (!response.ok) {
       console.error('[cron] orders cleanup failed', response.status, await response.text());
     }

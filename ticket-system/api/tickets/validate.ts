@@ -1,7 +1,13 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from '../_lib/supabase.js';
 import { isStaff } from '../_lib/auth.js';
-import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from '../_lib/http.js';
+import {
+  type ApiRequest,
+  type ApiResponse,
+  methodNotAllowed,
+  parseBody,
+  sendJson,
+  withErrorHandling
+} from '../_lib/http.js';
 import { verifyToken } from '../_lib/hmac.js';
 import { getEventBySlug, isEventOver, type EventRow } from '../_lib/events.js';
 import type { ValidateResult } from '../_lib/types.js';
@@ -27,7 +33,7 @@ function closed(result: ValidateResult, extra: Record<string, unknown> = {}) {
 
 // GET: the events a gate station can pick (not draft/archived), soonest first.
 // Staff-gated; lives here so /validar needs no admin rights and no new function.
-async function listGateEvents(res: VercelResponse): Promise<void> {
+async function listGateEvents(res: ApiResponse): Promise<void> {
   const { data, error } = await getSupabase()
     .from('events')
     .select('slug, name, short_name, status, starts_at, event_end')
@@ -50,7 +56,7 @@ async function listGateEvents(res: VercelResponse): Promise<void> {
 //  3. The event must not be over (event_end).
 //  4. Only then the atomic validate_ticket RPC flips valid->used in a single
 //     statement, so concurrent scans of the same code can't both win.
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (req.method !== 'POST' && req.method !== 'GET') return methodNotAllowed(res, ['POST', 'GET']);
   if (!isStaff(req)) return sendJson(res, 401, { error: 'unauthorized' });
   if (req.method === 'GET') return listGateEvents(res);
