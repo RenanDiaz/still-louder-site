@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DetailedHTMLProps, HTMLAttributes } from 'react';
 import { createYappyPayment } from '../shared/api';
+import { track } from '../shared/analytics';
 
 // =============================================================================
 // <YappyButton> — wrapper around Yappy's <btn-yappy> web component.
@@ -92,6 +93,7 @@ export function YappyButton({ orderId, cdnUrl, onPaymentSent, onError }: YappyBu
     if (!el || state !== 'ready') return;
 
     const handleClick = async () => {
+      track('add_payment_info', { payment_type: 'yappy' });
       try {
         el.isButtonLoading = true;
         const session = await createYappyPayment(orderId);

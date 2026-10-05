@@ -24,7 +24,7 @@ Where each document lives and what it covers. Start with the root
 | [`features/multi-evento.md`](features/multi-evento.md) | Spec: multi-event foundation (`events` table, migration 0011) — implemented |
 | [`features/entradas-31-10.md`](features/entradas-31-10.md) | Spec: Halloween Party sale (31 Oct 2026, slug `halloween-party`) |
 | [`features/gift-qr-campaigns.md`](features/gift-qr-campaigns.md) | Spec: hidden-QR gift ticket campaigns (`/regalo/<token>`) |
-| [`features/analytics-entradas.md`](features/analytics-entradas.md) | Spec: GA4 on the public ticket surfaces + server-side `purchase` via Measurement Protocol — proposed |
+| [`features/analytics-entradas.md`](features/analytics-entradas.md) | Spec: GA4 on the public ticket surfaces + server-side `purchase` via Measurement Protocol — implemented |
 
 ## Deployment (both apps)
 

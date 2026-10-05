@@ -5,7 +5,22 @@
 > (`click_shows`, `data-shows-link`). Este spec cubre **solo** el lado de
 > `entradas.still-louder.com`.
 
-## Estado: propuesto (5 oct 2026)
+## Estado: implementado (5 oct 2026) — falta la puesta en marcha manual
+
+Código implementado según este spec. Antes de que llegue el primer `purchase`
+hay que seguir la [Guía de puesta en marcha](#guía-de-puesta-en-marcha) (migración,
+secreto, GA4 Admin). Mientras tanto, el funnel del cliente funciona igual
+y el servidor no envía nada.
+
+Desviaciones deliberadas:
+
+| Spec | Implementación | Por qué |
+|---|---|---|
+| Regex `^\d{6,12}\.\d{9,11}$` / `^\d{6,12}$` | `^\d{1,12}\.\d{1,12}$` / `^\d{1,20}$` (`api/_lib/ga.ts`) | La parte aleatoria del client_id puede tener menos de 6 dígitos. El regex solo debe filtrar basura, no adivinar el formato exacto. |
+| `getGaIds()` con timeout de 1 s | Los ids se piden al cargar (máx. 5 s) y en el submit se esperan **≤ 500 ms** | Así un comprador con bloqueador no espera 1 s extra al comprar. |
+| `page_view` automático del `config` | `send_page_view: false`; el `page_view` se manda a mano cuando carga el evento, **antes** de que se monte el formulario | Así lleva `event_slug`/`event_status`, y `view_item` sale después de él (no antes, como pasaría con un efecto de React). |
+| `click_help` por canal (WhatsApp/Instagram/email) | Solo `channel: 'instagram'` | `/ayuda` hoy solo tiene el DM de Instagram como canal. |
+| — | Nota de privacidad en `/ayuda` ("Usamos Google Analytics…") | Lo que se acordó en "Riesgos". |
 
 ## Problema
 
@@ -104,8 +119,8 @@ solo queda sin atribución.
 - `api/_lib/issue.ts`: después de `mark_order_paid`, `await sendPurchase(...)`
   envuelto en `try/catch` y **antes** del correo, para que un correo lento no lo
   retrase. Se manda por cualquier camino de pago: admin, IPN de Yappy, CuantoApp.
-- `api/orders.ts`: acepta `ga_client_id` (regex `^\d{6,12}\.\d{9,11}$`) y
-  `ga_session_id` (`^\d{6,12}$`); si no cumplen el formato, se ignoran en silencio (nunca dan 400).
+- `api/orders.ts`: acepta `ga_client_id` (regex `^\d{1,12}\.\d{1,12}$`) y
+  `ga_session_id` (`^\d{1,20}$`); si no cumplen el formato, se ignoran en silencio (nunca dan 400).
 - Sin cambios en `cloudflare/worker.ts` ni en `REQUIRED_SECRETS`.
 
 ### Frontend
@@ -131,14 +146,9 @@ Como estas cabeceras aplican a todas las rutas, el admin también queda con el
 dominio permitido aunque no cargue el tag. Es aceptable: el permiso solo
 autoriza un origen, no carga nada.
 
-### GA4 Admin (manual, lo hace Renan)
+### GA4 Admin (manual)
 
-1. Data stream web existente: agregar `still-louder.com` a **Unwanted referrals**.
-2. Crear **Measurement Protocol API secret** → guardarlo como `GA_MP_API_SECRET`
-   en Vercel (prod) y en Cloudflare (`wrangler secret put` / dashboard) **antes**
-   del siguiente release del worker.
-3. Registrar las dimensiones personalizadas de arriba.
-4. Marcar `begin_checkout` y `purchase` como key events.
+Ver [Guía de puesta en marcha](#guía-de-puesta-en-marcha).
 
 ### Docs
 
@@ -182,15 +192,13 @@ autoriza un origen, no carga nada.
 - **Consentimiento.** El main site ya carga GA4 sin banner; este spec mantiene ese
   mismo criterio. La Ley 81 pide base legal para tratar datos personales; las
   cookies de analytics con IP truncada (GA4 no guarda IP) están en una zona
-  gris. Propongo **no** meter banner ahora, pero sí agregar en `/ayuda` una línea
-  de privacidad ("usamos Google Analytics para medir visitas; no compartimos tus
+  gris. Decidido (5 oct 2026): **sin** banner por ahora, y una línea
+  de privacidad en `/ayuda` ("usamos Google Analytics para medir visitas; no compartimos tus
   datos de compra"). Si la banda quiere banner, que sea un spec aparte para los dos sitios
   (Consent Mode v2).
-- **Dominio.** El spec asume que la venta se sirve en `entradas.still-louder.com`. Si
-  todavía se sirve desde `stilllouder.space` u otro dominio, la cookie
-  no se comparte y la atribución main site → entradas se pierde (el funnel
-  interno de entradas sí funciona). **Confirmar antes de implementar**, porque también cambia
-  el chequeo de hostname del criterio 9.
+- **Dominio.** Confirmado (5 oct 2026): la venta se sirve en producción en
+  `entradas.still-louder.com`. Si algún día cambia el host, hay que actualizar
+  `PROD_HOST` en `src/shared/analytics.ts`.
 - **Volumen.** Con ~230 entradas, los números son chicos: GA4 puede aplicar
   umbrales y ocultar filas en reportes con pocos usuarios. El funnel exploration
   sigue sirviendo; para cifras exactas, el admin.
@@ -198,3 +206,100 @@ autoriza un origen, no carga nada.
   (pago en efectivo días después), GA4 atribuye el `purchase` al usuario pero
   puede abrir una sesión nueva sin fuente. Aceptable; el atribuidor de GA4 a nivel usuario
   ("first user source") sigue funcionando.
+
+## Guía de puesta en marcha
+
+Pasos manuales, en este orden. Los pasos 1 y 2 tienen que estar hechos **antes**
+de que llegue a producción el código de este spec: sin la migración, el
+`UPDATE` de los ids de GA falla. No rompe nada (es best-effort), pero se pierde
+la atribución de esas órdenes.
+
+### 1. Migración en Supabase
+
+1. Supabase → proyecto → **SQL Editor** → New query.
+2. Pegar el contenido de `ticket-system/supabase/migrations/0014_ga_attribution.sql`
+   y ejecutarlo (o `supabase db push` si usas la CLI).
+3. Verificar: en **Table Editor → orders** aparecen las columnas `ga_client_id`,
+   `ga_session_id` y `ga_purchase_sent_at` (todas vacías). La migración es
+   idempotente (`add column if not exists`), así que se puede correr dos veces.
+
+### 2. Crear el secreto del Measurement Protocol
+
+1. [analytics.google.com](https://analytics.google.com) → propiedad de Still
+   Louder (la de `G-ZZ4XG8CD88`) → **Admin** (engranaje, abajo a la izquierda).
+2. **Data collection and modification → Data streams** → el stream web.
+3. **Measurement Protocol API secrets** → aceptar los términos si los pide →
+   **Create** → nickname `ticket-system` → copiar el **Secret value**.
+4. Guardarlo en el servidor (producción en Cloudflare):
+   ```bash
+   cd ticket-system
+   npx wrangler secret put GA_MP_API_SECRET   # pegar el valor
+   ```
+   `wrangler secret put` crea y despliega una versión nueva del Worker con el
+   código actual más el secreto. Las versiones que después suba
+   `npm run release:cloudflare` lo heredan. **No** hace falta agregarlo a
+   `REQUIRED_SECRETS`: es opcional y, una vez cargado, el script ya protege
+   contra perderlo ("MISSING vs. the live deployment").
+5. Vercel (rollback): **Settings → Environment Variables** → `GA_MP_API_SECRET`,
+   solo en *Production*. Así, si se vuelve a Vercel, el `purchase` sigue
+   funcionando.
+
+### 3. Configurar GA4
+
+Todo en **Admin** de la misma propiedad:
+
+1. **Unwanted referrals**: Data streams → stream web → **Configure tag
+   settings** → *Show more* → **List unwanted referrals** → condición
+   *Referral domain contains* `still-louder.com` → Save. Sin esto, la compra
+   aparece con fuente `still-louder.com / referral` en vez de Instagram, QR, etc.
+2. **Dimensiones personalizadas**: Data display → **Custom definitions** →
+   *Create custom dimension*, scope **Event**, una por fila (el nombre que se ve
+   en los reportes puede ser cualquiera; el *Event parameter* tiene que ser
+   exacto):
+
+   | Dimension name | Event parameter |
+   |---|---|
+   | Evento (slug) | `event_slug` |
+   | Estado del evento | `event_status` |
+   | Método de pago | `payment_type` |
+   | Error de checkout | `error_code` |
+   | Canal de ayuda | `channel` |
+
+   Las dimensiones solo aplican a los datos que llegan **después** de crearlas,
+   así que conviene crearlas antes de que salga el deploy.
+3. **Key events**: Data display → **Events**. `begin_checkout` y `purchase`
+   aparecen en esta lista recién después de que llegue el primero. Para no
+   esperar, ir a **Key events → New key event**, escribir `begin_checkout` →
+   Save, y lo mismo con `purchase`.
+
+### 4. Desplegar y verificar
+
+1. Hacer merge del PR. El release del ticket system es `npm run release:cloudflare`
+   (o Workers Builds); el main site no cambia.
+2. Abrir `https://entradas.still-louder.com/halloween-party?debug_mode=1` y en GA4
+   **Admin → DebugView** confirmar `page_view` (con `event_slug`), `view_item` y
+   `form_start` al escribir en el formulario (criterio 1).
+3. En DevTools → Application → Cookies, el `_ga` de `entradas.` y el de
+   `still-louder.com` deben tener el mismo valor (criterio 2).
+4. Compra de prueba **en efectivo**, desde la misma pestaña con `?debug_mode=1`
+   → `begin_checkout` en DebugView. En Supabase, esa orden tiene `ga_client_id`.
+5. Marcarla pagada en `/admin` → en Supabase se llena `ga_purchase_sent_at`.
+   El `purchase` del Measurement Protocol **no** aparece en DebugView (no lleva
+   `debug_mode`): se ve en **Reports → Realtime** en 1-2 minutos y en los
+   reportes normales en 24-48 h.
+6. Cancelarla/reembolsarla desde el admin como cualquier orden de prueba. GA4 no
+   descuenta el `purchase` solo; para una prueba de $10-12 no vale la pena
+   mandar un `refund`.
+
+### 5. Ver el funnel
+
+**Explore → Funnel exploration**, pasos:
+
+1. `page_view` con `event_status = on_sale` (y `event_slug` = el show)
+2. `form_start`
+3. `begin_checkout`
+4. `purchase`
+
+Breakdown por **Session source / medium** (de dónde vienen) o por **Método de
+pago**. `checkout_error` con breakdown por *Error de checkout* muestra qué rechaza
+el servidor (agotado, correo inválido…).

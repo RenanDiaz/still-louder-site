@@ -12,6 +12,7 @@ import {
 import { MAX_QUANTITY_PER_ORDER, priceBreakdown, reservationMinutesFor } from './_lib/pricing.js';
 import { sendOrderNotificationEmail } from './_lib/email.js';
 import { cuantoappLinkFor } from './_lib/cuantoapp.js';
+import { GA_CLIENT_ID_RE, GA_SESSION_ID_RE } from './_lib/ga.js';
 import type { Order, PaymentMethod, PresaleStatus, Tier } from './_lib/types.js';
 
 const TIERS: Tier[] = ['preventa', 'general'];
@@ -26,6 +27,9 @@ interface CreateOrderBody {
   tier?: string;
   quantity?: number;
   payment_method?: string;
+  // GA4 ids of this browser (attribution only; see api/_lib/ga.ts).
+  ga_client_id?: string;
+  ga_session_id?: string;
 }
 
 function paymentInstructions(method: PaymentMethod, totalCents: number, quantity: number) {
@@ -154,6 +158,20 @@ export default withErrorHandling(async (req: VercelRequest, res: VercelResponse)
       return sendJson(res, 409, { error: 'presale_sold_out' });
     }
     throw new Error(`create_order failed: ${error.message}`);
+  }
+
+  // Atribución GA4 del `purchase` futuro. Best-effort: ids con formato
+  // inválido se ignoran y un fallo aquí solo deja la orden sin atribución.
+  const gaClientId =
+    typeof body.ga_client_id === 'string' && GA_CLIENT_ID_RE.test(body.ga_client_id) ? body.ga_client_id : null;
+  if (gaClientId) {
+    const gaSessionId =
+      typeof body.ga_session_id === 'string' && GA_SESSION_ID_RE.test(body.ga_session_id) ? body.ga_session_id : null;
+    const { error: gaError } = await getSupabase()
+      .from('orders')
+      .update({ ga_client_id: gaClientId, ga_session_id: gaSessionId })
+      .eq('id', order!.id);
+    if (gaError) console.error('[orders] ga attribution update failed', gaError);
   }
 
   // Aviso interno al operador de que se registró una compra. Best-effort: un

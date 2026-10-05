@@ -59,6 +59,16 @@ export const env = {
   get cronSecret() {
     return optional('CRON_SECRET');
   },
+  // --- Google Analytics 4 (docs/features/analytics-entradas.md) -------------
+  // Measurement ID is public (it is in the main site's HTML); the Measurement
+  // Protocol API secret is not. Optional: without the secret no `purchase` is
+  // sent and nothing else changes.
+  get gaMeasurementId() {
+    return optional('GA_MEASUREMENT_ID', 'G-ZZ4XG8CD88');
+  },
+  get gaMpApiSecret() {
+    return optional('GA_MP_API_SECRET');
+  },
   get publicBaseUrl() {
     return optional('PUBLIC_BASE_URL', 'https://entradas.still-louder.com');
   },

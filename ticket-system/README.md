@@ -184,6 +184,8 @@ RESEND_API_KEY, EMAIL_FROM="Still Louder <entradas@stilllouder.space>"
 EMAIL_REPLY_TO                # opcional: buzón real (p. ej. Gmail) que recibe las respuestas
                               # del comprador; sin esto el correo no invita a responder
 ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compra (lista separada por comas)
+GA_MP_API_SECRET              # opcional: GA4 Measurement Protocol; sin esto no se manda el `purchase`
+                              # (docs/features/analytics-entradas.md)
 TICKET_HMAC_SECRET            # openssl rand -hex 32
 ADMIN_PASSWORD, STAFF_PASSWORD
 SUPPORT_PASSWORD              # opcional: rol de soporte (/support, solo lectura + reenviar correo).
@@ -326,6 +328,25 @@ cuentas de prueba (Admin/Developer o test accounts de la consola) y sale con
 `reviewStatus` a `APPROVED` en `google-wallet.ts` y los pases salen a cualquier
 usuario sin el rótulo. **Apple Wallet queda fuera de alcance** (requiere cuenta
 Apple Developer de pago).
+
+## Analytics (GA4)
+
+Spec y guía de configuración: `docs/features/analytics-entradas.md`. Misma
+propiedad que el main site (`G-ZZ4XG8CD88`), solo en las superficies públicas
+(`/entradas`, `/halloween-party`, `/ayuda`) y solo en el host de producción.
+
+- **Cliente** — `src/shared/analytics.ts` inyecta gtag.js (sin script inline:
+  la CSP no permite `'unsafe-inline'`) y manda el funnel: `page_view`
+  (con `event_slug`/`event_status`), `view_item`, `form_start`,
+  `begin_checkout`, `checkout_error`, `add_payment_info` (Yappy),
+  `yappy_expired`, `click_help`. Al crear la orden manda `ga_client_id` /
+  `ga_session_id`, que `api/orders.ts` valida y guarda (migración `0014`).
+- **Servidor** — el `purchase` lo manda `api/_lib/ga.ts` por Measurement
+  Protocol desde `issueOrder()`, así cuenta igual con Yappy (IPN), efectivo y
+  CuantoApp (admin). Una sola vez por orden (`orders.ga_purchase_sent_at`,
+  UPDATE condicional), excluye cortesías y regalos, y nunca bloquea la
+  emisión (timeout 2 s, errores solo a `console.error`).
+- **Nunca** se manda nombre, correo, teléfono ni token de QR a Google.
 
 ## Cómo se cumplen los criterios de aceptación
 

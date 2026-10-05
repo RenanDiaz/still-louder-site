@@ -92,6 +92,9 @@ export interface CreateOrderInput {
   tier: 'preventa' | 'general';
   quantity: number;
   payment_method: 'cuantoapp' | 'cash' | 'yappy';
+  // GA4 ids for attributing the server-side `purchase` (src/shared/analytics.ts).
+  ga_client_id?: string;
+  ga_session_id?: string;
 }
 
 export interface PriceBreakdown {

@@ -138,6 +138,8 @@ npx wrangler secret put YAPPY_API_CHANNEL        # default 'API' — confirmar c
 npx wrangler secret put YAPPY_BTN_CDN_URL        # override del CDN del web component; solo si el default no carga
 # Google Wallet (opt-in; sin la clave el botón no aparece)
 npx wrangler secret put GOOGLE_WALLET_SA_PRIVATE_KEY   # pegar con los \n escapados, igual que en Vercel
+# GA4 (opt-in; sin esto el servidor no manda el `purchase`) — docs/features/analytics-entradas.md
+npx wrangler secret put GA_MP_API_SECRET
 ```
 
 Para cargar muchas de una vez: `npx wrangler secret bulk secrets.json` (un
