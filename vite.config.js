@@ -10,7 +10,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: '/index.html',
-        'al-vacio-pre-release': '/al-vacio-pre-release.html'
+        'al-vacio-pre-release': '/al-vacio-pre-release.html',
+        links: '/links.html'
       },
       output: {
         assetFileNames: (assetInfo) => {

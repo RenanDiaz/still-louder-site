@@ -1,0 +1,239 @@
+/* /links (página de la bio) — spec: docs/features/bio-links.md (D9).
+   Hoja propia: no carga style.css. Solo tokens de variables.css. */
+@import url('./variables.css');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--font-primary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fondo: portada del single vigente, desenfocada y oscurecida. Cambia con el
+   single (docs/features/nuevo-single.md), junto con el og:image de links.html. */
+.links-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.links-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/assets/images/album_covers/a-las-10.webp');
+  background-image: -webkit-image-set(
+    url('/assets/images/album_covers/a-las-10.avif') type('image/avif'),
+    url('/assets/images/album_covers/a-las-10.webp') type('image/webp')
+  );
+  background-image: image-set(
+    url('/assets/images/album_covers/a-las-10.avif') type('image/avif'),
+    url('/assets/images/album_covers/a-las-10.webp') type('image/webp')
+  );
+  background-size: cover;
+  background-position: center;
+  filter: blur(28px) brightness(0.35) saturate(0.8);
+  transform: scale(1.3);
+}
+
+.links-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-hero);
+}
+
+.links-page {
+  position: relative;
+  z-index: var(--z-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--section-padding-x);
+}
+
+/* Cabecera */
+.links-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  text-align: center;
+}
+
+.links-header__logo {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.links-header__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-wider);
+}
+
+.links-header__tagline {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Botones principales */
+.links-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  background: var(--glass-bg);
+  border: var(--border-width-thin) solid var(--glass-border);
+  border-radius: var(--border-radius-lg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.links-card:hover {
+  background: var(--color-link-bg);
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.links-card:focus-visible,
+.links-social__link:focus-visible,
+.links-footer__link:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.links-card__title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.links-card__sub {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  color: var(--color-text-secondary);
+}
+
+/* Destacado: uno solo en la página (D7). */
+.links-card--featured {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.links-card--featured .links-card__sub {
+  color: var(--color-accent-text);
+}
+
+/* Single sin enlace todavía (D5). */
+.links-card--pending {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.links-card--pending:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  transform: none;
+}
+
+/* Fila de redes */
+.links-social {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links-social__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: var(--color-text-primary);
+  background: var(--glass-bg);
+  border: var(--border-width-thin) solid var(--glass-border);
+  border-radius: var(--border-radius-full);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.links-social__link:hover {
+  background: var(--color-link-bg);
+  border-color: var(--color-accent);
+}
+
+/* Pie */
+.links-footer {
+  text-align: center;
+  font-size: var(--font-size-sm);
+}
+
+.links-footer__link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.links-footer__link:hover {
+  color: var(--color-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .links-card,
+  .links-social__link {
+    transition: none;
+  }
+
+  .links-card:hover {
+    transform: none;
+  }
+}

@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the official website for **Still Louder**, a Panamanian rock band. The site is a static, performant landing page: current single ("A Las 10", `CONFIG.release`), streaming links, upcoming shows (`#shows`, driven by `CONFIG.shows`), about, FAQ, social/store links and a contact form. `al-vacio-pre-release.html` is a legacy page from the previous single "Al Vacío".
+This is the official website for **Still Louder**, a Panamanian rock band. The site is a static, performant landing page: current single ("A Las 10", `CONFIG.release`), streaming links, upcoming shows (`#shows`, driven by `CONFIG.shows`), about, FAQ, social/store links and a contact form. `links.html` is the link-in-bio page (`/links`, `noindex`;
+its buttons are hand-written HTML whose URLs must match `config.js`).
+`al-vacio-pre-release.html` is a legacy page from the previous single "Al Vacío".
 
 **Live URL**: https://still-louder.com/
 **Repository**: https://github.com/RenanDiaz/still-louder-site
@@ -202,6 +204,7 @@ still-louder-site/
 │   │   ├── css/
 │   │   │   ├── variables.css    # Design system tokens (colors, spacing, typography)
 │   │   │   ├── style.css        # Main styles
+│   │   │   ├── links.css        # /links bio page styles (does not load style.css)
 │   │   │   └── al-vacio-pre-release/  # Pre-release page styles
 │   │   ├── js/
 │   │   │   ├── main.js          # Entry point (wires up the modules below)
@@ -211,6 +214,7 @@ still-louder-site/
 │   │   │   ├── error-handler.js # Global error handling
 │   │   │   ├── ui-utils.js      # UI utilities (loading states, lazy loading)
 │   │   │   ├── sw-register.js   # Service Worker registration
+│   │   │   ├── links.js         # /links: hide expired shows + click_link analytics
 │   │   │   └── al-vacio-pre-release/  # Pre-release page scripts
 │   │   ├── images/              # Optimized images (WebP, AVIF formats)
 │   │   ├── .well-known/
@@ -223,6 +227,7 @@ still-louder-site/
 │   │   ├── robots.txt           # Search engine directives (→ /robots.txt)
 │   │   └── links.json           # Platform links data
 │   ├── index.html               # Main landing page
+│   ├── links.html               # Link-in-bio page (/links, noindex) — docs/features/bio-links.md
 │   └── al-vacio-pre-release.html # Pre-release page
 ├── scripts/
 │   ├── optimize-images.js       # Image optimization script

@@ -39,6 +39,10 @@ meta tags, JSON-LD and the sitemap do not, so they must use `/images/...`.
   own `#0d1216`).
 - Share image: home uses `/images/album_covers/a-las-10.jpeg` (1400x1400).
   Pre-release uses `/images/album_covers/al-vacio.jpeg` (760x760).
+- `/links` (`links.html`, bio page, `docs/features/bio-links.md`) is the
+  exception: `noindex, follow`, canonical to itself, `og:type=website`,
+  `twitter:card=summary`, no JSON-LD. Its `og:image` is the current single's
+  cover (same file as the home).
 
 ### 1.2 Structured data (JSON-LD, inline `<script type="application/ld+json">`)
 
@@ -54,7 +58,8 @@ Keep that `@id` stable.
 
 - `public/assets/sitemap.xml` lists two URLs: `/` (priority 1.0, image = A Las 10
   cover) and `/al-vacio-pre-release` (priority 0.8, image = Al Vacío cover). It
-  uses the `image:` sitemap extension.
+  uses the `image:` sitemap extension. `/links` is deliberately **not** listed
+  (it is `noindex`).
 - `public/assets/robots.txt`: a single `User-agent: *` group with `Allow: /`
   and `Disallow` for `/*.mp3$`, `/.git/`, `/node_modules/` and `/dist/`, plus
   `Sitemap: https://still-louder.com/sitemap.xml`. No `Crawl-delay` (Google
@@ -80,13 +85,17 @@ Keep that `@id` stable.
    `image:caption` for `/`.
 6. Export the new cover as `/images/...` (JPEG for OG, plus AVIF and WebP for
    `<picture>`), then run `npm run optimize:images`.
+7. `/links`: `og:image`/`twitter:image` in `public/links.html`, the background
+   in `.links-bg` (`public/assets/css/links.css`) and the single's card copy.
 
 ### 1.5 Checklist: shows
 
 Each show needs a card in `#shows` (flyer `<picture>` with a descriptive
 `alt`, plus a ticket link with `aria-label`) and a matching `MusicEvent`
 JSON-LD block. When a show has passed, remove its `MusicEvent` block and move
-the card to the "Último show" list.
+the card to the "Último show" list. Shows also have a card in `public/links.html`
+(same `ticketsUrl` as `config.js`, `data-expires` = end of the show); delete it
+once the show has passed.
 
 ### 1.6 Checklist: domain change
 
