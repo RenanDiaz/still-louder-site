@@ -25,14 +25,14 @@ pocos envíos al año, escritos a mano, a una base pequeña.
 |---|---|---|
 | D1 | Dónde vive | En `ticket-system/` (datos en Supabase, envío por Resend, UI como tab **Campañas** de `/admin`). Solo `isAdmin`; `/support` y staff no ven nada. |
 | D2 | Motor de envío | **Propio sobre Resend** (`resend.batch.send`), **no** Resend Broadcasts/Audiences. Motivo: la selección (olas, allegados, tope de frecuencia, exclusiones por evento) depende de nuestros datos; sincronizar contactos a Audiences duplica PII y crea dos fuentes de verdad de las bajas. Costo: la baja y la supresión son nuestras (ver D6). |
-| D3 | Origen de los contactos | Correos únicos (`lower(email)`) de órdenes `paid` de **cualquier** evento, incluidas cortesías (`courtesy`) y regalos (`gift`). Se excluyen órdenes solo `pending`/`cancelled` y las 100% reembolsadas. |
+| D3 | Origen de los contactos | Correos únicos (`lower(email)`) de órdenes `paid` de **cualquier** evento, **incluidas cortesías** (`courtesy`) y regalos (`gift`) — las cortesías suelen ser allegados, justo la muestra inicial. Se excluyen órdenes solo `pending`/`cancelled` y las 100% reembolsadas. |
 | D4 | Base legal | Ley 81 de 2019 (Panamá, datos personales). Los compradores previos no dieron consentimiento explícito para promociones → se tratan como **relación previa de cliente** (`consent_source = 'legacy_buyer'`), con baja en un clic en todo correo y aviso claro de por qué lo reciben. Desde ahora se pide **opt-in explícito** en la compra (Fase 0). ⚠️ Ver P1. |
 | D5 | Audiencia vs. entrega | Son ejes separados. **Audiencia**: todos los elegibles / por etiqueta / por evento / selección manual. **Entrega**: inmediata u **olas**. Las tres opciones de la UI ("todos", "escalonado", "seleccionados") son atajos sobre esos dos ejes. |
 | D6 | Baja (unsubscribe) | Obligatoria en todo correo de campaña: enlace visible + headers `List-Unsubscribe` / `List-Unsubscribe-Post` (one-click, RFC 8058). La baja es global para promociones y **nunca** afecta los correos transaccionales (QR, comprobantes). |
 | D7 | "Poco invasivo" | Sin pixel de apertura ni tracking de clics de Resend. Tope de frecuencia: un contacto no recibe más de **1 campaña cada 14 días** (configurable). Medición solo con UTM hacia el sitio (GA4 ya existe). |
-| D8 | Dominio de envío | Subdominio propio para promociones (p. ej. `novedades@noticias.still-louder.com`), separado de `entradas@…`, para que una queja de spam no afecte la entrega de QRs. |
+| D8 | Dominio de envío | Subdominio propio para correo **no transaccional**: `Still Louder <hola@noticias.still-louder.com>`, separado de `entradas@still-louder.com` (QRs), para que una queja de spam no afecte la entrega de entradas. El subdominio es solo DNS de correo (SPF/DKIM/DMARC en Resend), no sirve páginas. Ver "Relación con Comunicados". |
 | D9 | Contenido | Asunto + preheader + cuerpo en **Markdown** (render server-side) sobre una plantilla fija con la paleta `mono` de `api/_lib/email.ts`. Sin HTML libre. Una imagen opcional (URL https). |
-| D10 | Olas | **Manuales**: el admin pulsa "Enviar siguiente ola". Sin cron (Vercel Hobby no permite crons frecuentes y queremos revisar la reacción entre olas). |
+| D10 | Olas | **Manuales**: el admin pulsa "Enviar siguiente ola". Sin cron: es a propósito, queremos revisar la reacción entre olas antes de seguir (Cloudflare permitiría programarlas; ver Fase 2). |
 | D11 | Teléfonos / WhatsApp | Fuera de alcance. Solo correo. |
 
 ## Alcance
@@ -68,7 +68,7 @@ un contacto más sin consentimiento explícito. Debe salir **antes** que el rest
   y revisar su dashboard (la muestra es pequeña).
 - Programar una ola a una hora (si en Fase 1 hace falta).
 
-## Modelo de datos (`supabase/migrations/0014_marketing_campaigns.sql`)
+## Modelo de datos (`supabase/migrations/0015_marketing_campaigns.sql`)
 
 Todas las tablas con RLS habilitado y **sin policies** (solo service-role).
 
@@ -173,7 +173,7 @@ Envío: `resend.batch.send` en grupos de ≤ 100, con header `Idempotency-Key =
 del function) se puede reintentar con un botón que lo devuelve a `queued` solo
 si tiene más de 10 min y no tiene `resend_id`.
 
-### Público — `api/marketing.ts` (función serverless nueva, sin auth)
+### Público — `api/marketing.ts` (handler nuevo, sin auth)
 
 - `POST /api/marketing/unsubscribe` — acepta `{ t }` en JSON (desde la página)
   **y** el form-urlencoded `List-Unsubscribe=One-Click` (desde Gmail/Apple Mail,
@@ -182,11 +182,9 @@ si tiene más de 10 min y no tiene `resend_id`.
 - `GET /api/marketing/unsubscribe?t=…` → `{ email_masked, status }` para que la
   página muestre "r***@gmail.com".
 
-> **Conteo de funciones serverless: pasa de 11 a 12 = el límite de Vercel
-> Hobby.** Después de esto no cabe ninguna función nueva en Vercel; o la próxima
-> se mete en una existente, o primero se completa el cutover a Cloudflare (que
-> no tiene ese límite). Registrar la ruta en `cloudflare/worker.ts` y el rewrite
-> `/api/marketing/:path*` en `vercel.json` + `public/_redirects`.
+> Registrar `/api/marketing/unsubscribe` en el router de `cloudflare/worker.ts`
+> (no hay ruteo por filesystem). `CAMPAIGN_EMAIL_FROM` va en `vars` de
+> `wrangler.jsonc` (no es secreto).
 
 **Token de baja**: `base64url(email) + '.' + HMAC-SHA256(secret, 'unsub:' +
 email)` truncado, con comparación timing-safe (`api/_lib/hmac.ts`). Se deriva de
@@ -196,7 +194,8 @@ baja debe funcionar siempre).
 
 ## Superficie pública — `/baja`
 
-- `baja.html` (entry Vite), `noindex,nofollow` (meta + `X-Robots-Tag`), tema
+- `baja.html` (entry Vite), `noindex,nofollow` (meta + `X-Robots-Tag` en
+  `public/_headers`), tema
   público `src/entradas/theme.css`, como `/ayuda`.
 - **La baja no ocurre en el GET de la página**: los escáneres de enlaces de los
   clientes de correo abren los links y darían de baja a gente sin querer. La
@@ -243,10 +242,30 @@ No depende del evento seleccionado (como **Eventos**).
 6. **Freno entre olas**: si la ola anterior tiene ≥ 5 % de bajas + fallidos, el
    botón de la siguiente ola muestra la tasa y exige confirmación explícita.
 
+## Relación con Comunicados
+
+[`comunicados.md`](comunicados.md) son **páginas web** en el dominio raíz
+(`still-louder.com/comunicados/<slug>`); no envían correo (su spec lo deja fuera
+de alcance). No comparten subdominio porque no hay nada que compartir: el
+subdominio de D8 solo existe en el remitente de los correos.
+
+Si en el futuro se quiere **avisar por correo** de un comunicado, hay dos casos:
+
+- **Novedad para fans** (cambio de integrantes, posicionamiento): es una
+  campaña más de este sistema — mismo remitente `noticias.`, respeta bajas y
+  tope de frecuencia; el CTA enlaza al comunicado. Por eso el subdominio se
+  llama `noticias.` y no `promo.`: sirve para ambos.
+- **Aviso de servicio a quienes tienen entrada** (show cancelado o movido):
+  **no** es una campaña. Va por el canal transaccional (`entradas@`), a los
+  compradores de ese evento, **aunque estén de baja** de promociones. Queda
+  fuera de este spec (sería una acción "Avisar a compradores" en el tab
+  Eventos).
+
 ## Criterios de aceptación
 
 - [ ] Una compra con la casilla marcada guarda `marketing_opt_in = true`; sin
       marcar, `false`; la compra no exige la casilla. (Fase 0)
+- [ ] Quien recibió una cortesía aparece en Contactos con su evento.
 - [ ] La lista de contactos no tiene duplicados por mayúsculas/espacios y no
       incluye compradores con órdenes solo `pending`/`cancelled`.
 - [ ] No se puede congelar una campaña sin envío de prueba.
@@ -264,11 +283,11 @@ No depende del evento seleccionado (como **Eventos**).
 - [ ] Darse de baja no impide recibir el correo con QR de una compra nueva.
 - [ ] El HTML no contiene pixel de seguimiento ni enlaces reescritos por Resend.
 - [ ] `npm run typecheck` y `npm run build` pasan; la ruta nueva está en
-      `cloudflare/worker.ts` y en ambos archivos de rewrites.
+      `cloudflare/worker.ts`.
 
 ## Verificación end-to-end
 
-1. Aplicar `0014_marketing_campaigns.sql`. Con `vercel dev`:
+1. Aplicar `0015_marketing_campaigns.sql`. Con `npm run preview:cloudflare`:
 2. Admin → Campañas → Contactos: se sincronizan; etiquetar 3 correos propios
    como `allegado`.
 3. Nueva campaña, escalonado, olas de 2 → prueba a tu correo → congelar.
@@ -289,12 +308,12 @@ No depende del evento seleccionado (como **Eventos**).
   la primera campaña a todos.
 - **P2 — ¿Hay que agregar una política de privacidad?** Hoy ni `/entradas` ni
   el sitio principal enlazan una. La casilla de Fase 0 debería enlazar a una.
-- **P3 — Subdominio**: confirmar el nombre (`noticias.` u otro) y verificarlo en
-  Resend (SPF/DKIM/DMARC) **después** del cutover a `still-louder.com`, no
-  sobre `stilllouder.space`.
-- **P4 — ¿Cortesías como contactos?** D3 las incluye porque suelen ser
-  allegados (justo la muestra), pero quien recibió una cortesía no "compró".
-  Alternativa: incluirlas solo si están etiquetadas.
+- **P3 — Nombre del subdominio**: D8 propone `noticias.`. Alternativas
+  razonables: `news.` (corto, pero el resto del sitio está en español) o
+  `correo.` (genérico). Descartados: el dominio raíz (comparte reputación con
+  los QRs) y un dominio aparte (parece phishing y hay que mantenerlo).
+  Requisito antes del primer envío: verificar el subdominio en Resend
+  (SPF/DKIM) y publicar DMARC.
 
 ## Fuera de alcance
 

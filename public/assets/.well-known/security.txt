@@ -15,9 +15,8 @@ Canonical: https://still-louder.com/.well-known/security.txt
 # Please allow 48 hours for initial response
 # We appreciate responsible disclosure and will credit reporters
 
-# This site is hosted on Cloudflare Workers (Vercel is kept as a rollback host)
+# This site is hosted on Cloudflare Workers
 # For Cloudflare platform issues: https://www.cloudflare.com/disclosure/
-# For Vercel platform issues: https://vercel.com/security
 
 # Acknowledgments
 # We thank security researchers who help keep our site secure

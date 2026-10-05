@@ -3,14 +3,14 @@
 Venta, emisión y validación de entradas para los shows de Still Louder. Nació
 para **When We Were Young 3** (Hops, 1 de agosto de 2026) y desde la migración
 `0011` es **multi-evento**: cada show es una fila de `events` (ver "Eventos").
-Construido como app autónoma (React + TypeScript + Vite) con backend en
-**Vercel Serverless Functions** y base de datos **Supabase (Postgres)**. Esta es
+Construido como app autónoma (React + TypeScript + Vite) con backend en un
+**Cloudflare Worker** (handlers de `api/`) y base de datos **Supabase (Postgres)**. Esta es
 la entrega **M1** (vendible sin Yappy) más la integración del **Botón de Pago
 Yappy V2** (ver "Yappy — Botón de Pago V2").
 
 > Se construyó como un proyecto independiente dentro del repo (`/ticket-system`)
-> para no tocar el sitio estático existente. Se despliega como un **proyecto Vercel
-> aparte** (sugerido: subdominio `entradas.still-louder.com`). Ver "Despliegue".
+> para no tocar el sitio estático existente. Se despliega como un **Worker de
+> Cloudflare aparte** en `entradas.still-louder.com`. Ver "Despliegue".
 
 ## Superficies
 
@@ -35,7 +35,7 @@ pagado" del admin; Yappy la invoca desde su IPN autenticada
 
 ```
 ticket-system/
-├── api/                      # Vercel serverless functions (TypeScript)
+├── api/                      # handlers de la API (TypeScript), ruteados por cloudflare/worker.ts
 │   ├── _lib/                 # lógica compartida (NUNCA llega al cliente)
 │   │   ├── env.ts            # acceso validado a variables de entorno
 │   │   ├── supabase.ts       # cliente service-role (bypass RLS)
@@ -59,13 +59,13 @@ ticket-system/
 │   ├── tickets/validate.ts   # POST  /api/tickets/validate       (staff)
 │   ├── tickets/qr.ts         # GET   /api/tickets/qr?t=<token>   (imagen del QR)
 │   ├── wallet/google/[ticketId].ts # GET /api/wallet/google/:id   (302 al saveUrl)
-│   ├── admin.ts              # TODAS las rutas /api/admin/* en una sola función (rewrite en vercel.json)
+│   ├── admin.ts              # TODAS las rutas /api/admin/* en un solo handler (router de cloudflare/worker.ts)
 │   ├── yappy/config.ts       # GET   /api/yappy/config           (público, sin secretos)
 │   ├── yappy/create-order.ts # POST  /api/yappy/create-order     (público, scoped a la orden)
 │   └── yappy/ipn.ts          # GET   /api/yappy/ipn              (confirmación firmada de Yappy)
-├── cloudflare/               # deploy alternativo en Workers (ver docs/deploy-cloudflare.md)
+├── cloudflare/               # entry del Worker (ver docs/deploy-cloudflare.md)
 │   ├── worker.ts             # router de /api/* — REGISTRAR aquí cada archivo nuevo de api/
-│   └── vercel-adapter.ts     # shim req/res para correr los handlers de api/ en Workers
+│   └── adapter.ts            # Request del Worker → req/res (ApiRequest/ApiResponse) de api/
 ├── src/                      # frontend React
 │   ├── shared/               # api.ts, config.ts, styles.css
 │   ├── entradas/             # compra/teaser de cualquier evento (+ Teaser.tsx, theme.css, themes/)
@@ -88,7 +88,7 @@ ticket-system/
 │   └── 0011_events.sql                  # multi-evento: events + event_tier, event_id en todo
 ├── index.html · entradas.html · halloween-party.html · ayuda.html · regalo.html
 ├── admin.html · support.html · validar.html
-├── vite.config.ts · vercel.json · wrangler.jsonc · .env.example
+├── vite.config.ts · wrangler.jsonc · .env.example
 └── tsconfig.json · tsconfig.api.json · tsconfig.cloudflare.json
 ```
 
@@ -139,7 +139,7 @@ Eventos del admin.
 ## Panel de admin
 
 Un **selector de evento** arriba (recordado en el dispositivo) y seis pestañas,
-todas contra rutas `/api/admin/*` (una sola función serverless, ver nota abajo).
+todas contra rutas `/api/admin/*` (un solo handler, ver nota abajo).
 Las cinco primeras están scopeadas al evento elegido: cada llamada lleva
 `?event=<id>` y el servidor responde `400 event_required` sin él (nunca "todos
 los eventos" por accidente):
@@ -163,19 +163,20 @@ los eventos" por accidente):
 - **Eventos:** tabla de todos los shows (estado, precios, vendidas/aforo) +
   formulario crear/editar + botones de transición de estado. Ver "Eventos".
 
-> **Límite de funciones (Vercel Hobby):** el plan Hobby permite **máx. 12
-> funciones serverless** por deploy y el proyecto está cerca del tope. Por eso
-> TODAS las rutas `/api/admin/*` viven en **una sola función** (`api/admin.ts`)
-> que enruta internamente (orders, cleanup, mark-paid, cancel, resend-email,
-> stage2, tickets, revoke/unrevoke, courtesy). Un rewrite en `vercel.json` mapea
-> `/api/admin/:path*` a `/api/admin?path=...` porque Vercel **no soporta
-> archivos catch-all `[...path].ts`** fuera de Next.js (despliegan pero
-> devuelven 404). Antes de añadir un archivo nuevo bajo `api/`, contar las
-> funciones.
+> **Rutas de admin:** TODAS las rutas `/api/admin/*` viven en **un solo
+> handler** (`api/admin.ts`) que enruta internamente por `req.query.path`
+> (orders, cleanup, mark-paid, cancel, resend-email, stage2, tickets,
+> revoke/unrevoke, courtesy). Nació por el límite de 12 funciones de Vercel
+> Hobby, que ya no aplica; se mantiene porque un solo punto de entrada con auth
+> es más simple. **Un archivo nuevo bajo `api/` hay que registrarlo en el router
+> de `cloudflare/worker.ts`** (no hay ruteo por filesystem).
 
 ### 2. Variables de entorno
 
-Copia `.env.example` y complétalo (en Vercel: Settings → Environment Variables).
+En producción, las no sensibles van en `vars` de `wrangler.jsonc` y el resto con
+`npx wrangler secret put` (lista y detalle en
+[`docs/deploy-cloudflare.md`](../docs/deploy-cloudflare.md)). En local, copia
+`.env.example` a `.dev.vars`.
 Todas son **server-only**; ninguna se expone al navegador.
 
 ```
@@ -184,6 +185,8 @@ RESEND_API_KEY, EMAIL_FROM="Still Louder <entradas@stilllouder.space>"
 EMAIL_REPLY_TO                # opcional: buzón real (p. ej. Gmail) que recibe las respuestas
                               # del comprador; sin esto el correo no invita a responder
 ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compra (lista separada por comas)
+GA_MP_API_SECRET              # opcional: GA4 Measurement Protocol; sin esto no se manda el `purchase`
+                              # (docs/features/analytics-entradas.md)
 TICKET_HMAC_SECRET            # openssl rand -hex 32
 ADMIN_PASSWORD, STAFF_PASSWORD
 SUPPORT_PASSWORD              # opcional: rol de soporte (/support, solo lectura + reenviar correo).
@@ -218,41 +221,34 @@ npm install
 npm run dev        # frontend en http://localhost:3100
 ```
 
-Para correr las funciones `/api` localmente usa `vercel dev` (Vercel CLI), que
-sirve frontend + funciones juntas y carga las variables del proyecto.
+Para correr frontend + API + cron juntos usa `npm run preview:cloudflare`
+(build + `wrangler dev`, lee `.dev.vars`). Ver "Smoke test local" en
+[`docs/deploy-cloudflare.md`](../docs/deploy-cloudflare.md).
 
 ```bash
 npm run typecheck  # tsc para src, api y el Worker de Cloudflare
 npm run build      # build de producción a dist/
 ```
 
-## Despliegue (Vercel)
+## Despliegue (Cloudflare)
 
-Crea un **segundo proyecto Vercel** apuntando al mismo repo con:
+Un Worker (`still-louder-tickets`, config en `wrangler.jsonc`) sirve el build
+de Vite y la API en `entradas.still-louder.com`. Se libera **solo** con
+`npm run release:cloudflare` (también el deploy command de Workers Builds),
+nunca con `wrangler deploy`: ver "Releases seguros" en
+[`docs/deploy-cloudflare.md`](../docs/deploy-cloudflare.md), que es la guía
+completa (vars, secrets, headers, cron, smoke test).
 
-- **Root Directory:** `ticket-system`
-- **Framework Preset:** Vite (build `vite build`, output `dist`)
-- Variables de entorno: las de arriba.
-- Dominio: `entradas.still-louder.com` (CNAME en el DNS del dominio).
-
-El sitio estático actual (raíz del repo) sigue siendo su propio proyecto Vercel,
-intacto. `vercel.json` aquí define headers de seguridad (CSP, HSTS,
-`Permissions-Policy: camera=(self)` para el escáner) y el **cron diario** que
-ejecuta `/api/admin/orders/cleanup`.
-
-> **Frecuencia del cron de limpieza:** el plan **Hobby** (gratis) de Vercel solo
-> permite crons **una vez al día**; una expresión horaria falla el deploy con
-> _"Hobby accounts are limited to daily cron jobs"_. Por eso el `schedule` en
-> `vercel.json` es `"0 6 * * *"` (diario; en Hobby, Vercel lo dispara en algún
-> momento dentro de esa hora). Esto **no afecta la disponibilidad de cupos**: el
-> conteo libera las reservas vencidas por timestamp (`reservation_expires_at >
-> now()`), así que la limpieza es solo housekeeping (marcar como `cancelled`). Si
-> suben a **Vercel Pro**, pueden volver a una frecuencia horaria (`"0 * * * *"`).
-> El JSON no admite comentarios, por eso esta nota vive aquí y no en `vercel.json`.
-
-> **Cloudflare:** la app también puede deployarse como Worker de Cloudflare sin
-> reescribir la API (adaptador en `cloudflare/`, config en `wrangler.jsonc`).
-> Guía completa: [`docs/deploy-cloudflare.md`](../docs/deploy-cloudflare.md).
+- Headers de seguridad (CSP, HSTS, `Permissions-Policy: camera=(self)` para el
+  escáner): `public/_headers` para los assets y `cloudflare/adapter.ts` para
+  `/api/*`.
+- Rewrites/redirects de páginas: `public/_redirects`.
+- **Cron de limpieza** diario (`0 6 * * *`, `triggers.crons` en
+  `wrangler.jsonc` → `scheduled()` en `cloudflare/worker.ts` →
+  `/api/admin/orders/cleanup`). Diario porque **no afecta la disponibilidad de
+  cupos**: el conteo libera las reservas vencidas por timestamp
+  (`reservation_expires_at > now()`), así que la limpieza es solo housekeeping
+  (marcar como `cancelled`). Se puede hacer más frecuente cambiando la expresión.
 
 > Alternativa: integrarlo en el proyecto existente bajo `/entradas` y `/validar`.
 > Se eligió el proyecto aparte por la configuración inusual de `publicDir` del
@@ -327,6 +323,25 @@ cuentas de prueba (Admin/Developer o test accounts de la consola) y sale con
 usuario sin el rótulo. **Apple Wallet queda fuera de alcance** (requiere cuenta
 Apple Developer de pago).
 
+## Analytics (GA4)
+
+Spec y guía de configuración: `docs/features/analytics-entradas.md`. Misma
+propiedad que el main site (`G-ZZ4XG8CD88`), solo en las superficies públicas
+(`/entradas`, `/halloween-party`, `/ayuda`) y solo en el host de producción.
+
+- **Cliente** — `src/shared/analytics.ts` inyecta gtag.js (sin script inline:
+  la CSP no permite `'unsafe-inline'`) y manda el funnel: `page_view`
+  (con `event_slug`/`event_status`), `view_item`, `form_start`,
+  `begin_checkout`, `checkout_error`, `add_payment_info` (Yappy),
+  `yappy_expired`, `click_help`. Al crear la orden manda `ga_client_id` /
+  `ga_session_id`, que `api/orders.ts` valida y guarda (migración `0014`).
+- **Servidor** — el `purchase` lo manda `api/_lib/ga.ts` por Measurement
+  Protocol desde `issueOrder()`, así cuenta igual con Yappy (IPN), efectivo y
+  CuantoApp (admin). Una sola vez por orden (`orders.ga_purchase_sent_at`,
+  UPDATE condicional), excluye cortesías y regalos, y nunca bloquea la
+  emisión (timeout 2 s, errores solo a `console.error`).
+- **Nunca** se manda nombre, correo, teléfono ni token de QR a Google.
+
 ## Cómo se cumplen los criterios de aceptación
 
 - **Emisión idempotente:** `mark_order_paid` transiciona `pending→paid` una sola
@@ -395,7 +410,7 @@ correo y el pase de Wallet usan la misma paleta.
    aforo y tema. Nace en `draft`.
 2. **Publicar teaser** cuando quieras que la URL exista.
 3. Revisar: `/entradas?evento=<slug>` (o su ruta propia). Para una ruta bonita
-   (`/<slug>`), agregar el rewrite a `vercel.json` **y** `public/_redirects`
+   (`/<slug>`), agregar el rewrite a `public/_redirects`
    (o un `<slug>.html` que cargue `src/entradas/main.tsx`, como `halloween-party.html`,
    si el preview del enlace debe tener sus propias meta).
 4. Google Wallet: con el evento seleccionado, **"Clase de Google Wallet"**.
@@ -532,12 +547,12 @@ Migración: `supabase/migrations/0006_refunds.sql` (estado `refunded` + columnas
 El algoritmo del `code` está verificado contra el ejemplo del manual mediante un
 *self-test* en `yappy.ts` (HMAC con Seed Code sobre `apiKey+fecha`); si se rompe,
 el módulo loguea `login-code HMAC self-test FAILED`. Hay además logging temporal
-(`console.error [yappy] ...`) en ambos pasos para ver en los Logs de Vercel
-(proyecto ticket-system → Logs, filtrar `/api/admin`) en qué paso y con qué
+(`console.error [yappy] ...`) en ambos pasos para ver en los Logs del Worker
+(dashboard → Workers → `still-louder-tickets` → Logs, filtrar `/api/admin`) en qué paso y con qué
 código rebota.
 
 > **A confirmar con soporte de Yappy / en UAT:** (1) si exigen **allowlist de la
-> IP de origen** — las funciones de Vercel salen con IPs dinámicas, lo que sería
+> IP de origen** — los Workers de Cloudflare salen con IPs dinámicas, lo que sería
 > el principal riesgo arquitectónico; (2) el **nombre exacto y el valor** del
 > header de IP (hoy `client-ip` con la IP del navegador del admin) y de `channel`
 > (`YP-0008` = cabeceras obligatorias faltantes); (3) la TZ esperada de la fecha

@@ -2,6 +2,7 @@ import { getSupabase } from './supabase.js';
 import { makeToken } from './hmac.js';
 import { sendTicketEmail } from './email.js';
 import { getEventById, type EventRow } from './events.js';
+import { sendPurchase } from './ga.js';
 import type { Order, Ticket } from './types.js';
 
 export class IssueError extends Error {
@@ -69,6 +70,14 @@ export async function issueOrder(orderId: string, paymentRef?: string | null): P
   const event = await requireEvent(order.event_id);
   const ticketRows = (tickets ?? []) as Pick<Ticket, 'id'>[];
   const tokens = ticketRows.map((t) => makeToken(event.code, t.id));
+
+  // GA4 purchase (once per order, see ga.ts). Before the email so a slow send
+  // doesn't delay it; a failure here never blocks issuance.
+  try {
+    await sendPurchase(order, event);
+  } catch (gaError) {
+    console.error('[issue] ga purchase failed', gaError);
+  }
 
   let emailed = false;
   if (!order.emailed_at && tokens.length > 0) {

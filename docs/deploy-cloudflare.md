@@ -1,20 +1,15 @@
 # Deploy en Cloudflare (Workers)
 
-Producción se mueve de Vercel a **Cloudflare Workers** y del dominio
-`stilllouder.space` a **`still-louder.com`**. Cada app es un Worker
-independiente, igual que en Vercel eran dos proyectos separados:
+Las dos apps corren **solo en Cloudflare Workers** (Vercel quedó retirado) en
+**`still-louder.com`**. Cada app es un Worker independiente:
 
 | App | Worker | Config | Dominio de producción |
 |---|---|---|---|
 | Main site | `still-louder-site` (solo assets estáticos) | `wrangler.jsonc` (raíz) | `still-louder.com` (+ `www` → 301 al apex) |
 | Ticket system | `still-louder-tickets` (assets + API) | `ticket-system/wrangler.jsonc` | `entradas.still-louder.com` |
 
-La configuración de Vercel queda intacta (sirve de **rollback**: ambos backends
-usan la misma Supabase, así que volver a Vercel no parte los datos): `vercel.json` sigue aplicando en
-Vercel y los archivos de Cloudflare (`wrangler.jsonc`, `_headers`,
-`_redirects`) son ignorados por Vercel (los `_headers`/`_redirects` se sirven
-como estáticos inertes). **Si cambias headers o rewrites, actualiza ambos
-lados** — cada archivo indica su espejo.
+Headers y rewrites viven solo en los archivos de Cloudflare: `_headers`,
+`_redirects` y, para `/api/*` del ticket system, `cloudflare/adapter.ts`.
 
 ## Requisitos
 
@@ -25,8 +20,6 @@ lados** — cada archivo indica su espejo.
   `wrangler.jsonc` crean los registros DNS y certificados al deployar — si la
   zona no está en la cuenta, `wrangler deploy` falla con un error explícito.
   Las URLs `*.workers.dev` siguen activas (`workers_dev: true`) para probar.
-
-**Pasos de migración en orden: ver [Cutover a still-louder.com](#cutover-a-still-loudercom) al final.**
 
 ---
 
@@ -43,19 +36,19 @@ npm run deploy:cloudflare    # build + wrangler deploy
 Sin secrets, así que el problema de la cadena de secrets del ticket system no
 aplica aquí.
 
-- Los headers de seguridad y caching de `vercel.json` viven en
-  `public/assets/_headers` (Vite copia `public/assets/` → raíz de `dist/`, que
-  es donde Cloudflare espera `_headers`).
-- `cleanUrls` se replica con `assets.html_handling: "auto-trailing-slash"`.
+- Los headers de seguridad y caching viven en `public/assets/_headers` (Vite
+  copia `public/assets/` → raíz de `dist/`, que es donde Cloudflare espera
+  `_headers`).
+- URLs sin `.html` con `assets.html_handling: "auto-trailing-slash"`.
 - Dominios: `still-louder.com` y `www.still-louder.com` (bloque `routes`).
 
 ## Ticket system (`ticket-system/`)
 
-Un solo Worker sirve el build de Vite (assets) y **la misma API estilo Vercel
-sin reescribirla**: `cloudflare/worker.ts` enruta `/api/*` hacia los handlers
-existentes de `api/` a través del adaptador `cloudflare/vercel-adapter.ts`
-(shim de `req`/`res`). Con `nodejs_compat`, `node:crypto`, `Buffer` y
-`process.env` funcionan sin cambios en el código de `api/`.
+Un solo Worker sirve el build de Vite (assets) y la API: `cloudflare/worker.ts`
+enruta `/api/*` hacia los handlers de `api/` a través de `cloudflare/adapter.ts`,
+que arma el par `req`/`res` estilo Node (`ApiRequest`/`ApiResponse` en
+`api/_lib/http.ts`) a partir del `Request` del Worker. Con `nodejs_compat`,
+`node:crypto`, `Buffer` y `process.env` funcionan en `api/`.
 
 ```bash
 cd ticket-system
@@ -71,8 +64,8 @@ nada sale a producción con `wrangler deploy` a secas.
 
 ### Variables de entorno: `vars` vs. secrets
 
-Las variables de Vercel se reparten en dos lugares del Worker. `process.env`
-ve ambas por igual (`nodejs_compat`), así que el código de `api/` no cambia:
+Las variables se reparten en dos lugares del Worker. `process.env` ve ambas
+por igual (`nodejs_compat`):
 
 - **`vars` en `wrangler.jsonc`**: solo valores **no sensibles** que dependen
   del dominio o del entorno. Quedan versionadas junto al bloque `routes`, y
@@ -137,7 +130,10 @@ npx wrangler secret put YAPPY_API_SEED
 npx wrangler secret put YAPPY_API_CHANNEL        # default 'API' — confirmar con Yappy
 npx wrangler secret put YAPPY_BTN_CDN_URL        # override del CDN del web component; solo si el default no carga
 # Google Wallet (opt-in; sin la clave el botón no aparece)
-npx wrangler secret put GOOGLE_WALLET_SA_PRIVATE_KEY   # pegar con los \n escapados, igual que en Vercel
+npx wrangler secret put GOOGLE_WALLET_SA_PRIVATE_KEY   # pegar con los 
+ escapados (el código los convierte)
+# GA4 (opt-in; sin esto el servidor no manda el `purchase`) — docs/features/analytics-entradas.md
+npx wrangler secret put GA_MP_API_SECRET
 ```
 
 Para cargar muchas de una vez: `npx wrangler secret bulk secrets.json` (un
@@ -150,13 +146,12 @@ Notas:
   **toda** entrada ya emitida: los correos enviados y los pases de Google
   Wallet. El QR no se guarda en la BD, así que reenviar el correo lo regenera
   con la firma nueva. Solo rotarlo cuando no haya entradas vivas de ningún
-  evento, o asumiendo que hay que reenviar todos los correos. Mientras
-  Vercel y Cloudflare convivan, **el valor tiene que ser el mismo en los dos**.
+  evento, o asumiendo que hay que reenviar todos los correos.
 - **CuantoApp**: el código usa `||`, así que un `CUANTOAPP_PAYMENT_URL_<n>`
   definido **vacío** cae al fallback `CUANTOAPP_PAYMENT_URL` (o a ningún link,
   si ese también está vacío). Después de cada deploy, revisar la pestaña
   **CuantoApp** del admin: marca faltantes, fallbacks y links duplicados.
-- **No migrar** estas variables que quedan en el dashboard de Vercel: ningún
+- **Variables obsoletas** (no crearlas aunque aparezcan en notas viejas): ningún
   código las lee. `VENUE_ADDRESS` y `EVENT_START_ISO` hoy viven en la tabla
   `events`. `GOOGLE_WALLET_CLASS_SUFFIX` se retiró: la clase es
   `${issuerId}.${events.code}` en minúscula. `YAPPY_MERCHANT_ID` y
@@ -234,22 +229,20 @@ npm run build && node scripts/release-cloudflare.mjs --secrets-file secrets.json
 rm secrets.json
 ```
 
-Los valores salen de Vercel (`vercel env pull` en el proyecto del ticket
-system) o del gestor de contraseñas. `TICKET_HMAC_SECRET` tiene que ser
+Los valores salen del gestor de contraseñas. `TICKET_HMAC_SECRET` tiene que ser
 **exactamente** el mismo, o los QR emitidos dejan de validar. Si `CRON_SECRET`
 no se recupera, sirve uno nuevo (`openssl rand -hex 16`): solo lo usa el cron
 del propio Worker.
 
-### Piezas que replican vercel.json
+### Dónde vive cada cosa
 
-| En Vercel | En Cloudflare |
+| Qué | Dónde |
 |---|---|
-| Rewrite `/api/admin/:path*` → `?path=` | Router en `cloudflare/worker.ts` (pasa `path` como param) |
-| Rewrites `/when-we-were-young-3`, `/regalo/:token` | `public/_redirects` (rewrites 200) |
-| Headers (CSP, `X-Robots-Tag` de `/regalo`) | `public/_headers` (assets) + adaptador (`/api/*`: `no-store` + CSP/HSTS/`X-Frame-Options`/`nosniff`) |
-| Cron diario `orders/cleanup` | `triggers.crons` + handler `scheduled()` (manda `Authorization: Bearer CRON_SECRET`, mismo contrato que Vercel Cron) |
-| `cleanUrls` | `assets.html_handling: "auto-trailing-slash"` |
-| Límite de 12 funciones (Hobby) | No aplica: es un solo Worker |
+| Ruteo de `/api/*` (incluye `/api/admin/:path*` → `api/admin.ts` con `path`) | Router en `cloudflare/worker.ts` |
+| Rewrites `/when-we-were-young-3`, `/regalo/:token`; redirect `/31-10`, `/` | `public/_redirects` |
+| Headers (CSP, `X-Robots-Tag` de `/regalo`) | `public/_headers` (assets) + `cloudflare/adapter.ts` (`/api/*`: `no-store` + CSP/HSTS/`X-Frame-Options`/`nosniff`) |
+| Cron diario `orders/cleanup` | `triggers.crons` + handler `scheduled()` (manda `Authorization: Bearer CRON_SECRET`) |
+| URLs sin `.html` | `assets.html_handling: "auto-trailing-slash"` |
 
 ### Cosas a tener en cuenta
 
@@ -296,101 +289,27 @@ npm run preview:cloudflare
 
 ---
 
-## Cutover a still-louder.com
+## Dominio viejo (`stilllouder.space`)
 
-Orden pensado para que **Vercel siga vendiendo hasta el último paso**: nada de
-lo de abajo toca Vercel ni `stilllouder.space` hasta el paso 7. Hacerlo
-**antes de abrir la preventa**, no el mismo día.
-
-### 1. Deploy de los dos Workers
-
-```bash
-npx wrangler login
-npm install && npm run deploy:cloudflare                          # main site
-cd ticket-system && npm install && npm run deploy:cloudflare      # tickets
-```
-
-Verificar que `https://still-louder.com`, `https://www.still-louder.com` y
-`https://entradas.still-louder.com` responden (el certificado puede tardar
-unos minutos la primera vez).
-
-### 2. Secrets del ticket system
-
-Copiar **los mismos valores** de Vercel (Project → Settings → Environment
-Variables → Production) con `wrangler secret put`. La lista completa está en
-[Variables de entorno](#variables-de-entorno-vars-vs-secrets), incluidas las
-obsoletas que no hay que copiar. Lo que está en el bloque `vars` de
-`wrangler.jsonc` **no** va como secret: se aplicó con el deploy del paso 1. `CRON_SECRET` sí hay que crearlo aunque en Vercel no lo
-hayas usado: sin él, el cron del Worker no corre.
-
-`npx wrangler secret list` para confirmar que no falta ninguno. Un secret
-requerido faltante hace que toda la API responda `500 internal_error`.
-
-### 3. Yappy (el paso de mayor riesgo — hacerlo primero en el calendario)
-
-En Yappy Comercial → Botón de Pago, cambiar el dominio/URL del comercio a
-`https://entradas.still-louder.com`. Si el portal no deja editarlo o requiere
-aprobación de Banco General, **ese es el camino crítico**: mientras no esté
-aprobado, Yappy rechazará órdenes del dominio nuevo. La URL del IPN no se
-registra en el portal: el backend la manda en cada orden
-(`${PUBLIC_BASE_URL}/api/yappy/ipn`).
-
-Plan B si Yappy no aprueba a tiempo: vender con Tarjeta (CuantoApp) + Efectivo
-en el dominio nuevo y habilitar Yappy cuando se apruebe (quitar
-`YAPPY_BTN_MERCHANT_ID` lo deshabilita limpiamente), o mantener la venta en
-Vercel/`entradas.stilllouder.space` hasta que se apruebe.
-
-### 4. Correo (Resend)
-
-Hecho: `EMAIL_FROM` es `entradas@still-louder.com` (dominio verificado en
-Resend, registros SPF/DKIM en Cloudflare DNS). Mantener los registros DNS de
-Resend de `stilllouder.space` mientras haya correos viejos en circulación.
-
-### 5. Smoke test en producción (Cloudflare)
-
-- `/entradas`, `/31-10`, `/ayuda`, `/admin`, `/validar`, `/support` cargan.
-- `GET /api/presale/status` → 200 con datos reales (prueba Supabase + secrets).
-- Login en `/admin` y `/validar` (prueba `ADMIN_PASSWORD`/`STAFF_PASSWORD`).
-- Una compra real de $1 por Yappy → IPN → correo con QR → QR pasa en
-  `/validar` una vez → reversa. Esto valida HMAC, Resend, Yappy y el dominio
-  de punta a punta.
-- `/admin` → reenviar correo de una orden: el enlace del QR apunta a
-  `entradas.still-louder.com`.
-- Cron: dashboard → Workers → `still-louder-tickets` → Settings → Triggers
-  muestra `0 6 * * *`; al día siguiente, Logs muestra la corrida sin
-  `[cron] ... failed`.
-
-### 6. Enlaces del sitio y material
-
-Este repo ya apunta todo a `still-louder.com` (canonical, OG, sitemap,
-`config.js`, enlaces a entradas). Mergear a `main` **después** del paso 5
-(el merge redeploya Vercel con canonicals al dominio nuevo). Actualizar bio de
-Instagram/Facebook/Linktree y cualquier QR impreso.
-
-### 7. Dominio viejo → 301 al nuevo
-
-Lo más simple con la zona `stilllouder.space` también en Cloudflare
-(Add a site → cambiar nameservers en el registrador; importar los registros
-existentes, **incluidos los de Resend**). Luego, en Rules → Redirect Rules de
-la zona vieja, dos reglas (dynamic, 301, preserve query string):
+El cutover a `still-louder.com` está hecho. La zona `stilllouder.space` sigue en
+Cloudflare solo para redirigir enlaces viejos (posts, QR impresos, `/31-10` del
+teaser), con dos Redirect Rules (dynamic, 301, preserve query string):
 
 | Si hostname es | Redirigir a |
 |---|---|
 | `entradas.stilllouder.space` | `concat("https://entradas.still-louder.com", http.request.uri.path)` |
 | `stilllouder.space` o `www.stilllouder.space` | `concat("https://still-louder.com", http.request.uri.path)` |
 
-Los hostnames necesitan un registro DNS proxied (naranja) para que la regla
-aplique: un `AAAA 100::` proxied por cada uno basta. Y en la zona nueva, una
-regla `www.still-louder.com` → `concat("https://still-louder.com", http.request.uri.path)`.
+Cada hostname necesita un registro DNS proxied (naranja) para que la regla
+aplique (un `AAAA 100::` basta). En la zona nueva, una regla
+`www.still-louder.com` → `concat("https://still-louder.com", http.request.uri.path)`.
+Mantener los registros DNS de Resend de `stilllouder.space` mientras haya
+correos viejos en circulación.
 
-Con esto, los enlaces viejos (posts, QR del sitio, `/31-10` del teaser)
-siguen funcionando. Después de verificar, quitar los dominios de los
-proyectos de Vercel; no borrar los proyectos hasta pasado el evento
-(rollback).
+## Rollback
 
-### Rollback
-
-Volver a apuntar los enlaces/DNS a Vercel. Las órdenes creadas en Cloudflare
-viven en la misma Supabase, así que el admin de Vercel las ve. Lo único a
-revisar: órdenes Yappy creadas en Cloudflare tienen el IPN en el dominio
-nuevo — dejar el Worker vivo hasta que no queden pendientes (15 min).
+Un deploy malo se revierte en Cloudflare: el script de release ya vuelve solo
+al deployment anterior si falla el smoke test de producción, y a mano está
+`npx wrangler rollback` (o dashboard → Workers → Deployments). Ojo: un rollback
+no repara una cadena de secrets rota (ver
+[Releases seguros](#releases-seguros-versiones-y-secrets)).

@@ -34,13 +34,12 @@ con la versión en español sin esfuerzo manual de memoria.
 ### 1. URL: `/en`, servida desde `public/en.html`
 
 `public/en.html` es una **tercera entrada de Rollup** en `vite.config.js`, igual
-que `al-vacio-pre-release`. `cleanUrls`/`trailingSlash: false` (Vercel) y
-`auto-trailing-slash` (Cloudflare) ya la sirven en `/en` sin rewrites.
+que `al-vacio-pre-release`. `html_handling: auto-trailing-slash` (Cloudflare)
+ya la sirve en `/en` sin rewrites.
 
 Descartado `public/en/index.html` (`/en/`): `index.html` usa rutas **relativas**
-(`assets/images/...`) que se romperían dentro de una subcarpeta, y en Vercel
-`trailingSlash: false` choca con la barra final que impone el directorio en
-Cloudflare.
+(`assets/images/...`) que se romperían dentro de una subcarpeta, y el
+directorio impone una barra final en Cloudflare.
 
 Canonical de la página: `https://still-louder.com/en`.
 
@@ -175,12 +174,12 @@ extiende el hook de `transformIndexHtml` a `en.html`.
 | `scripts/check-dist.js` | Verificar que `/en` (`en.html`) esté en `REQUIRED`. Ya recorre todos los `dist/*.html` del nivel raíz, así que cubre las referencias de `en.html` sin más cambios. |
 | `CLAUDE.md`, `docs/main-site/seo-accessibility.md`, `docs/main-site/pwa.md` | Documentar la regla "todo cambio de contenido va en `index.html` **y** `en.html`", el hreflang y el precache. |
 
-Sin cambios: `vercel.json`, `public/assets/_headers`, `wrangler.jsonc` (sin
+Sin cambios: `public/assets/_headers`, `wrangler.jsonc` (sin
 rewrites ni CSP nuevas), `site.webmanifest`, `ticket-system/`.
 
 ## Criterios de aceptación
 
-1. `https://still-louder.com/en` responde 200 en Vercel y en Cloudflare con
+1. `https://still-louder.com/en` responde 200 en Cloudflare con
    `<html lang="en">`. `/en.html` y `/en/` redirigen a `/en`, igual que hoy pasa
    con `/al-vacio-pre-release`.
 2. No queda copy visible en español en `/en`, salvo nombres propios: banda,
