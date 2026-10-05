@@ -263,10 +263,13 @@ Todo en **Admin** de la misma propiedad:
 
    Las dimensiones solo aplican a los datos que llegan **después** de crearlas,
    así que conviene crearlas antes de que salga el deploy.
-3. **Key events**: Data display → **Events**. `begin_checkout` y `purchase`
-   aparecen en esta lista recién después de que llegue el primero. Para no
-   esperar, ir a **Key events → New key event**, escribir `begin_checkout` →
-   Save, y lo mismo con `purchase`.
+3. **Key events**: primero hay que generar cada evento una vez (paso 4: una
+   compra de prueba en efectivo produce `begin_checkout` y, al marcarla pagada,
+   `purchase`). Cuando aparezcan en Data display → **Events** (puede tardar
+   hasta 24 h), marcar la estrella / el toggle **Mark as key event** de cada
+   uno, con **Don't set a default key event value** (el `purchase` ya trae su
+   `value`; un valor por defecto lo pisaría) y **Once per event**. **No** usar
+   **Create event**: crea un evento derivado nuevo, no marca el existente.
 
 ### 4. Desplegar y verificar
 
