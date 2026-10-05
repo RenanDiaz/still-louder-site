@@ -183,7 +183,7 @@ function buildEventTicketClass(classId: string, event: EventRow) {
       : {}),
     dateTime: { start: event.starts_at, end: event.event_end },
     // Logo / hero must be HTTPS, no redirects — served from this app's own
-    // public/ dir (same Vercel deployment as the API).
+    // public/ dir (same Worker as the API).
     logo: { sourceUri: { uri: `${env.publicBaseUrl}/apple-touch-icon.png` } },
     heroImage: { sourceUri: { uri: event.og_image_url || `${env.publicBaseUrl}/og-image.jpg` } },
     hexBackgroundColor: BACKGROUND_HEX[event.theme] ?? DEFAULT_BACKGROUND_HEX

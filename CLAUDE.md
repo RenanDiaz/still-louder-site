@@ -16,18 +16,18 @@ its buttons are hand-written HTML whose URLs must match `config.js`).
 ## Two Separate Applications (Important)
 
 This repository contains **two independent applications** that share a single
-git repo but deploy **separately** (two Vercel projects today, two Cloudflare
-Workers after the cutover) to **different domains**.
+git repo but deploy **separately** (two Cloudflare Workers) to **different
+domains**. Vercel is no longer used.
 The rest of this document describes the **main site** unless stated otherwise.
 
 | | Main site | Ticket system |
 |---|---|---|
 | Location | repo root (`public/`, `scripts/`, etc.) | `ticket-system/` |
 | Purpose | Static band landing page (current single, shows, contact) | Ticketing flow (purchase, admin, gate validation) |
-| Stack | Vite + vanilla ES6 modules + CSS | Vite + React + TypeScript + serverless API |
-| Vercel project | Main project (root config) | **Separate** Vercel project (`ticket-system/vercel.json`) |
+| Stack | Vite + vanilla ES6 modules + CSS | Vite + React + TypeScript + API on the Worker |
+| Cloudflare Worker | `still-louder-site` (assets only, root `wrangler.jsonc`) | `still-louder-tickets` (assets + API, `ticket-system/wrangler.jsonc`) |
 | Production domain | https://still-louder.com/ | **Subdomain** `https://entradas.still-louder.com` |
-| Config files | root `vercel.json`, `vite.config.js`, `package.json` | `ticket-system/vercel.json`, `vite.config.ts`, `package.json` |
+| Config files | root `wrangler.jsonc`, `vite.config.js`, `package.json`, `public/assets/_headers` | `ticket-system/wrangler.jsonc`, `vite.config.ts`, `package.json`, `public/_headers`, `public/_redirects` |
 
 **Key implications:**
 
@@ -35,11 +35,11 @@ The rest of this document describes the **main site** unless stated otherwise.
   headers (CSP), and `public/` static directories. A change in one does **not**
   affect the other.
 - The ticket system is a multi-page React app (`entradas`, `admin`, `validar`,
-  plus a redirecting `index`) with its own serverless backend under
-  `ticket-system/api/`. See `ticket-system/README.md` for its architecture and
+  plus a redirecting `index`) with its own backend under `ticket-system/api/`
+  (run by the Worker). See `ticket-system/README.md` for its architecture and
   deployment.
 - **Shared assets are not actually shared at runtime** — they live in separate
-  Vercel deployments. To use the same asset in both (e.g. the favicon), the
+  Worker deployments. To use the same asset in both (e.g. the favicon), the
   file must be **copied** into each app's own `public/` directory and referenced
   with that app's root-relative paths.
 - **Brand-derived assets follow the main site's current design.** Generic
@@ -63,8 +63,8 @@ The rest of this document describes the **main site** unless stated otherwise.
 ## Ticket System (`ticket-system/`)
 
 Ticket sales, issuance and gate validation for the **When We Were Young 3**
-show. React 18 + TypeScript + Vite frontend, **Vercel Serverless Functions**
-(TypeScript) backend, **Supabase (Postgres)** database, **Resend** for email,
+show. React 18 + TypeScript + Vite frontend, TypeScript API handlers run by a
+**Cloudflare Worker**, **Supabase (Postgres)** database, **Resend** for email,
 **Yappy Botón de Pago V2** for in-app payment. Full details (env vars, Supabase
 setup, Yappy flow, deployment) live in `ticket-system/README.md` — read it
 before touching this app.
@@ -79,8 +79,8 @@ npm run typecheck  # tsc for src, api AND the Cloudflare worker (tsconfig.json +
 npm run build      # production build to ticket-system/dist/
 ```
 
-The `/api` functions don't run under `npm run dev` — use `vercel dev` (Vercel
-CLI) to serve frontend + serverless functions together with project env vars.
+The `/api` handlers don't run under `npm run dev` — use `npm run preview:cloudflare`
+(build + `wrangler dev`, env from `.dev.vars`) to serve frontend + API + cron together.
 There is no test suite; `npm run typecheck` is the validation gate. The root
 `npm run lint`/`format` scripts do **not** cover this app.
 
@@ -105,7 +105,7 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   `/entradas` — it exists only so the link preview has the show's own meta;
   the event row's `status` decides teaser vs. purchase flow).
   Root `index.html` redirects to `/entradas`;
-  `/when-we-were-young-3` rewrites to `/entradas` (`vercel.json`).
+  `/when-we-were-young-3` rewrites to `/entradas` (`public/_redirects`).
   **Multi-event** (migration 0011, spec `docs/features/multi-evento.md`): every
   show is a row in `events` (+ prices in `event_tier`) and every order, ticket
   and gift campaign has a NOT NULL `event_id`. `/entradas` resolves the event
@@ -121,15 +121,15 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 - **Frontend**: `src/entradas/` (incl. `Teaser.tsx`, `themes/`), `src/ayuda/`, `src/admin/`,
   `src/validar/`, `src/support/`, `src/regalo/`, plus `src/shared/` (`api.ts`,
   `config.ts`, `styles.css`).
-- **Backend**: `api/` serverless functions; shared server-only logic in
+- **Backend**: `api/` handlers (Node-style `req`/`res`, typed `ApiRequest`/
+  `ApiResponse` in `api/_lib/http.ts`, adapted to the Worker by
+  `cloudflare/adapter.ts`); shared server-only logic in
   `api/_lib/` (env access, Supabase service-role client, auth gates, HMAC,
   QR rendering, email, pricing, events, issuance, Yappy adapter). **Nothing in
-  `api/_lib/` may ever be imported by client code.** Vercel Hobby caps a
-  deployment at **12 serverless functions**, so ALL `/api/admin/*` routes share
-  one function (`api/admin.ts`) reached via a `vercel.json` rewrite
-  (`/api/admin/:path*` → `/api/admin?path=...`) — catch-all `[...path].ts`
-  files do NOT work outside Next.js; count functions before adding a file
-  under `api/`.
+  `api/_lib/` may ever be imported by client code.** ALL `/api/admin/*` routes
+  share one handler (`api/admin.ts`, dispatching on `req.query.path`). There is
+  **no filesystem routing**: a new file under `api/` must be registered in the
+  router in `cloudflare/worker.ts`.
 - **Database**: `supabase/migrations/` — schema with RLS enabled and no
   policies (only the service-role key can access) plus atomic RPCs
   (`create_order`, `mark_order_paid`, `validate_ticket`, `presale_status`,
@@ -162,18 +162,18 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 - **Race-safe capacity**: presale/total capacity checks serialize via
   `SELECT ... FOR UPDATE` on the event's `events` row (per event); expired pending
   reservations free their quota by timestamp instantly. The daily cleanup cron
-  (`vercel.json` → `/api/admin/orders/cleanup`, daily because Vercel Hobby
-  forbids hourly crons) is housekeeping only.
+  (`triggers.crons` in `wrangler.jsonc` → `scheduled()` in `cloudflare/worker.ts`
+  → `/api/admin/orders/cleanup`) is housekeeping only.
 - **Secrets are server-only**: all env vars (Supabase service role, Resend,
   HMAC secret, admin/staff passwords, Yappy credentials) live exclusively in
-  the serverless functions — none are exposed via `VITE_*`. Yappy's secret API
+  the Worker (`vars` / `wrangler secret`) — none are exposed via `VITE_*`. Yappy's secret API
   calls happen in the backend; the browser only receives the
   transaction token for the `<btn-yappy>` web component.
 - **Admin/staff auth**: every protected endpoint checks `ADMIN_PASSWORD` /
   `STAFF_PASSWORD` with timing-safe comparison (`api/_lib/auth.ts`).
-- The ticket-system CSP (`ticket-system/vercel.json`) intentionally allows
-  Supabase, Yappy and Firebase endpoints — keep it in sync when adding
-  external calls.
+- The ticket-system CSP (`ticket-system/public/_headers`; `/api/*` responses get
+  theirs from `cloudflare/adapter.ts`) intentionally allows Supabase, Yappy and
+  Firebase endpoints — keep it in sync when adding external calls.
 
 ---
 
@@ -188,7 +188,7 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
 | Prettier | 3.x | Code formatting |
 | Terser | 5.x | JavaScript minification |
 | Sharp | 0.33.x | Image optimization |
-| Vercel | - | Hosting and deployment |
+| Cloudflare Workers | - | Hosting and deployment (Wrangler) |
 | Google Analytics 4 | - | Analytics tracking |
 
 **Required Node.js version**: >=18.0.0
@@ -219,7 +219,7 @@ still-louder-site/
 │   │   ├── images/              # Optimized images (WebP, AVIF formats)
 │   │   ├── .well-known/
 │   │   │   └── security.txt     # Security contact information (→ /.well-known/security.txt)
-│   │   ├── _headers             # Cloudflare mirror of vercel.json headers
+│   │   ├── _headers             # Security/caching headers (→ dist/_headers)
 │   │   ├── site.webmanifest     # PWA manifest (→ /site.webmanifest)
 │   │   ├── sw.js                # Service Worker (→ /sw.js)
 │   │   ├── offline.html         # Offline fallback page (→ /offline.html)
@@ -236,7 +236,6 @@ still-louder-site/
 ├── ticket-system/               # SEPARATE app — see "Ticket System" section
 ├── dist/                        # Build output (generated, gitignored)
 ├── vite.config.js               # Vite configuration
-├── vercel.json                  # Vercel deployment config (headers, caching)
 ├── wrangler.jsonc               # Cloudflare Workers config (assets-only)
 ├── eslint.config.js             # ESLint flat config (rules live here)
 ├── .eslintrc.json               # Legacy ESLint config (kept for tooling compat)
@@ -415,8 +414,8 @@ The service worker (`sw.js`) uses different caching strategies:
 
 ### Security Headers
 
-All security headers are configured in `vercel.json` **and mirrored in
-`public/assets/_headers`** for Cloudflare (see "Cloudflare Workers" below):
+All security headers are configured in `public/assets/_headers` (see
+"Deployment" below):
 - Content Security Policy (CSP)
 - HSTS (2 years, preload ready)
 - X-Frame-Options (DENY)
@@ -434,7 +433,8 @@ All security headers are configured in `vercel.json` **and mirrored in
 | `public/assets/js/config.js` | All URLs and settings | Changing links, messages, feature flags |
 | `public/assets/css/variables.css` | Design tokens | Changing colors, spacing, typography |
 | `public/assets/css/style.css` | Main styles | Styling changes |
-| `vercel.json` | Security headers, caching | Security policy updates |
+| `public/assets/_headers` | Security headers, caching | Security policy updates |
+| `wrangler.jsonc` | Cloudflare Worker config (domains, assets) | Domain/routing changes |
 | `vite.config.js` | Build configuration | Build optimization changes |
 | `public/assets/site.webmanifest` | PWA configuration | App name, icons, theme |
 
@@ -468,9 +468,8 @@ The `#contacto` section posts to a **Google Form** with no backend of its own
 single text field (`CONFIG.contact.messageField`), and submits via
 `fetch(url, { mode: 'no-cors' })`. A hidden honeypot (`#contact-website`) drops
 bot submissions. **The Form URL is config-driven (`CONFIG.contact`), and
-`docs.google.com` must stay in the `connect-src` CSP directive in `vercel.json`
-and `public/assets/_headers`
-or the submit fails silently.** To capture separate columns instead of one
+`docs.google.com` must stay in the `connect-src` CSP directive in
+`public/assets/_headers` or the submit fails silently.** To capture separate columns instead of one
 composed field, point `CONFIG.contact.formUrl`/`messageField` at a dedicated
 Form (and extend the handler with per-field `entry.*` IDs).
 
@@ -525,16 +524,12 @@ After deployment:
 
 ## Deployment
 
-The site is deployed on **Vercel** and auto-deploys from the `main` branch.
-
-### Manual Deployment
+Both apps run on **Cloudflare Workers** only (`still-louder.com` and
+`entradas.still-louder.com`). Full guide: `docs/deploy-cloudflare.md`.
 
 ```bash
-# Build
-npm run build
-
-# Deploy (if Vercel CLI installed)
-vercel --prod
+npm run preview:cloudflare   # build + wrangler dev (local)
+npm run deploy:cloudflare    # build + wrangler deploy (main site)
 ```
 
 ### Environment
@@ -542,24 +537,19 @@ vercel --prod
 - No environment variables required for basic functionality
 - Google Analytics ID is hardcoded in `index.html` and `config.js`
 
-### Cloudflare Workers (production target)
+### Cloudflare Workers
 
-Production is moving from Vercel to **Cloudflare Workers** and from
-`stilllouder.space` to **`still-louder.com`** (`entradas.still-louder.com` for
-tickets). Vercel configs stay in place as the rollback path until the cutover
-in `docs/deploy-cloudflare.md` ("Cutover a still-louder.com") is done. Key rules
-when touching either app:
+Key rules when touching either app:
 
 - The main site is an assets-only Worker (`wrangler.jsonc` at the root). Its
-  security/caching headers are **duplicated**: `vercel.json` (Vercel) and
-  `public/assets/_headers` (Cloudflare, copied by Vite to `dist/_headers`).
-  Change both when changing headers.
-- The ticket system Worker (`ticket-system/wrangler.jsonc`) reuses the Vercel
-  `api/` handlers through the adapter in `ticket-system/cloudflare/`. There is
-  **no filesystem routing** on Cloudflare: any new file under
-  `ticket-system/api/` must also be registered in the router in
-  `ticket-system/cloudflare/worker.ts`. Its headers/rewrites are likewise
-  duplicated in `ticket-system/public/_headers` and `_redirects`.
+  security/caching headers live in `public/assets/_headers` (copied by Vite to
+  `dist/_headers`).
+- The ticket system Worker (`ticket-system/wrangler.jsonc`) runs the `api/`
+  handlers through the adapter in `ticket-system/cloudflare/`. There is
+  **no filesystem routing**: any new file under `ticket-system/api/` must be
+  registered in the router in `ticket-system/cloudflare/worker.ts`. Static
+  headers/rewrites live in `ticket-system/public/_headers` and `_redirects`;
+  `/api/*` headers are set in `cloudflare/adapter.ts`.
 - The ticket system is released **only** through
   `ticket-system/scripts/release-cloudflare.mjs` (`npm run release:cloudflare`,
   also the Workers Builds deploy command), never `wrangler deploy`: each Worker
@@ -615,7 +605,7 @@ Edit `public/assets/css/variables.css` → modify `--color-*` variables.
 - Don't skip accessibility attributes (ARIA labels, alt text)
 - Don't modify the frozen CONFIG object
 - Don't add dependencies without considering bundle size
-- Don't remove security headers from `vercel.json` / `public/assets/_headers`
+- Don't remove security headers from `public/assets/_headers` / `ticket-system/public/_headers`
 
 ---
 
@@ -654,7 +644,7 @@ Full index: `docs/README.md`.
 - `docs/main-site/pwa.md` - Service Worker, manifest, offline, PWA testing
 - `docs/main-site/security.md` - Security headers / CSP and verification
 - `docs/main-site/seo-accessibility.md` - SEO metadata, structured data, a11y conventions
-- `docs/deploy-cloudflare.md` - Cloudflare Workers deploy and domain cutover
+- `docs/deploy-cloudflare.md` - Cloudflare Workers deploy (vars, secrets, safe releases, old-domain redirects)
 
 Reference docs describe the current state; don't add per-phase "implementation
 summary" files — PR descriptions and git history are the changelog.

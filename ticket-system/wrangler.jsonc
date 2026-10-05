@@ -1,7 +1,7 @@
 // Cloudflare Workers config for the TICKET SYSTEM (entradas.still-louder.com).
 // One Worker serves both halves of the app:
 //   - static assets: the Vite multi-page build in dist/
-//   - /api/*: the existing Vercel-style handlers, adapted by cloudflare/worker.ts
+//   - /api/*: the api/ handlers, routed by cloudflare/worker.ts
 //
 // Release:  npm run release:cloudflare     (build + scripts/release-cloudflare.mjs:
 //           upload, check secrets, smoke-test preview, promote, smoke-test prod)
@@ -39,9 +39,8 @@
     "run_worker_first": ["/api/*"]
   },
 
-  // Mirror of vercel.json "crons": daily cleanup of expired pending orders.
-  // (Cloudflare has no hourly-cron restriction; tighten the schedule here if
-  // desired — the endpoint is idempotent housekeeping.)
+  // Daily cleanup of expired pending orders (scheduled() in cloudflare/worker.ts).
+  // Tighten the schedule here if desired — the endpoint is idempotent housekeeping.
   "triggers": {
     "crons": ["0 6 * * *"]
   },

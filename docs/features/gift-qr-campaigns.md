@@ -1,7 +1,7 @@
 # Campañas de entradas de regalo vía QR oculto
 
 > Subsistema: `ticket-system/`. Esta feature vive en la app de tickets (React +
-> TS + Vercel Functions + Supabase), **no** en el sitio principal.
+> TS + funciones `api/` sobre Cloudflare Workers + Supabase), **no** en el sitio principal.
 
 ## Contexto
 
@@ -97,12 +97,14 @@ Garantiza **N exacto**: jamás se emite N+1. `regalo`/`gift` no aparecen en
 
 > Conteo de funciones serverless: se pasó de 10 a **11** (límite Hobby = 12).
 > Solo `api/gifts.ts` es nueva; las rutas admin comparten `api/admin.ts`.
+> (El límite de Vercel Hobby ya no aplica en Cloudflare; todo archivo nuevo bajo
+> `api/` se registra en el router de `cloudflare/worker.ts`.)
 
 ## Superficie pública oculta — `/regalo/<token>`
 
 - `regalo.html` (entry Vite) con `<meta name="robots" content="noindex,nofollow">`.
-- `vercel.json`: rewrite `/regalo/:token` → `/regalo` y header
-  `X-Robots-Tag: noindex, nofollow` para `/regalo(.*)`. CSP sin cambios (la
+- `public/_redirects`: rewrite `/regalo/*` → `/regalo` (200); `public/_headers`:
+  `X-Robots-Tag: noindex, nofollow` para `/regalo` y `/regalo/*`. CSP sin cambios (la
   página solo llama same-origin `/api/gifts`).
 - `src/regalo/App.tsx`: lee el token de `location.pathname` (no query string);
   estados: cargando → formulario / agotada / no encontrada (neutra) → reclamado /
@@ -133,7 +135,7 @@ regalo!"). El QR firmado HMAC y Google Wallet operan sobre el ticket, sin cambio
 ## Verificación end-to-end
 
 1. `cd ticket-system && npm run typecheck && npm run build`.
-2. Aplicar `0008_gift_campaigns.sql` en Supabase. Con `vercel dev`:
+2. Aplicar `0008_gift_campaigns.sql` en Supabase. Con `npm run preview:cloudflare` (wrangler dev):
    - Admin → Regalos → crear campaña N=2 → ver QR/URL.
    - `/regalo/<token>` → reclamar email A → llega correo con ticket **tier `regalo`**
      y QR válido en `/validar`.

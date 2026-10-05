@@ -145,7 +145,7 @@ export const CONFIG = {
   // visitor's name + email + message into that one field (messageField).
   // To switch to a dedicated form with separate columns, create a new Google
   // Form, then replace formUrl + messageField here (or add name/email fields).
-  // NOTE: docs.google.com must be allowed in `connect-src` (vercel.json CSP),
+  // NOTE: docs.google.com must be allowed in `connect-src` (CSP in public/assets/_headers),
   // since the submit is a `fetch(..., { mode: 'no-cors' })`.
   contact: {
     formUrl:

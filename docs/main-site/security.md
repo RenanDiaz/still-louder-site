@@ -3,7 +3,8 @@
 Current security posture of the **main site** (`https://still-louder.com`, Vite
 root `public/`, publicDir `public/assets/`). The ticket system
 (`entradas.still-louder.com`) is a separate app with its own CSP in
-`ticket-system/vercel.json` and `ticket-system/public/_headers`. Nothing here
+`ticket-system/public/_headers` (static) and `ticket-system/cloudflare/adapter.ts`
+(API responses). Nothing here
 applies to it.
 
 The site is static: no server code, no cookies of its own, no user accounts.
@@ -12,17 +13,13 @@ two Google Forms we post to.
 
 ## Where headers live (the rule)
 
-Headers are **duplicated** and must be changed in **both** files:
+Headers live in **one** file: `public/assets/_headers`. Vite copies publicDir
+to the `dist/` root, so it ships as `dist/_headers`; `wrangler.jsonc` is an
+assets-only Cloudflare Worker serving `./dist`.
 
-| Host | File | Notes |
-|---|---|---|
-| Vercel | `vercel.json` → `headers` | Rollback path. |
-| Cloudflare Workers | `public/assets/_headers` | Vite copies publicDir to the `dist/` root, so it ships as `dist/_headers`. `wrangler.jsonc` is an assets-only Worker serving `./dist`. On Vercel, `/_headers` is served as an inert public file. |
+After editing it, verify the live headers with `curl -sI`.
 
-After editing either file, diff the two (see "Drift" below for the current
-state) and verify the live headers with `curl -sI`.
-
-## Response headers (all paths, `/*` / `/(.*)`)
+## Response headers (all paths, `/*`)
 
 | Header | Value | Why |
 |---|---|---|
@@ -130,7 +127,7 @@ network level.
 ## Verification checklist
 
 1. `curl -sI https://still-louder.com/` and `curl -sI https://still-louder.com/al-vacio-pre-release`:
-   all headers from the table are present, with the same CSP on both hosts.
+   all headers from the table are present, with the same CSP on both pages.
 2. https://securityheaders.com/ on `still-louder.com`. Expect the
    `unsafe-inline` warning, and nothing missing.
 3. https://observatory.mozilla.org/ on `still-louder.com`. Same expectation.
@@ -142,8 +139,8 @@ network level.
    not the SPA/404. `/sw.js` has `Cache-Control: no-cache`.
 7. `npm audit` at the repo root (dev dependencies only, since nothing from
    `node_modules` ships to the browser).
-8. After any header change, confirm the `vercel.json` and `_headers` values
-   match.
+8. After any header change, confirm with `curl -sI` that the live values
+   match `_headers`.
 
 ## Known issues / drift
 
@@ -156,24 +153,13 @@ fixed; see git history.
    and `entry.1365306044`, so both land in one sheet. Comments are prefixed
    "Comentario (Al Vacío)" to tell them apart. Kept on purpose (the page is
    legacy); splitting only needs new values in `CONFIG.comments`.
-2. **Image-only CSP only on Vercel, and probably dead**: `vercel.json:15` sets a
-   strict CSP for `/assets/images/(.*)`, but `_headers` has no equivalent. On
-   Vercel the later `/(.*)` rule (`vercel.json:149`) sets the same key and most
-   likely overrides it. Verify with `curl -sI` on an image.
-3. **Caching rule drift** between `vercel.json` and `_headers`:
-   - Vercel forces `Content-Type` on `/assets/css`/`/assets/js`
-     (`vercel.json:27-28,40-41`). `_headers` does not.
-   - Vercel's audio rules (`vercel.json:55-80`: `/assets/**.mp3|wav|ogg`) vs
-     `_headers:38` (`/assets/mp3/*` only).
-   - Vercel's extension rules for root images and favicons
-     (`vercel.json:82-143`) vs `_headers:43` (`/images/*` only).
-   - HTML revalidation: Vercel by extension (`vercel.json:181-189,199-207`),
-     Cloudflare by clean URL (`_headers:48-55`, so each new page needs its own
-     line).
-   - Neither host covers the unhashed `dist/js/*` and `dist/css/*` copies.
-   The security headers themselves (CSP etc., `vercel.json:149-177` vs
-   `_headers:11-18`) are identical.
-4. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
+2. **Caching rule gaps** in `_headers`:
+   - Audio is covered only under `/assets/mp3/*` (`_headers:38`).
+   - Long-lived caching covers `/images/*` only (`_headers:43`); root images
+     and favicons get the default.
+   - HTML revalidation is by clean URL (`_headers:48-55`), so each new page
+     needs its own line.
+   - The unhashed `dist/js/*` and `dist/css/*` copies are not covered.
+3. **GA4 `connect-src` may be too narrow**: GA4 often beacons to
    `region1.google-analytics.com`/`*.analytics.google.com`, which the CSP
-   (`vercel.json:149`, `_headers:11`) does not allow. Check the console for
-   violations.
+   (`_headers:11`) does not allow. Check the console for violations.

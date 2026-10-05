@@ -1,6 +1,12 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabase } from './_lib/supabase.js';
-import { methodNotAllowed, parseBody, sendJson, withErrorHandling } from './_lib/http.js';
+import {
+  type ApiRequest,
+  type ApiResponse,
+  methodNotAllowed,
+  parseBody,
+  sendJson,
+  withErrorHandling
+} from './_lib/http.js';
 import {
   areSalesOpen,
   getEventBySlug,
@@ -53,7 +59,7 @@ function paymentInstructions(method: PaymentMethod, totalCents: number, quantity
   }
 }
 
-export default withErrorHandling(async (req: VercelRequest, res: VercelResponse) => {
+export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
 
   const body = parseBody<CreateOrderBody>(req);
