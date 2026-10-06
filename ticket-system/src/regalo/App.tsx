@@ -183,6 +183,7 @@ function ClaimForm({
           autoComplete="email"
         />
         <p className="tk-hint">Aquí enviaremos tu entrada con el código QR.</p>
+        <NewsOptIn checked={newsOptIn} onChange={setNewsOptIn} />
 
         <label htmlFor="phone">Teléfono (opcional)</label>
         <input
@@ -192,8 +193,6 @@ function ClaimForm({
           onChange={(e) => setPhone(e.target.value)}
           autoComplete="tel"
         />
-
-        <NewsOptIn checked={newsOptIn} onChange={setNewsOptIn} />
 
         {error && (
           <div className="tk-alert tk-alert--error" role="alert">

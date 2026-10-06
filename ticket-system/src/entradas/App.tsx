@@ -473,6 +473,7 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
                 autoComplete="email"
               />
               <p className="tk-hint">Aquí enviaremos tu entrada con el código QR.</p>
+              <NewsOptIn checked={newsOptIn} onChange={setNewsOptIn} />
 
               <label htmlFor="phone">{method === 'yappy' ? 'Teléfono (Yappy)' : 'Teléfono (opcional)'}</label>
               <input
@@ -485,8 +486,6 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
               {method === 'yappy' && (
                 <p className="tk-hint">El número panameño asociado a tu cuenta de Yappy.</p>
               )}
-
-              <NewsOptIn checked={newsOptIn} onChange={setNewsOptIn} />
 
               <label htmlFor="method">Método de pago</label>
               <select id="method" value={method} onChange={(e) => setMethod(e.target.value as Method)}>
