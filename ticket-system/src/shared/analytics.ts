@@ -27,6 +27,7 @@ export interface GaIds {
 }
 
 let enabled = false;
+let context: Record<string, string> = {};
 let idsPromise: Promise<GaIds | null> = Promise.resolve(null);
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
@@ -86,20 +87,18 @@ export function initAnalytics(): void {
 export function track(name: string, params: Record<string, unknown> = {}): void {
   if (!enabled) return;
   try {
-    window.gtag!('event', name, params);
+    window.gtag!('event', name, { ...context, ...params });
   } catch {
     // ignore
   }
 }
 
-/** Params attached to every later hit (event_slug, event_status). */
+/**
+ * Params merged into every later track() call (event_slug, event_status).
+ * Not gtag('set'): in production its custom params never reached the hits.
+ */
 export function setAnalyticsContext(params: Record<string, string>): void {
-  if (!enabled) return;
-  try {
-    window.gtag!('set', params);
-  } catch {
-    // ignore
-  }
+  context = { ...context, ...params };
 }
 
 export function trackPageView(params: Record<string, unknown> = {}): void {
