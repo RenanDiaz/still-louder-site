@@ -690,6 +690,10 @@ html:not([data-view='teaser']) body::before {
 }
 
 /* ===================== ANIMACIÓN DE ENTRADA ===================== */
+/* `backwards`, no `both`: un transform que se queda "relleno" al terminar la
+   animación vuelve al elemento containing block de sus hijos position:fixed,
+   y el modal de <btn-yappy> (dentro de .tk-form.tk-reveal) se pintaba pegado
+   a la tarjeta en vez de a la pantalla. */
 @keyframes tk-pop {
   from {
     opacity: 0;
@@ -697,7 +701,7 @@ html:not([data-view='teaser']) body::before {
   }
 }
 .tk-reveal {
-  animation: tk-pop 0.5s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+  animation: tk-pop 0.5s cubic-bezier(0.2, 1.2, 0.4, 1) backwards;
 }
 
 /* ACCESIBILIDAD: respeta prefers-reduced-motion */
