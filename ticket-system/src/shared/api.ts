@@ -39,6 +39,7 @@ function withEvent(path: string, eventId: string, params: Record<string, string 
 // --- Public ------------------------------------------------------------------
 
 export type EventStatus = 'draft' | 'teaser' | 'on_sale' | 'archived';
+export type StockDisplay = 'always' | 'never' | 'threshold';
 
 // Public view of an event (from the `events` row). The client draws from it;
 // the server stays authoritative on what can be sold.
@@ -62,14 +63,19 @@ export interface PublicEvent {
 }
 
 export interface PresaleNumbers {
-  available: number;
-  capacity: number;
+  // Cupo de preventa restante. null = el evento oculta el contador
+  // (docs/features/contador-boletos.md); capacity va y viene con él.
+  available: number | null;
+  capacity: number | null;
   stage2Active: boolean;
   soldOut: boolean;
-  // Aforo total del evento (todas las tarifas): boletos restantes y si ya no se
-  // vende más. Alimentan el contador "quedan N" y el bloqueo del formulario.
-  totalAvailable: number;
+  // Aforo total del evento (todas las tarifas): boletos restantes (null =
+  // oculto) y si ya no se vende más. Alimentan el contador "quedan N" y el
+  // bloqueo del formulario.
+  totalAvailable: number | null;
   eventSoldOut: boolean;
+  // Tope del selector de cantidad (1–10); siempre presente.
+  maxPerOrder: number;
 }
 
 export interface PresaleStatusResponse {
@@ -567,6 +573,8 @@ export interface AdminEvent {
   status: EventStatus;
   theme: string;
   og_image_url: string | null;
+  stock_display: StockDisplay;
+  stock_display_threshold: number | null;
   tiers: { preventa: number; general: number };
   paidTickets?: number;
 }
@@ -589,6 +597,8 @@ export interface EventInput {
   total_capacity?: number;
   theme?: string;
   og_image_url?: string;
+  stock_display?: StockDisplay;
+  stock_display_threshold?: number | null;
   tiers?: { preventa?: number; general?: number };
 }
 

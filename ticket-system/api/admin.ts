@@ -20,11 +20,13 @@ import { env } from './_lib/env.js';
 import {
   EVENT_CODE_RE,
   EVENT_SLUG_RE,
+  STOCK_DISPLAYS,
   canTransition,
   getEventById,
   getTierPrices,
   type EventRow,
-  type EventStatus
+  type EventStatus,
+  type StockDisplay
 } from './_lib/events.js';
 import { randomBytes } from 'node:crypto';
 import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_lib/types.js';
@@ -891,6 +893,8 @@ interface EventBody {
   total_capacity?: unknown;
   theme?: unknown;
   og_image_url?: unknown;
+  stock_display?: unknown;
+  stock_display_threshold?: unknown;
   tiers?: { preventa?: unknown; general?: unknown };
 }
 
@@ -913,6 +917,8 @@ type EventFields = Partial<
     | 'total_capacity'
     | 'theme'
     | 'og_image_url'
+    | 'stock_display'
+    | 'stock_display_threshold'
   >
 >;
 
@@ -974,6 +980,22 @@ function parseEventBody(
     if (url && !/^https:\/\/\S+$/.test(url)) return { error: 'invalid_og_image_url' };
     fields.og_image_url = url || null;
   }
+  if (body.stock_display !== undefined) {
+    const mode = str(body.stock_display) as StockDisplay;
+    if (!STOCK_DISPLAYS.includes(mode)) return { error: 'invalid_stock_display' };
+    fields.stock_display = mode;
+  }
+  if (body.stock_display_threshold !== undefined) {
+    // null / '' clears it (allowed unless the mode is 'threshold'; see stockThresholdOk).
+    const raw = body.stock_display_threshold;
+    if (raw === null || raw === '') {
+      fields.stock_display_threshold = null;
+    } else {
+      const n = Number(raw);
+      if (!Number.isInteger(n) || n < 1 || n > 100000) return { error: 'invalid_stock_display_threshold' };
+      fields.stock_display_threshold = n;
+    }
+  }
 
   const tiers: Partial<Record<'preventa' | 'general', number>> = {};
   for (const tier of ['preventa', 'general'] as const) {
@@ -990,6 +1012,11 @@ function parseEventBody(
 function datesInOrder(e: Pick<EventRow, 'presale_start' | 'presale_end' | 'sales_end' | 'event_end'>): boolean {
   const t = (iso: string) => new Date(iso).getTime();
   return t(e.presale_start) <= t(e.presale_end) && t(e.presale_end) <= t(e.sales_end) && t(e.sales_end) <= t(e.event_end);
+}
+
+/** 'threshold' needs a threshold (mirrors events_stock_display_threshold_required). */
+function stockThresholdOk(e: Partial<Pick<EventRow, 'stock_display' | 'stock_display_threshold'>>): boolean {
+  return e.stock_display !== 'threshold' || (e.stock_display_threshold ?? null) !== null;
 }
 
 async function upsertTiers(eventId: string, tiers: Partial<Record<'preventa' | 'general', number>>): Promise<void> {
@@ -1012,6 +1039,7 @@ async function createEvent(req: ApiRequest, res: ApiResponse): Promise<void> {
     if (fields[key] === undefined) return sendJson(res, 400, { error: `missing_${key}` });
   }
   if (!datesInOrder(fields as EventRow)) return sendJson(res, 400, { error: 'invalid_date_order' });
+  if (!stockThresholdOk(fields)) return sendJson(res, 400, { error: 'missing_stock_display_threshold' });
   if (tiers.preventa === undefined || tiers.general === undefined) {
     return sendJson(res, 400, { error: 'missing_tiers' });
   }
@@ -1052,6 +1080,9 @@ async function updateEvent(req: ApiRequest, res: ApiResponse, id: string): Promi
   }
 
   if (!datesInOrder({ ...current, ...fields })) return sendJson(res, 400, { error: 'invalid_date_order' });
+  if (!stockThresholdOk({ ...current, ...fields })) {
+    return sendJson(res, 400, { error: 'missing_stock_display_threshold' });
+  }
 
   if (Object.keys(fields).length > 0) {
     const { error } = await getSupabase()

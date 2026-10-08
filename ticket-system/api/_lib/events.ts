@@ -18,6 +18,7 @@ import { getSupabase } from './supabase.js';
 
 export type EventStatus = 'draft' | 'teaser' | 'on_sale' | 'archived';
 export type SellableTier = 'preventa' | 'general';
+export type StockDisplay = 'always' | 'never' | 'threshold';
 
 export interface EventRow {
   id: string;
@@ -40,12 +41,15 @@ export interface EventRow {
   status: EventStatus;
   theme: string;
   og_image_url: string | null;
+  stock_display: StockDisplay;
+  stock_display_threshold: number | null;
   created_at: string;
   updated_at: string;
 }
 
 export type TierPrices = Record<SellableTier, number>;
 
+export const STOCK_DISPLAYS: StockDisplay[] = ['always', 'never', 'threshold'];
 export const EVENT_STATUSES: EventStatus[] = ['draft', 'teaser', 'on_sale', 'archived'];
 export const EVENT_CODE_RE = /^[A-Z0-9]{3,8}$/;
 export const EVENT_SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -153,6 +157,16 @@ export function isEventOver(ev: EventRow, now: Date = new Date()): boolean {
 }
 
 // --- Presentación -------------------------------------------------------------
+
+/**
+ * ¿Puede el público ver este contador de boletos? (spec contador-boletos.md)
+ * `threshold` revela el número solo cuando ya es ≤ al umbral.
+ */
+export function stockVisible(ev: Pick<EventRow, 'stock_display' | 'stock_display_threshold'>, n: number): boolean {
+  if (ev.stock_display === 'never') return false;
+  if (ev.stock_display === 'threshold') return ev.stock_display_threshold !== null && n <= ev.stock_display_threshold;
+  return true; // 'always', or the column not migrated yet (0016): keep the old behavior
+}
 
 /** Lo que el público puede ver de un evento (sin caps internos). */
 export function publicEvent(ev: EventRow, tiers: TierPrices) {

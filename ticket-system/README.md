@@ -124,6 +124,11 @@ agotados". `presale_status` devuelve además `total_available` /
 `event_sold_out`, que alimentan el contador público «quedan N boletos». Las
 cortesías y regalos no pasan por `create_order` (el admin nunca se bloquea),
 pero sí consumen aforo al contarse como pagadas.
+La migración `0016` hace ese contador configurable por evento
+(`events.stock_display`: `always` / `never` / `threshold` con
+`stock_display_threshold`, editable en la pestaña Eventos): `presale/status`
+envía `null` en lugar del número cuando debe ocultarse, más `maxPerOrder` para
+el selector (spec `docs/features/contador-boletos.md`).
 
 La migración `0011` hace el sistema **multi-evento** (spec
 `docs/features/multi-evento.md`): crea `events` (fechas, caps, aforo, estado,
