@@ -50,9 +50,14 @@ export async function runHandler(
   });
   // Cloudflare terminates the connection; expose the client IP the way the
   // handlers expect it (x-forwarded-for first entry / socket.remoteAddress).
+  // ALWAYS overwrite: Cloudflare appends to a client-sent X-Forwarded-For, so
+  // its first entry is whatever the client typed (Vercel used to replace it).
+  // cf-connecting-ip is set by Cloudflare and can't be spoofed.
   const clientIp = headers['cf-connecting-ip'] ?? '';
-  if (!headers['x-forwarded-for'] && clientIp) {
+  if (clientIp) {
     headers['x-forwarded-for'] = clientIp;
+  } else {
+    delete headers['x-forwarded-for'];
   }
 
   // Body parsing: parsed JSON for application/json, raw string otherwise (parseBody() in _lib/http.ts

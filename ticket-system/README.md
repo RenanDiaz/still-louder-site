@@ -181,7 +181,7 @@ Todas son **server-only**; ninguna se expone al navegador.
 
 ```
 SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-RESEND_API_KEY, EMAIL_FROM="Still Louder <entradas@stilllouder.space>"
+RESEND_API_KEY, EMAIL_FROM="Still Louder <entradas@still-louder.com>"
 EMAIL_REPLY_TO                # opcional: buzón real (p. ej. Gmail) que recibe las respuestas
                               # del comprador; sin esto el correo no invita a responder
 ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compra (lista separada por comas)
@@ -369,7 +369,7 @@ propiedad que el main site (`G-ZZ4XG8CD88`), solo en las superficies públicas
   así que una reserva vencida libera su cupo **al instante por timestamp**, sin
   esperar a la limpieza. `cleanup_expired_orders` (cron diario + botón admin) es
   solo housekeeping: marca esas pendientes como `cancelled`.
-- **Correo desde `entradas@stilllouder.space`:** configurable vía `EMAIL_FROM`
+- **Correo desde `entradas@still-louder.com`:** configurable vía `EMAIL_FROM`
   (requiere dominio verificado en Resend — DKIM/SPF/DMARC). El dominio solo
   **envía**: no hay recepción configurada, así que responder a `entradas@` no
   llega a nadie. `EMAIL_REPLY_TO` (opcional) pone un buzón real (p. ej. el

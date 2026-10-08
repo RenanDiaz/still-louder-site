@@ -27,7 +27,7 @@ export const env = {
     return required('RESEND_API_KEY');
   },
   get emailFrom() {
-    return optional('EMAIL_FROM', 'Still Louder <entradas@stilllouder.space>');
+    return optional('EMAIL_FROM', 'Still Louder <entradas@still-louder.com>');
   },
   // Dirección que recibe las respuestas del comprador (header Reply-To).
   // El dominio en Resend solo está verificado para ENVIAR: sin esto, responder
