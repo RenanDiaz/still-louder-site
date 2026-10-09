@@ -210,7 +210,6 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
   // Aforo total: al agotarse no se vende más en NINGUNA tarifa — el
   // formulario se reemplaza por el aviso de agotado. null = status aún no cargó.
   const eventSoldOut = presale?.eventSoldOut ?? false;
-  const totalAvailable = presale?.totalAvailable ?? null;
   // Preventa can only be bought while its date is open AND cupo remains.
   const presaleAvailable = !presaleEnded && !presaleSoldOut;
   // The tier is never the buyer's choice: while presale is available everyone
@@ -224,8 +223,8 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
 
   // No ofrecer más boletos de los que quedan (el servidor rechaza igual, pero
   // el selector no debe invitar a pedir 10 cuando quedan 3).
-  const maxQuantity =
-    totalAvailable !== null ? Math.max(1, Math.min(10, totalAvailable)) : 10;
+  // maxPerOrder llega aunque el contador esté oculto.
+  const maxQuantity = presale?.maxPerOrder ?? 10;
   useEffect(() => {
     if (quantity > maxQuantity) setQuantity(maxQuantity);
   }, [quantity, maxQuantity]);
@@ -291,12 +290,13 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
         // instante (el formulario se reemplaza por el aviso de agotado) y dejar
         // que el refetch confirme.
         setPresale((p) => ({
-          available: 0,
-          capacity: p?.capacity ?? 0,
+          available: p && p.available !== null ? 0 : null,
+          capacity: p?.capacity ?? null,
           stage2Active: p?.stage2Active ?? false,
           soldOut: true,
-          totalAvailable: 0,
-          eventSoldOut: true
+          totalAvailable: p && p.totalAvailable !== null ? 0 : null,
+          eventSoldOut: true,
+          maxPerOrder: 1
         }));
         refreshPresale();
       } else if (code === 'presale_sold_out') {
@@ -304,12 +304,13 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
         // Flip availability locally right away (works even if the status fetch
         // failed earlier); the refetch then refines the real count.
         setPresale((p) => ({
-          available: 0,
-          capacity: p?.capacity ?? 0,
+          available: p && p.available !== null ? 0 : null,
+          capacity: p?.capacity ?? null,
           stage2Active: p?.stage2Active ?? false,
           soldOut: true,
-          totalAvailable: p?.totalAvailable ?? 0,
-          eventSoldOut: p?.eventSoldOut ?? false
+          totalAvailable: p?.totalAvailable ?? null,
+          eventSoldOut: p?.eventSoldOut ?? false,
+          maxPerOrder: p?.maxPerOrder ?? 10
         }));
         refreshPresale();
       } else if (code === 'presale_ended') {
@@ -320,7 +321,9 @@ function Sale({ event, initialPresale }: { event: PublicEvent; initialPresale: P
         // clock was ahead). Flip back so the buyer pays the cheaper price.
         setError('¡La preventa está disponible! Aplica su precio — revisa el total antes de continuar.');
         setPresaleEnded(false);
-        setPresale((p) => (p ? { ...p, available: Math.max(p.available, 1), soldOut: false } : p));
+        setPresale((p) =>
+          p ? { ...p, available: p.available === null ? null : Math.max(p.available, 1), soldOut: false } : p
+        );
         refreshPresale();
       } else if (code === 'sales_not_open') {
         setError('La venta aún no abre. Revisa el contador y vuelve a intentarlo cuando llegue a cero.');
@@ -733,7 +736,8 @@ function PresaleIndicator({
 }) {
   // Contador de aforo total: cuántos boletos quedan a la venta sumando todas
   // las tarifas. El caso "0 / agotado" no llega aquí: reemplaza el formulario
-  // entero con <SoldOutNotice />.
+  // entero con <SoldOutNotice />. Cada número puede venir en null si el evento
+  // lo oculta (docs/features/contador-boletos.md): entonces no se pinta su línea.
   const total = presale?.totalAvailable ?? null;
   const totalLine =
     total !== null && total > 0 ? (
@@ -767,11 +771,12 @@ function PresaleIndicator({
     );
   }
   // Preventa activa: el contador total manda. Si el cupo de preventa es menor
-  // que los boletos restantes, aclarar cuántos conservan su precio.
+  // que los boletos restantes (o el total está oculto), aclarar cuántos
+  // conservan su precio.
   return (
     <>
       {totalLine}
-      {total !== null && presale.available < total && (
+      {presale.available !== null && (total === null || presale.available < total) && (
         <p className="tk-stock">
           los próximos <b>{presale.available}</b> al precio de preventa ★
         </p>

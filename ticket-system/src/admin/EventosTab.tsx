@@ -5,7 +5,8 @@ import {
   updateEvent,
   type AdminEvent,
   type EventInput,
-  type EventStatus
+  type EventStatus,
+  type StockDisplay
 } from '../shared/api';
 
 // =============================================================================
@@ -49,6 +50,13 @@ const THEMES = [
   { value: 'halloween', label: 'Halloween (noche + rojo sangre)' }
 ];
 
+// Contador "quedan N" de la página pública (spec docs/features/contador-boletos.md).
+const STOCK_DISPLAY_OPTIONS: { value: StockDisplay; label: string }[] = [
+  { value: 'always', label: 'Siempre' },
+  { value: 'never', label: 'Nunca' },
+  { value: 'threshold', label: 'Solo cuando queden pocos' }
+];
+
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_slug: 'Slug inválido: solo minúsculas, números y guiones (p. ej. halloween-party).',
   invalid_code: 'Código inválido: 3 a 8 letras mayúsculas o números (p. ej. SL3110).',
@@ -62,7 +70,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   event_archived: 'Un evento archivado no se puede editar.',
   invalid_transition: 'Ese cambio de estado no está permitido.',
   status_changed: 'Otro admin cambió el estado mientras tanto. Recarga e inténtalo de nuevo.',
-  invalid_og_image_url: 'La imagen OG debe ser una URL https://.'
+  invalid_og_image_url: 'La imagen OG debe ser una URL https://.',
+  missing_stock_display_threshold: 'Indica a partir de cuántos boletos restantes se muestra el contador.',
+  invalid_stock_display_threshold: 'El umbral del contador debe ser un número entero mayor a 0.'
 };
 
 function errorText(err: unknown): string {
@@ -111,6 +121,8 @@ interface FormState {
   price_general: string;
   theme: string;
   og_image_url: string;
+  stock_display: StockDisplay;
+  stock_display_threshold: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -132,7 +144,9 @@ const EMPTY_FORM: FormState = {
   price_preventa: '',
   price_general: '',
   theme: 'mono',
-  og_image_url: ''
+  og_image_url: '',
+  stock_display: 'always',
+  stock_display_threshold: ''
 };
 
 function formFromEvent(e: AdminEvent): FormState {
@@ -155,7 +169,9 @@ function formFromEvent(e: AdminEvent): FormState {
     price_preventa: (e.tiers.preventa / 100).toFixed(2),
     price_general: (e.tiers.general / 100).toFixed(2),
     theme: e.theme,
-    og_image_url: e.og_image_url ?? ''
+    og_image_url: e.og_image_url ?? '',
+    stock_display: e.stock_display,
+    stock_display_threshold: e.stock_display_threshold === null ? '' : String(e.stock_display_threshold)
   };
 }
 
@@ -179,6 +195,9 @@ function inputFromForm(f: FormState): EventInput {
     total_capacity: Number(f.total_capacity),
     theme: f.theme,
     og_image_url: f.og_image_url,
+    stock_display: f.stock_display,
+    // Se guarda aunque el modo no sea 'threshold', para no perderlo al alternar.
+    stock_display_threshold: f.stock_display_threshold === '' ? null : Number(f.stock_display_threshold),
     tiers: { preventa: cents(f.price_preventa), general: cents(f.price_general) }
   };
 }
@@ -408,6 +427,31 @@ function EventForm({
         {field('presale_stage2_cap', 'Cupo preventa etapa 2', { type: 'number', min: 0, step: 1, required: true })}
         {field('total_capacity', 'Aforo total', { type: 'number', min: 1, step: 1, required: true })}
       </div>
+
+      <h3>Contador público de boletos</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0 16px' }}>
+        <div>
+          <label htmlFor="ev-stock_display">Mostrar «quedan N boletos»</label>
+          <select id="ev-stock_display" value={form.stock_display} onChange={set('stock_display')}>
+            {STOCK_DISPLAY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        {field('stock_display_threshold', 'Mostrar cuando queden ≤', {
+          type: 'number',
+          min: 1,
+          step: 1,
+          disabled: form.stock_display !== 'threshold',
+          required: form.stock_display === 'threshold'
+        })}
+      </div>
+      <p className="muted" style={{ fontSize: 13 }}>
+        Aplica al total y al cupo de preventa («los próximos N al precio de preventa»). Oculto, el número no sale del
+        servidor. Este panel siempre muestra los números reales.
+      </p>
 
       <h3>Apariencia</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0 16px' }}>
