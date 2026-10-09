@@ -14,7 +14,7 @@ export const CONFIG = {
     },
     appleMusic: {
       name: 'Apple Music',
-      url: 'https://music.apple.com/pa/album/skirlaz/1871380684?i=1871380685&l=en-GB',
+      url: 'https://music.apple.com/pa/album/a-las-10/6819517736?i=6819517737',
       icon: 'apple-music',
       color: '#fa243c'
     },
@@ -26,13 +26,13 @@ export const CONFIG = {
     },
     deezer: {
       name: 'Deezer',
-      url: 'https://link.deezer.com/s/33uBZiHm7eOvA8b5tzklb',
+      url: 'https://link.deezer.com/s/34D1I6YLOZ25jA56dvjAe',
       icon: 'deezer',
       color: '#ff0092'
     },
     amazonMusic: {
       name: 'Amazon Music',
-      url: 'https://music.amazon.com/tracks/B0GJ7DHTMV?marketplaceId=ATVPDKIKX0DER&musicTerritory=US&ref=dm_sh_fJNxSrdaEGv6WxGuYZQFb117Y',
+      url: 'https://music.amazon.com/tracks/B0HLYQGFQ9?marketplaceId=ATVPDKIKX0DER&musicTerritory=US&ref=dm_sh_qlYvdrhpbNpJl8xdZ0v9jhKnU',
       icon: 'amazon-music',
       color: '#232f3e'
     }

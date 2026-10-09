@@ -1,10 +1,10 @@
 # Nueva era del sitio: "A Las 10"
 
-> **Estado (4 oct 2026):** **Fase 1 implementada** en la rama
-> `feat/a-las-10-rework` con la portada (1400×1400) y la foto en vivo
-> (Modesto Miranda, Rock n' Folk, 6 feb 2026, con permiso) en mano; solo faltan las **URLs
-> de plataformas**, que se pegan el 5 de octubre (`config.js`, `#escuchar` y
-> los `offers` del JSON-LD siguen con las de Skirlaz hasta entonces, CA-3).
+> **Estado (9 oct 2026):** **Fase 1 implementada** con la portada (1400×1400) y la
+> foto en vivo (Modesto Miranda, Rock n' Folk, 6 feb 2026, con permiso). Las
+> URLs de plataformas (`config.js`, `#escuchar` y los `offers` del JSON-LD)
+> apuntan a "A Las 10" desde el 9 oct (Spotify desde el 5), CA-3. El `offer` de
+> YouTube sigue con el video anterior hasta la Fase 2.
 > **"A Las 10" se estrena el 5 de octubre de 2026.** El video de YouTube llega
 > aparte (previsto el 31 oct): **Fase 2 pendiente**. No hay pre-save.
 > Subsistema: **sitio principal** (repo root) + el asset de marca genérico del
