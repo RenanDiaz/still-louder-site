@@ -13,7 +13,7 @@ Where each document lives and what it covers. Start with the root
 | [`main-site/seo-accessibility.md`](main-site/seo-accessibility.md) | Metadata, structured data, sitemap/robots, a11y conventions, verification |
 | [`features/i18n-main-site-en.md`](features/i18n-main-site-en.md) | Spec: English version of the landing at `/en` (press / international listeners) — implemented (English pending band review) |
 | [`features/comunicados.md`](features/comunicados.md) | Spec: official band statements (`/comunicados`, build-time Markdown pages + home banner) — not implemented |
-| [`features/bio-links.md`](features/bio-links.md) | Spec: link-in-bio page at `/links` (Stratovarius + Halloween tickets, new single) — implemented |
+| [`features/bio-links.md`](features/bio-links.md) | Spec: link-in-bio page at `/links` (show tickets, new single) — implemented |
 | [`features/nuevo-single.md`](features/nuevo-single.md) | Spec: re-theme the landing for the single "A Las 10" (release 5 Oct 2026, video ≈ 31 Oct) from the cover + one live photo — Phase 1 implemented, Phase 2 (video) pending |
 
 ## Ticket system (`ticket-system/`)
@@ -22,9 +22,9 @@ Where each document lives and what it covers. Start with the root
 |---|---|
 | [`../ticket-system/README.md`](../ticket-system/README.md) | Architecture, env vars, Supabase, Yappy, operations — read before touching the app |
 | [`features/multi-evento.md`](features/multi-evento.md) | Spec: multi-event foundation (`events` table, migration 0011) — implemented |
-| [`features/entradas-31-10.md`](features/entradas-31-10.md) | Spec: Halloween Party sale (31 Oct 2026, slug `halloween-party`) |
+| [`features/entradas-31-10.md`](features/entradas-31-10.md) | Spec: Halloween Party sale (31 Oct 2026, slug `halloween-party`) — implemented, on sale since 1 Oct |
 | [`features/gift-qr-campaigns.md`](features/gift-qr-campaigns.md) | Spec: hidden-QR gift ticket campaigns (`/regalo/<token>`) |
-| [`features/analytics-entradas.md`](features/analytics-entradas.md) | Spec: GA4 on the public ticket surfaces + server-side `purchase` via Measurement Protocol — implemented |
+| [`features/analytics-entradas.md`](features/analytics-entradas.md) | Spec: GA4 on the public ticket surfaces + server-side `purchase` via Measurement Protocol — implemented and live |
 | [`features/contador-boletos.md`](features/contador-boletos.md) | Spec: per-event toggle for the public "quedan N boletos" counter (always / never / below a threshold), hidden server-side — implemented |
 | [`features/campanas-promocion.md`](features/campanas-promocion.md) | Spec: promotional email campaigns to past buyers (all / staggered waves / selected), opt-in at checkout, one-click unsubscribe — Phase 0 (checkout opt-in) implemented |
 

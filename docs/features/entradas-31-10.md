@@ -4,6 +4,12 @@
 > (migración `0013`); `/31-10` redirige 301 ahí y `ticket-system/31-10.html` es
 > hoy `halloween-party.html`. Las menciones a `/31-10` más abajo son el diseño
 > original — ver D2 y el README del ticket-system para el estado vigente.
+>
+> **Actualización 14 oct:** venta abierta desde el 1 oct. Las decisiones de
+> abajo quedaron cerradas con los valores de la "Actualización 28 sep" (D1,
+> D3–D6) y D7 = 1 oct 00:00; la tabla y el checklist de operativa se conservan
+> como registro del diseño, no como pendientes. La fuente de verdad del evento
+> es su fila en `events`/`event_tier` (pestaña **Eventos** de `/admin`).
 
 > Subsistema: `ticket-system/` (venta) + sitio principal (`public/`, solo el
 > enlace de compra). **Depende de `docs/features/multi-evento.md`**: este spec
@@ -57,7 +63,7 @@ cupo race-safe, Yappy V2, Google Wallet, cortesías, regalos, reembolsos,
 > | 9 | $95.01 | $113.94 |
 > | 10 | $105.53 | $126.56 |
 
-## Decisiones pendientes (llenar antes de implementar)
+## Decisiones (cerradas — ver la actualización del 14 oct arriba)
 
 Cada fila trae una **recomendación** para no bloquear; si se acepta tal cual,
 el spec está completo con esos valores.
@@ -129,7 +135,7 @@ Estaciones sugeridas: `puerta-1`, `puerta-2` (como WWWY3).
 
 (La tarjeta del 11-10 no cambia: su venta es de Ticketplus.)
 
-## Operativa previa a la apertura (checklist)
+## Operativa previa a la apertura (checklist, histórico: la venta abrió el 1 oct)
 
 - [ ] Llenar D1–D13.
 - [ ] `multi-evento.md` implementado y desplegado con la migración aplicada en
