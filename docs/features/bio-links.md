@@ -194,8 +194,8 @@ lean juntos.
 **Contenido**
 
 - **CA-4** Los `href` de los botones de shows coinciden carácter a carácter
-  con `CONFIG.shows.upcoming.stratovarius.ticketsUrl` y
-  `CONFIG.shows.upcoming.oct31.ticketsUrl` (comprobable con `grep`).
+  con `CONFIG.shows.upcoming.<show>.ticketsUrl` (hoy solo
+  `CONFIG.shows.upcoming.oct31.ticketsUrl`) (comprobable con `grep`).
 - **CA-5** Con JS deshabilitado todos los enlaces funcionan y el botón
   `pending` no es enfocable ni clickeable.
 - **CA-6** Adelantando el reloj del navegador más allá de `data-expires` de

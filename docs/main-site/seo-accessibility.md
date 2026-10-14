@@ -200,9 +200,8 @@ the mobile menu's ARIA state and focus handling, and the pre-release page's
 nested footer, inline skip-link style/JS, `theme-color`, conflicting
 `#band` entity and imgur hotlinks (images now self-hosted).
 
-- **MusicEvent completeness**: neither event has `endDate`, and the
-  Stratovarius `offers` has no `price` (`index.html`). Rich Results flags both
-  as warnings. Don't add them until the real values are known.
+- **MusicEvent completeness**: the Halloween Party event has no `endDate`
+  (`index.html`). Rich Results flags it as a warning. Don't add them until the real values are known.
 - **Small OG image**: 640x640 (`index.html:85`) is below the 1200x630
   recommended for `summary_large_image`.
 - **Unverified handle**: `twitter:site`/`creator` `@StillLouder`
