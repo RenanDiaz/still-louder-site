@@ -8,6 +8,11 @@ This is the official website for **Still Louder**, a Panamanian rock band. The s
 its buttons are hand-written HTML whose URLs must match `config.js`).
 `al-vacio-pre-release.html` is a legacy page from the previous single "Al Vacío".
 
+**The landing is bilingual**: `index.html` (es, `/`) and `en.html` (en, `/en`)
+are two hand-edited copies. **Every content change to `index.html` must be
+mirrored in `en.html`** — `npm run validate` fails (`scripts/check-i18n.js`) if
+their structure, links, dates or JSON-LD data drift. See "Two languages" below.
+
 **Live URL**: https://still-louder.com/
 **Repository**: https://github.com/RenanDiaz/still-louder-site
 
@@ -215,6 +220,7 @@ still-louder-site/
 │   │   ├── js/
 │   │   │   ├── main.js          # Entry point (wires up the modules below)
 │   │   │   ├── config.js        # Centralized configuration (URLs, settings)
+│   │   │   ├── i18n.js          # `lang` + `t({ es, en })` for JS-generated copy
 │   │   │   ├── analytics.js     # GA4 tracking module
 │   │   │   ├── share.js         # Web Share API module
 │   │   │   ├── error-handler.js # Global error handling
@@ -232,12 +238,14 @@ still-louder-site/
 │   │   ├── sitemap.xml          # SEO sitemap (→ /sitemap.xml)
 │   │   ├── robots.txt           # Search engine directives (→ /robots.txt)
 │   │   └── links.json           # Platform links data
-│   ├── index.html               # Main landing page
+│   ├── index.html               # Main landing page (Spanish, /)
+│   ├── en.html                  # English copy of the landing (/en) — keep in sync
 │   ├── links.html               # Link-in-bio page (/links, noindex) — docs/features/bio-links.md
 │   └── al-vacio-pre-release.html # Pre-release page
 ├── scripts/
 │   ├── optimize-images.js       # Image optimization script
-│   └── check-dist.js            # Post-build check: every local ref resolves in dist/
+│   ├── check-dist.js            # Post-build check: every local ref resolves in dist/
+│   └── check-i18n.js            # Parity check index.html ↔ en.html (part of validate)
 ├── docs/                        # Specs (features/), reference docs (main-site/), deploy guide — index in docs/README.md
 ├── ticket-system/               # SEPARATE app — see "Ticket System" section
 ├── dist/                        # Build output (generated, gitignored)
@@ -300,7 +308,8 @@ npm run preview
 | `lint:fix` | `npm run lint:fix` | Auto-fix ESLint issues |
 | `format` | `npm run format` | Format code with Prettier |
 | `format:check` | `npm run format:check` | Check code formatting |
-| `validate` | `npm run validate` | Run lint + format check |
+| `validate` | `npm run validate` | Run lint + format check + i18n parity check |
+| `check:i18n` | `npm run check:i18n` | Verify `index.html` and `en.html` have the same structure, links, dates and JSON-LD data |
 | `check:dist` | `npm run check:dist` | After a build: verify every local ref in `dist/` (HTML, SW precache, manifest) exists |
 | `optimize:images` | `npm run optimize:images` | Optimize images with Sharp |
 
@@ -435,7 +444,8 @@ All security headers are configured in `public/assets/_headers` (see
 
 | File | Purpose | When to Modify |
 |------|---------|----------------|
-| `public/index.html` | Main landing page | Adding new sections, updating meta tags |
+| `public/index.html` | Main landing page (es) | Adding new sections, updating meta tags |
+| `public/en.html` | English landing (`/en`) | **Every time `index.html` content changes** |
 | `public/assets/js/config.js` | All URLs and settings | Changing links, messages, feature flags |
 | `public/assets/css/variables.css` | Design tokens | Changing colors, spacing, typography |
 | `public/assets/css/style.css` | Main styles | Styling changes |
@@ -465,6 +475,25 @@ platforms: {
 2. Add the HTML in `public/index.html` following the existing pattern with proper ARIA labels.
 
 3. Add brand color to `variables.css` if needed.
+
+### Two languages (`/` and `/en`)
+
+Spec: `docs/features/i18n-main-site-en.md`; SEO details in
+`docs/main-site/seo-accessibility.md` §1.0.
+
+- **HTML copy**: edit `index.html` AND `en.html`. Section ids stay the same
+  (Spanish) in both, so anchors work across languages. Only translate text,
+  `alt`, `aria-label`, `title` and free-text JSON-LD (`description`,
+  `roleName`, `Offer.name`); URLs, dates, prices and proper names must be
+  identical or `check:i18n` fails. Song titles, band/venue names and nicknames
+  are never translated.
+- **JS copy**: never hardcode user-facing strings. Use `t()` from `i18n.js`
+  (resolved from `<html lang>`, falls back to `es`), either with
+  `t(CONFIG.messages).error.x` (add the key to **both** `es` and `en`) or a
+  local `t({ es: '...', en: '...' })`. Both pages load the same bundle.
+- Links to Spanish-only destinations (ticket system, `/ayuda`) say so in
+  `en.html`. Each page has its own canonical plus the shared `hreflang` trio;
+  `sitemap.xml` and the SW `PRECACHE_URLS` include `/en`.
 
 ### Contact form (no backend)
 
@@ -508,7 +537,8 @@ uiUtils.showToast(CONFIG.messages.success.copiedToClipboard, 'success');
 
 Before deploying, verify:
 
-- [ ] `npm run validate` passes (lint + format)
+- [ ] `npm run validate` passes (lint + format + i18n parity)
+- [ ] Content changes are in both `index.html` and `en.html`
 - [ ] Dev server works: `npm run dev`
 - [ ] Production build works: `npm run build && npm run preview`
 - [ ] `npm run check:dist` passes (no missing files in `dist/`)

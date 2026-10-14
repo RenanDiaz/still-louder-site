@@ -4,6 +4,7 @@
  */
 
 import CONFIG from './config.js';
+import { t } from './i18n.js';
 
 class UIUtils {
   constructor() {
@@ -71,12 +72,12 @@ class UIUtils {
     const spinner = document.createElement('div');
     spinner.className = options.className || 'spinner';
     spinner.setAttribute('role', 'status');
-    spinner.setAttribute('aria-label', 'Cargando...');
+    spinner.setAttribute('aria-label', t({ es: 'Cargando...', en: 'Loading...' }));
 
     // Add screen reader text
     const srText = document.createElement('span');
     srText.className = 'sr-only';
-    srText.textContent = 'Cargando...';
+    srText.textContent = t({ es: 'Cargando...', en: 'Loading...' });
     spinner.appendChild(srText);
 
     return spinner;
@@ -91,7 +92,10 @@ class UIUtils {
     const skeleton = document.createElement('div');
     skeleton.className = 'skeleton';
     skeleton.setAttribute('aria-busy', 'true');
-    skeleton.setAttribute('aria-label', 'Cargando contenido...');
+    skeleton.setAttribute(
+      'aria-label',
+      t({ es: 'Cargando contenido...', en: 'Loading content...' })
+    );
 
     if (options.width) skeleton.style.width = options.width;
     if (options.height) skeleton.style.height = options.height;

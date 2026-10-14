@@ -1,0 +1,1223 @@
+<!doctype html>
+<!--
+  English version of index.html, served at /en (docs/features/i18n-main-site-en.md).
+  Every content change goes in BOTH files; `npm run validate` (scripts/check-i18n.js)
+  fails if their structure, links, dates or JSON-LD data drift apart.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <title>Still Louder - A Las 10 | Official Release 2026</title>
+    <meta
+      name="description"
+      content="Listen to 'A Las 10', the new single by Still Louder, on Spotify, Apple Music, Deezer, Amazon Music and YouTube Music. Panamanian rock, out now on every digital platform."
+    />
+    <meta
+      name="keywords"
+      content="Still Louder, A Las 10, music, single, new single, rock, heavy metal, Panama, Chiriquí, band, streaming, Spotify, Apple Music, Deezer, YouTube, Amazon Music, 2026, Panamanian rock, Panama rock band, Hard Rock Rising, In Hostilia, Bomba de Tiempo, Litio+, Al Vacío, Skirlaz"
+    />
+    <meta name="author" content="Still Louder" />
+    <meta
+      name="robots"
+      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+    />
+    <meta name="theme-color" content="#140505" />
+
+    <!-- Geo Tags for Panama -->
+    <meta name="geo.region" content="PA" />
+    <meta name="geo.placename" content="Panamá" />
+    <meta name="geo.position" content="9.1450;-79.9870" />
+    <meta name="ICBM" content="9.1450, -79.9870" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="shortcut icon" href="/assets/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Still Louder" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="canonical" href="https://still-louder.com/en" />
+    <!-- Every language version lists all of them (docs/features/i18n-main-site-en.md) -->
+    <link rel="alternate" hreflang="es" href="https://still-louder.com/" />
+    <link rel="alternate" hreflang="en" href="https://still-louder.com/en" />
+    <link rel="alternate" hreflang="x-default" href="https://still-louder.com/" />
+
+    <!-- Social Media Verification -->
+    <link rel="me" href="https://www.instagram.com/still_louder/" />
+    <link rel="me" href="https://www.facebook.com/share/1FRfEeLhhp/?mibextid=wwXIfr" />
+    <link rel="me" href="https://www.youtube.com/@StillLouder" />
+    <link rel="me" href="https://www.tiktok.com/@stilllouder.pa" />
+
+    <!-- Social Media - Legacy Support -->
+    <meta name="og:see_also" content="https://www.instagram.com/still_louder/" />
+    <meta name="og:see_also" content="https://www.facebook.com/share/1FRfEeLhhp/?mibextid=wwXIfr" />
+    <meta name="og:see_also" content="https://www.youtube.com/@StillLouder" />
+    <meta name="og:see_also" content="https://www.tiktok.com/@stilllouder.pa" />
+
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+
+    <!-- Critical CSS -->
+    <link rel="stylesheet" href="assets/css/style.css" />
+
+    <!-- Modern fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_PA" />
+    <meta property="og:type" content="music.song" />
+    <meta property="og:title" content="Still Louder - A Las 10 | Official Release 2026" />
+    <meta
+      property="og:description"
+      content="Listen to 'A Las 10', the new single by Still Louder. Available on Spotify, Apple Music, Deezer, Amazon Music and YouTube Music."
+    />
+    <meta property="og:url" content="https://still-louder.com/en" />
+    <meta property="og:site_name" content="Still Louder" />
+    <meta
+      property="og:image"
+      content="https://still-louder.com/images/album_covers/a-las-10.jpeg"
+    />
+    <meta
+      property="og:image:secure_url"
+      content="https://still-louder.com/images/album_covers/a-las-10.jpeg"
+    />
+    <meta property="og:image:alt" content="Cover art of the single A Las 10 by Still Louder" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1400" />
+    <meta property="og:image:height" content="1400" />
+
+    <!-- Music-specific Open Graph -->
+    <meta property="music:musician" content="https://still-louder.com/" />
+    <meta property="music:release_date" content="2026-10-05" />
+    <meta property="music:song" content="https://still-louder.com/" />
+    <!-- music:preview_url:youtube returns with the official video (Phase 2 of
+         docs/features/nuevo-single.md). -->
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Still Louder - A Las 10 | Official Release 2026" />
+    <meta
+      name="twitter:description"
+      content="Listen to 'A Las 10', the new single by Still Louder. Available on Spotify, Apple Music, Deezer, Amazon Music and YouTube Music."
+    />
+    <meta
+      name="twitter:image"
+      content="https://still-louder.com/images/album_covers/a-las-10.jpeg"
+    />
+    <meta name="twitter:image:alt" content="Cover art of the single A Las 10 by Still Louder" />
+    <meta name="twitter:site" content="@StillLouder" />
+    <meta name="twitter:creator" content="@StillLouder" />
+    <meta name="twitter:label1" content="Genre" />
+    <meta name="twitter:data1" content="Rock" />
+    <meta name="twitter:label2" content="Year" />
+    <meta name="twitter:data2" content="2026" />
+
+    <!-- JSON-LD Structured Data - MusicRecording -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "MusicRecording",
+        "name": "A Las 10",
+        "url": "https://still-louder.com/",
+        "image": "https://still-louder.com/images/album_covers/a-las-10.jpeg",
+        "datePublished": "2026-10-05",
+        "genre": ["Heavy Metal", "Rock"],
+        "inLanguage": "es",
+        "byArtist": {
+          "@type": "MusicGroup",
+          "@id": "https://still-louder.com/#band",
+          "name": "Still Louder",
+          "genre": ["Heavy Metal", "Rock"],
+          "foundingLocation": {
+            "@type": "Place",
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "PA",
+              "addressLocality": "Panamá"
+            }
+          },
+          "sameAs": [
+            "https://www.instagram.com/still_louder/",
+            "https://www.facebook.com/share/1FRfEeLhhp/?mibextid=wwXIfr",
+            "https://www.youtube.com/@StillLouder",
+            "https://www.tiktok.com/@stilllouder.pa",
+            "https://open.spotify.com/artist/5BLVv7MvjmdCCWYFVlwY83",
+            "https://music.apple.com/pa/artist/still-louder/1829334535"
+          ]
+        },
+        "recordingOf": {
+          "@type": "MusicComposition",
+          "name": "A Las 10",
+          "composer": {
+            "@type": "MusicGroup",
+            "@id": "https://still-louder.com/#band"
+          },
+          "inLanguage": "es"
+        },
+        "inAlbum": {
+          "@type": "MusicAlbum",
+          "name": "A Las 10",
+          "albumReleaseType": "Single",
+          "datePublished": "2026-10-05",
+          "byArtist": {
+            "@id": "https://still-louder.com/#band"
+          }
+        },
+        "offers": {
+          "@type": "AggregateOffer",
+          "availability": "https://schema.org/InStock",
+          "lowPrice": "0",
+          "priceCurrency": "USD",
+          "offerCount": "3",
+          "offers": [
+            {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "url": "https://open.spotify.com/track/3Bt2Rd8QLuPCd1i4UtgPDn",
+              "seller": {
+                "@type": "Organization",
+                "name": "Spotify"
+              }
+            },
+            {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "url": "https://music.apple.com/pa/album/a-las-10/6819517736?i=6819517737",
+              "seller": {
+                "@type": "Organization",
+                "name": "Apple Music"
+              }
+            },
+            {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "url": "https://youtu.be/ukpbbWdqh_A",
+              "seller": {
+                "@type": "Organization",
+                "name": "YouTube"
+              }
+            }
+          ]
+        }
+      }
+    </script>
+
+    <!-- JSON-LD Structured Data - Organization/MusicGroup -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "MusicGroup",
+        "@id": "https://still-louder.com/#band",
+        "name": "Still Louder",
+        "alternateName": "Still Louder Band",
+        "url": "https://still-louder.com/",
+        "logo": "https://still-louder.com/images/still_louder_logo.png",
+        "image": "https://still-louder.com/images/album_covers/a-las-10.jpeg",
+        "genre": ["Heavy Metal", "Rock"],
+        "foundingDate": "2009",
+        "foundingLocation": {
+          "@type": "Place",
+          "name": "Chiriquí, Panamá",
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "PA",
+            "addressRegion": "Chiriquí",
+            "addressLocality": "David"
+          }
+        },
+        "member": [
+          {
+            "@type": "OrganizationRole",
+            "roleName": "Vocals and guitar",
+            "member": { "@type": "Person", "name": "Carlos Franceschi", "alternateName": "Toty" }
+          },
+          {
+            "@type": "OrganizationRole",
+            "roleName": "Guitar and backing vocals",
+            "member": { "@type": "Person", "name": "Alexis Jiménez", "alternateName": "Alexo" }
+          },
+          {
+            "@type": "OrganizationRole",
+            "roleName": "Bass",
+            "member": { "@type": "Person", "name": "Renán Díaz", "alternateName": "Nancho" }
+          },
+          {
+            "@type": "OrganizationRole",
+            "roleName": "Drums",
+            "member": { "@type": "Person", "name": "Víctor Rivera", "alternateName": "Vicho" }
+          }
+        ],
+        "sameAs": [
+          "https://www.instagram.com/still_louder/",
+          "https://www.facebook.com/share/1FRfEeLhhp/?mibextid=wwXIfr",
+          "https://www.youtube.com/@StillLouder",
+          "https://www.tiktok.com/@stilllouder.pa",
+          "https://open.spotify.com/artist/5BLVv7MvjmdCCWYFVlwY83",
+          "https://music.apple.com/pa/artist/still-louder/1829334535"
+        ]
+      }
+    </script>
+
+    <!-- JSON-LD Structured Data - MusicEvent (31 oct 2026, fecha propia; venta en el ticket-system) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "MusicEvent",
+        "name": "Still Louder's Halloween Party ft. Fábula Sarcástica & Elefreak",
+        "image": "https://still-louder.com/images/shows/halloween-party-2026-10-31.jpg",
+        "startDate": "2026-10-31T20:00:00-05:00",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "location": {
+          "@type": "MusicVenue",
+          "name": "Hops Food & Drinks",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "David",
+            "addressRegion": "Chiriquí",
+            "addressCountry": "PA"
+          }
+        },
+        "performer": [
+          { "@id": "https://still-louder.com/#band" },
+          { "@type": "MusicGroup", "name": "Fábula Sarcástica" },
+          { "@type": "MusicGroup", "name": "Elefreak" }
+        ],
+        "organizer": { "@id": "https://still-louder.com/#band" },
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Presale",
+            "price": "10.00",
+            "priceCurrency": "USD",
+            "validFrom": "2026-10-01T00:00:00-05:00",
+            "url": "https://entradas.still-louder.com/halloween-party",
+            "availability": "https://schema.org/InStock"
+          },
+          {
+            "@type": "Offer",
+            "name": "General",
+            "price": "12.00",
+            "priceCurrency": "USD",
+            "validFrom": "2026-10-01T00:00:00-05:00",
+            "url": "https://entradas.still-louder.com/halloween-party",
+            "availability": "https://schema.org/InStock"
+          }
+        ]
+      }
+    </script>
+
+    <!-- JSON-LD Structured Data - WebSite -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "url": "https://still-louder.com/",
+        "name": "Still Louder - Official Website",
+        "description": "Official website of Still Louder. Listen to our music on every digital platform.",
+        "inLanguage": "en",
+        "publisher": {
+          "@id": "https://still-louder.com/#band"
+        }
+      }
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZZ4XG8CD88"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('source') === 'qr') {
+        gtag('config', 'G-ZZ4XG8CD88', { custom_map: { dimension1: 'source' } });
+        gtag('event', 'page_view', { source: 'qr' });
+      } else if (params.get('source') === 'pwa') {
+        gtag('config', 'G-ZZ4XG8CD88', { custom_map: { dimension1: 'source' } });
+        gtag('event', 'page_view', { source: 'pwa' });
+      } else {
+        gtag('config', 'G-ZZ4XG8CD88');
+      }
+    </script>
+  </head>
+
+  <body>
+    <!-- Skip to main content link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Fixed Navigation Header -->
+    <header class="site-header" id="site-header">
+      <div class="header-content">
+        <a href="#hero" class="header-logo">Still Louder</a>
+        <nav class="header-nav" aria-label="Main navigation">
+          <a href="#hero" class="nav-link active" data-section="hero">Home</a>
+          <a href="#escuchar" class="nav-link" data-section="escuchar">Listen</a>
+          <a href="#shows" class="nav-link" data-section="shows">Shows</a>
+          <a href="#about" class="nav-link" data-section="about">Band</a>
+          <a href="#faq" class="nav-link" data-section="faq">FAQ</a>
+          <a href="#conectar" class="nav-link" data-section="conectar">Connect</a>
+          <a href="#contacto" class="nav-link" data-section="contacto">Contact</a>
+        </nav>
+        <div class="header-actions">
+          <!-- Language switch: same markup in index.html with the languages swapped.
+               main.js (initLangSwitch) carries the current section across. -->
+          <nav class="lang-switch" aria-label="Language">
+            <a
+              href="/"
+              class="lang-switch__link"
+              hreflang="es"
+              lang="es"
+              aria-label="Versión en español"
+              >ES</a
+            >
+            <span class="lang-switch__current" aria-current="page" lang="en">EN</span>
+          </nav>
+          <button
+            class="mobile-menu-btn"
+            id="mobile-menu-btn"
+            type="button"
+            aria-label="Menu"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-menu" id="mobile-menu">
+      <nav class="mobile-nav" aria-label="Mobile navigation">
+        <a href="#hero" class="mobile-nav-link" data-section="hero">Home</a>
+        <a href="#escuchar" class="mobile-nav-link" data-section="escuchar">Listen</a>
+        <a href="#shows" class="mobile-nav-link" data-section="shows">Shows</a>
+        <a href="#about" class="mobile-nav-link" data-section="about">Band</a>
+        <a href="#faq" class="mobile-nav-link" data-section="faq">FAQ</a>
+        <a href="#conectar" class="mobile-nav-link" data-section="conectar">Connect</a>
+        <a href="#contacto" class="mobile-nav-link" data-section="contacto">Contact</a>
+      </nav>
+    </div>
+
+    <main id="main-content" role="main">
+      <!-- Hero Section -->
+      <section class="hero" id="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <div class="hero-album">
+            <picture>
+              <source srcset="assets/images/album_covers/a-las-10.avif" type="image/avif" />
+              <source srcset="assets/images/album_covers/a-las-10.webp" type="image/webp" />
+              <img
+                src="assets/images/album_covers/a-las-10.jpeg"
+                alt="Cover art of the single A Las 10 by Still Louder"
+                class="album-cover"
+                width="1400"
+                height="1400"
+                fetchpriority="high"
+              />
+            </picture>
+            <div class="album-glow"></div>
+          </div>
+          <div class="hero-text">
+            <p class="hero-subtitle reveal-up">New Single</p>
+            <h1 class="hero-title reveal-up">A Las 10</h1>
+            <p class="hero-artist reveal-up">Still Louder</p>
+            <p class="hero-available reveal-up">
+              <span class="pulse-dot"></span>
+              Out now on every platform
+            </p>
+          </div>
+          <div class="hero-cta reveal-up">
+            <a href="#escuchar" class="btn btn-primary">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Listen Now
+            </a>
+            <button class="btn btn-secondary" id="share-btn" aria-label="Share">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              Share
+            </button>
+          </div>
+        </div>
+        <a href="#escuchar" class="scroll-indicator" aria-label="Scroll down">
+          <span class="scroll-arrow"></span>
+        </a>
+      </section>
+
+      <!-- Listen Section -->
+      <section class="section section-listen" id="escuchar">
+        <div class="section-container">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Listen</h2>
+            <p class="section-subtitle reveal-up">
+              "A Las 10" is now playing on your favorite platform
+            </p>
+          </header>
+
+          <!-- The official video embed (youtube-nocookie iframe, .video-wrapper)
+               returns here in Phase 2 of docs/features/nuevo-single.md. -->
+
+          <!-- Platform Links Grid -->
+          <nav class="platforms-grid" aria-label="Streaming platform links" role="navigation">
+            <a
+              href="https://open.spotify.com/track/3Bt2Rd8QLuPCd1i4UtgPDn"
+              class="platform-card glass-card reveal-up"
+              id="spotify-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to A Las 10 by Still Louder on  Spotify (opens in a new window)"
+            >
+              <div class="platform-icon platform-icon--spotify">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.669 11.538a.5.5 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686m.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858m.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288"
+                  />
+                </svg>
+              </div>
+              <span class="platform-name">Spotify</span>
+              <span class="platform-action">Play</span>
+            </a>
+
+            <a
+              href="https://music.apple.com/pa/album/a-las-10/6819517736?i=6819517737"
+              class="platform-card glass-card reveal-up"
+              id="apple-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to A Las 10 by Still Louder on  Apple Music (opens in a new window)"
+            >
+              <div class="platform-icon platform-icon--apple">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="m10.995 0 .573.001q.241 0 .483.007c.35.01.705.03 1.051.093.352.063.68.166.999.329a3.36 3.36 0 0 1 1.47 1.468c.162.32.265.648.328 1 .063.347.084.7.093 1.051q.007.241.007.483l.001.573v5.99l-.001.573q0 .241-.008.483c-.01.35-.03.704-.092 1.05a3.5 3.5 0 0 1-.33 1 3.36 3.36 0 0 1-1.468 1.468 3.5 3.5 0 0 1-1 .33 7 7 0 0 1-1.05.092q-.241.007-.483.008l-.573.001h-5.99l-.573-.001q-.241 0-.483-.008a7 7 0 0 1-1.052-.092 3.6 3.6 0 0 1-.998-.33 3.36 3.36 0 0 1-1.47-1.468 3.6 3.6 0 0 1-.328-1 7 7 0 0 1-.093-1.05Q.002 11.81 0 11.568V5.005l.001-.573q0-.241.007-.483c.01-.35.03-.704.093-1.05a3.6 3.6 0 0 1 .329-1A3.36 3.36 0 0 1 1.9.431 3.5 3.5 0 0 1 2.896.1 7 7 0 0 1 3.95.008Q4.19.002 4.432 0h.573zm-.107 2.518-4.756.959H6.13a.66.66 0 0 0-.296.133.5.5 0 0 0-.16.31c-.004.027-.01.08-.01.16v5.952c0 .14-.012.275-.106.39-.095.115-.21.15-.347.177l-.31.063c-.393.08-.65.133-.881.223a1.4 1.4 0 0 0-.519.333 1.25 1.25 0 0 0-.332.995c.031.297.166.582.395.792.156.142.35.25.578.296.236.047.49.031.858-.043.196-.04.38-.102.555-.205a1.4 1.4 0 0 0 .438-.405 1.5 1.5 0 0 0 .233-.55c.042-.202.052-.386.052-.588V6.347c0-.276.08-.35.302-.404.024-.005 3.954-.797 4.138-.833.257-.049.378.025.378.294v3.524c0 .14-.001.28-.096.396-.094.115-.211.15-.348.178l-.31.062c-.393.08-.649.133-.88.223a1.4 1.4 0 0 0-.52.334 1.26 1.26 0 0 0-.34.994c.03.297.174.582.404.792a1.2 1.2 0 0 0 .577.294c.237.048.49.03.858-.044.197-.04.381-.098.556-.202a1.4 1.4 0 0 0 .438-.405q.173-.252.233-.549a2.7 2.7 0 0 0 .044-.589V2.865c0-.273-.143-.443-.4-.42-.04.003-.383.064-.424.073"
+                  />
+                </svg>
+              </div>
+              <span class="platform-name">Apple Music</span>
+              <span class="platform-action">Play</span>
+            </a>
+
+            <a
+              href="https://www.youtube.com/@StillLouder"
+              class="platform-card glass-card reveal-up"
+              id="youtube-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Subscribe to Still Louder's YouTube channel (opens in a new window)"
+            >
+              <div class="platform-icon platform-icon--youtube">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+                  ></path>
+                </svg>
+              </div>
+              <span class="platform-name">YouTube</span>
+              <span class="platform-action">Subscribe</span>
+            </a>
+
+            <a
+              href="https://link.deezer.com/s/34D1I6YLOZ25jA56dvjAe"
+              class="platform-card glass-card reveal-up"
+              id="deezer-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to A Las 10 by Still Louder on  Deezer (opens in a new window)"
+            >
+              <div class="platform-icon platform-icon--deezer">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 28 28"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M18.81 4.16v3.03H24V4.16h-5.19zM6.27 8.38v3.027h5.189V8.38h-5.19zm12.54 0v3.027H24V8.38h-5.19zM6.27 12.594v3.027h5.189v-3.027h-5.19zm6.271 0v3.027h5.19v-3.027h-5.19zm6.27 0v3.027H24v-3.027h-5.19zM0 16.81v3.029h5.19v-3.03H0zm6.27 0v3.029h5.189v-3.03h-5.19zm6.271 0v3.029h5.19v-3.03h-5.19zm6.27 0v3.029H24v-3.03h-5.19Z"
+                  ></path>
+                </svg>
+              </div>
+              <span class="platform-name">Deezer</span>
+              <span class="platform-action">Play</span>
+            </a>
+
+            <a
+              href="https://music.amazon.com/tracks/B0HLYQGFQ9?marketplaceId=ATVPDKIKX0DER&amp;musicTerritory=US&amp;ref=dm_sh_qlYvdrhpbNpJl8xdZ0v9jhKnU"
+              class="platform-card glass-card reveal-up"
+              id="amazon-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to A Las 10 by Still Louder on  Amazon Music (opens in a new window)"
+            >
+              <div class="platform-icon platform-icon--amazon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 48 48"
+                  width="32"
+                  height="32"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="21.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></circle>
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M32.28 29.7c1.113-.45 3.092-1.048 3.688-.326c.644.781-.17 2.477-.92 3.794"
+                  ></path>
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11.798 30.223c1.759 1.397 6.954 3.535 12.488 3.535a17 17 0 0 0 10.167-3.08M20.404 20.125v3.3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-3.3m0 3.3v2m-14.004-3.2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3.2m-4-5.2v5.2m4-3.2a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3.2"
+                  ></path>
+                  <circle cx="31.88" cy="17.675" r=".7" fill="currentColor"></circle>
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M31.88 20.125v5.3m-5.34-.452a2.25 2.25 0 0 0 1.646.447h.448a1.324 1.324 0 0 0 1.322-1.325h0a1.324 1.324 0 0 0-1.322-1.325h-.897a1.324 1.324 0 0 1-1.322-1.325h0a1.324 1.324 0 0 1 1.322-1.325h.449a2.25 2.25 0 0 1 1.644.448m7.77 3.85a2 2 0 0 1-1.737 1.007h0a2 2 0 0 1-2-2v-1.3a2 2 0 0 1 2-2h0a2 2 0 0 1 1.735 1.004"
+                  ></path>
+                </svg>
+              </div>
+              <span class="platform-name">Amazon Music</span>
+              <span class="platform-action">Play</span>
+            </a>
+          </nav>
+        </div>
+      </section>
+
+      <!-- Shows Section -->
+      <!--
+        Fechas en vivo, en orden cronológico. Cada tarjeta es un <article>
+        .shows-card; la primera es la "próxima fecha".
+        Al pasar un show: borrar su tarjeta y su MusicEvent, y pasarlo a
+        "Último show" (checklist 1.5 de docs/main-site/seo-accessibility.md).
+
+        · 31 oct 2026 — Still Louder's Halloween Party, fecha propia con
+          flyer oficial (--featured) y venta DIRECTA en el ticket-system: el
+          CTA apunta a CONFIG.shows.upcoming.oct31.ticketsUrl
+          (assets/js/config.js). Conserva --next por el pulso del punto.
+
+        Cuenta regresiva: cada .shows-card__countdown con data-countdown la
+        rellena initShowsCountdown() (assets/js/main.js); el texto del HTML es
+        el fallback si el JS no corre.
+      -->
+      <section class="section section-shows" id="shows">
+        <div class="section-container">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Shows</h2>
+            <p class="section-subtitle reveal-up">Where to catch us live</p>
+          </header>
+
+          <div class="shows-upcoming">
+            <article class="shows-card shows-card--featured shows-card--next glass-card reveal-up">
+              <div class="shows-card__poster">
+                <picture>
+                  <source
+                    srcset="assets/images/shows/halloween-party-2026-10-31.avif"
+                    type="image/avif"
+                  />
+                  <source
+                    srcset="assets/images/shows/halloween-party-2026-10-31.webp"
+                    type="image/webp"
+                  />
+                  <img
+                    src="assets/images/shows/halloween-party-2026-10-31.jpg"
+                    alt="Flyer: Still Louder's Halloween Party at Hops Food &amp; Drinks. Special guests: Fábula Sarcástica and Elefreak."
+                    width="720"
+                    height="1280"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
+              </div>
+
+              <div class="shows-card__body">
+                <p class="shows-card__status">
+                  <span class="shows-card__dot" aria-hidden="true"></span>
+                  Next show · our own show
+                </p>
+
+                <h3 class="shows-card__title">Still Louder&rsquo;s Halloween Party</h3>
+                <p class="shows-card__role">ft. Fábula Sarcástica &amp; Elefreak</p>
+
+                <p class="shows-card__date shows-card__date--sm">
+                  <time datetime="2026-10-31T20:00:00-05:00">31 · 10 · 2026</time>
+                </p>
+                <p class="shows-card__countdown" data-countdown="2026-10-31T20:00:00-05:00">
+                  Saturday, October 31
+                </p>
+
+                <ul class="shows-card__meta">
+                  <li>Hops Food &amp; Drinks · David, Chiriquí</li>
+                  <li>8:00 PM</li>
+                </ul>
+
+                <p class="shows-card__text">
+                  Our Halloween night, with Fábula Sarcástica and Elefreak as special guests.
+                  Presale at <strong>$10</strong> for the first 100 tickets from October 1; after
+                  that, <strong>$12</strong>.
+                </p>
+
+                <a
+                  href="https://entradas.still-louder.com/halloween-party"
+                  class="btn btn-shows"
+                  data-shows-link="oct31_tickets"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Tickets for Still Louder's Halloween Party, October 31 at Hops Food &amp; Drinks (Spanish-only site, opens in a new window)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"
+                    />
+                    <line x1="13" y1="7" x2="13" y2="17" stroke-dasharray="2 2" />
+                  </svg>
+                  Tickets
+                </a>
+                <p class="shows-card__note">
+                  Sold directly by the band at entradas.still-louder.com — no middlemen. The ticket
+                  site is in Spanish only: you pay with Yappy, card or cash and your QR code arrives
+                  by email.
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <div class="shows-past reveal-up">
+            <h3 class="shows-past__title">Last show</h3>
+            <ul class="shows-past__list">
+              <li class="shows-past__item">
+                <span class="shows-past__date">
+                  <time datetime="2026-10-11">Oct 11, 2026</time>
+                </span>
+                <span class="shows-past__body">
+                  <strong class="shows-past__name">Stratovarius in Panama</strong>
+                  <span class="shows-past__venue">Aurora at Soho · Panama City</span>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Section -->
+      <section class="section section-about" id="about">
+        <div class="section-container">
+          <div class="about-grid">
+            <div class="about-image reveal-left">
+              <div class="about-image-frame">
+                <picture>
+                  <source
+                    srcset="assets/images/photoshoot/skirlaz/IMG_2433.avif"
+                    type="image/avif"
+                  />
+                  <source
+                    srcset="assets/images/photoshoot/skirlaz/IMG_2433.webp"
+                    type="image/webp"
+                  />
+                  <img
+                    src="assets/images/photoshoot/skirlaz/IMG_2433.jpg"
+                    alt="Still Louder - rock band from Chiriquí, Panama"
+                    loading="lazy"
+                    width="1280"
+                    height="1918"
+                  />
+                </picture>
+              </div>
+            </div>
+            <div class="about-content">
+              <header class="section-header section-header--left">
+                <h2 class="section-title reveal-up">Still Louder</h2>
+                <p class="section-subtitle reveal-up">Heavy Metal from Panama</p>
+              </header>
+              <div class="about-text">
+                <p class="reveal-up">
+                  <strong>Still Louder</strong> is a rock band from
+                  <strong>David, Chiriquí, Panama</strong>, formed in 2009. Their powerful,
+                  high-energy sound captures the essence of heavy metal: heavy guitars, deep bass
+                  and crushing drums.
+                </p>
+                <p class="reveal-up">
+                  Winners of <strong>Hard Rock Rising Panama 2013</strong> and ranked among the
+                  <strong>35 most-voted bands worldwide</strong> in that competition. In 2015, their
+                  album <em>In Hostilia</em> made the
+                  <strong>Headbangers Latino América Top 250</strong>.
+                </p>
+                <p class="reveal-up">
+                  They have shared the stage with international acts such as 2 Minutos (Argentina)
+                  and Mantra (Costa Rica), as well as leading Panamanian bands like Cabeza de
+                  Martillo, Llevarte a Marte and MD.
+                </p>
+                <p class="reveal-up">
+                  After a hiatus that began in 2016, the band returned in 2024 with its
+                  <strong>original lineup</strong>:
+                </p>
+                <ul class="about-members reveal-up" aria-label="Still Louder members">
+                  <li class="about-members__item">
+                    <span class="about-members__name">Carlos “Toty” Franceschi</span>
+                    <span class="about-members__role">Vocals and guitar</span>
+                  </li>
+                  <li class="about-members__item">
+                    <span class="about-members__name">Alexis “Alexo” Jiménez</span>
+                    <span class="about-members__role">Guitar and backing vocals</span>
+                  </li>
+                  <li class="about-members__item">
+                    <span class="about-members__name">Renán “Nancho” Díaz</span>
+                    <span class="about-members__role">Bass</span>
+                  </li>
+                  <li class="about-members__item">
+                    <span class="about-members__name">Víctor “Vicho” Rivera</span>
+                    <span class="about-members__role">Drums</span>
+                  </li>
+                </ul>
+                <p class="reveal-up">
+                  <em
+                    >"A Las 10" (2026) is their latest single, following "Skirlaz" (2026), "Al
+                    Vacío" (2025) and "Litio+" (2024). With their return, Still Louder has become
+                    one of the driving forces behind the rock and metal revival in Chiriquí.</em
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section class="section section-faq" id="faq">
+        <div class="section-container section-container--narrow">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Frequently asked questions</h2>
+            <p class="section-subtitle reveal-up">What people ask us most about the band</p>
+          </header>
+
+          <div class="faq-list reveal-up">
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">Where can I listen to Still Louder?</summary>
+              <div class="faq-item__a">
+                <p>
+                  On every platform: Spotify, Apple Music, YouTube, Deezer and Amazon Music. You'll
+                  find all the links in the
+                  <a href="#escuchar">Listen</a> section.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">How do I buy tickets for your shows?</summary>
+              <div class="faq-item__a">
+                <p>
+                  Our next show (the link is in the <a href="#shows">Shows</a> section) is on
+                  <strong>October 31, 2026</strong> — Still Louder&rsquo;s Halloween Party at Hops
+                  Food &amp; Drinks, David — and tickets are sold online directly by the band at
+                  <a
+                    href="https://entradas.still-louder.com/halloween-party"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >entradas.still-louder.com</a
+                  >
+                  (Spanish-only site), never through middlemen: $10 presale from October 1 (first
+                  100 tickets) and $12 after that. If you have a question about a previous purchase,
+                  write to us or check the
+                  <a
+                    href="https://entradas.still-louder.com/ayuda"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >ticket help and FAQ</a
+                  >
+                  (in Spanish).
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">Do you have merch or an official store?</summary>
+              <div class="faq-item__a">
+                <p>
+                  Yes. Get merch and more at our
+                  <a
+                    href="https://cuanto.app/still_louder"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >official store</a
+                  >.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">How do I book you for my event?</summary>
+              <div class="faq-item__a">
+                <p>
+                  We love playing live! Write to us from the <a href="#contacto">Contact</a> section
+                  with the date, venue and details of your event, and we'll get back to you to
+                  coordinate.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">Where is the band from?</summary>
+              <div class="faq-item__a">
+                <p>
+                  Still Louder is a rock band from <strong>David, Chiriquí, Panama</strong>, formed
+                  in 2009. Learn more in the <a href="#about">Band</a> section.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">Who are the band members?</summary>
+              <div class="faq-item__a">
+                <p>
+                  The original lineup, reunited in 2024: Carlos “Toty” Franceschi (vocals and
+                  guitar), Alexis “Alexo” Jiménez (guitar and backing vocals), Renán “Nancho” Díaz
+                  (bass) and Víctor “Vicho” Rivera (drums).
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item glass-card">
+              <summary class="faq-item__q">Where can I follow you on social media?</summary>
+              <div class="faq-item__a">
+                <p>
+                  On Instagram, Facebook, YouTube and TikTok. All the links are in the
+                  <a href="#conectar">Connect</a> section.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connect Section -->
+      <section class="section section-connect" id="conectar">
+        <div class="section-container">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Connect</h2>
+            <p class="section-subtitle reveal-up">Follow us on social media</p>
+          </header>
+
+          <div class="social-grid reveal-up">
+            <a
+              href="https://www.instagram.com/still_louder/"
+              class="social-card glass-card social-card--instagram"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Still Louder on  Instagram (opens in a new window)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
+                />
+              </svg>
+              <span class="social-name">Instagram</span>
+              <span class="social-handle">@still_louder</span>
+            </a>
+
+            <a
+              href="https://www.facebook.com/share/1FRfEeLhhp/?mibextid=wwXIfr"
+              class="social-card glass-card social-card--facebook"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Still Louder on  Facebook (opens in a new window)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                />
+              </svg>
+              <span class="social-name">Facebook</span>
+              <span class="social-handle">/stilllouder</span>
+            </a>
+
+            <a
+              href="https://www.youtube.com/@StillLouder"
+              class="social-card glass-card social-card--youtube"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Subscribe to Still Louder's YouTube channel (opens in a new window)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+                />
+              </svg>
+              <span class="social-name">YouTube</span>
+              <span class="social-handle">@StillLouder</span>
+            </a>
+
+            <a
+              href="https://www.tiktok.com/@stilllouder.pa"
+              class="social-card glass-card social-card--tiktok"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Still Louder on  TikTok (opens in a new window)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"
+                />
+              </svg>
+              <span class="social-name">TikTok</span>
+              <span class="social-handle">@stilllouder.pa</span>
+            </a>
+          </div>
+
+          <!-- Store Link -->
+          <div class="store-wrapper reveal-up">
+            <a
+              href="https://cuanto.app/still_louder"
+              class="store-card glass-card"
+              id="cuanto-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visit the official store on Cuanto (opens in a new window)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              <div class="store-text">
+                <span class="store-title">Official Store</span>
+                <span class="store-subtitle">Merch & more</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact Section -->
+      <section class="section section-contact" id="contacto">
+        <div class="section-container section-container--narrow">
+          <header class="section-header">
+            <h2 class="section-title reveal-up">Contact</h2>
+            <p class="section-subtitle reveal-up">Booking, press or a question? Write to us</p>
+          </header>
+
+          <form class="contact-form glass-card reveal-up" id="contact-form" novalidate>
+            <div class="contact-form__field">
+              <label for="contact-name">Name</label>
+              <input
+                id="contact-name"
+                name="name"
+                type="text"
+                autocomplete="name"
+                required
+                minlength="2"
+              />
+            </div>
+
+            <div class="contact-form__field">
+              <label for="contact-email">Email</label>
+              <input id="contact-email" name="email" type="email" autocomplete="email" required />
+            </div>
+
+            <div class="contact-form__field">
+              <label for="contact-message">Message</label>
+              <textarea
+                id="contact-message"
+                name="message"
+                rows="5"
+                required
+                minlength="10"
+              ></textarea>
+            </div>
+
+            <!-- Honeypot anti-spam: oculto para humanos, tentador para bots. Si
+                 viene lleno, descartamos el envío en silencio. -->
+            <div class="contact-form__hp" aria-hidden="true">
+              <label for="contact-website">Leave this field empty</label>
+              <input
+                id="contact-website"
+                name="website"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary contact-form__submit" id="contact-submit">
+              Send message
+            </button>
+
+            <p class="contact-form__alt">
+              Or message us directly on
+              <a
+                href="https://www.instagram.com/still_louder/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Instagram</a
+              >.
+            </p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-content">
+        <p class="footer-copyright">&copy; 2026 Still Louder. All rights reserved.</p>
+        <p class="footer-location">Chiriquí, Panama</p>
+      </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- Service Worker Registration -->
+    <script type="module" src="/assets/js/sw-register.js"></script>
+
+    <!-- Main Application Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
+  </body>
+</html>

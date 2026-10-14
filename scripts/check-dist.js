@@ -10,6 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dist = path.resolve(__dirname, '..', 'dist');
 
 const REQUIRED = [
+  '/en',
   '/sw.js',
   '/offline.html',
   '/robots.txt',
@@ -25,7 +26,8 @@ const check = (label, url) => {
   }
   const pathname = decodeURIComponent(new URL(url, 'http://local/').pathname);
   const file = path.join(dist, pathname.endsWith('/') ? `${pathname}index.html` : pathname);
-  const ok = existsSync(file);
+  // Extensionless page URLs (/en) are served from <name>.html (Cloudflare html_handling)
+  const ok = existsSync(file) || (!path.extname(file) && existsSync(`${file}.html`));
   if (!ok) {
     failures++;
   }

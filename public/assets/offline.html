@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
-    <title>Sin conexión - Still Louder</title>
+    <title>Sin conexión · Offline - Still Louder</title>
     <meta
       name="description"
-      content="No hay conexión a internet. Por favor, verifica tu conexión."
+      content="No hay conexión a internet. Por favor, verifica tu conexión. / No internet connection. Please check your connection."
     />
     <meta name="theme-color" content="#140505" />
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -126,6 +126,13 @@
         color: #cccccc;
         margin-bottom: 10px;
         font-weight: 500;
+      }
+
+      /* Bilingual page (single offline fallback for / and /en): English line under each Spanish one */
+      .subtitle-en {
+        font-size: 1.1rem;
+        color: #999999;
+        margin: -5px 0 20px;
       }
 
       .description {
@@ -331,40 +338,55 @@
       </div>
 
       <h1>Sin Conexión</h1>
+      <p class="subtitle-en" lang="en">You're offline</p>
 
       <div class="connection-indicator">
         <span class="status-dot" id="status-dot"></span>
-        <span class="status-text" id="status-text">Desconectado</span>
+        <span class="status-text" id="status-text">Desconectado · Offline</span>
       </div>
 
       <p class="description">
         Parece que no tienes conexión a internet en este momento. Por favor, verifica tu conexión e
         intenta nuevamente.
+        <br />
+        <span lang="en"
+          >It looks like you don't have an internet connection right now. Please check your
+          connection and try again.</span
+        >
       </p>
 
       <div class="actions">
         <button class="btn btn-primary" id="retry-btn" onclick="retryConnection()">
           <span class="spinner"></span>
-          <span class="btn-text">Reintentar Conexión</span>
+          <span class="btn-text">Reintentar · <span lang="en">Retry</span></span>
         </button>
-        <button class="btn btn-secondary" onclick="goBack()">Volver Atrás</button>
+        <button class="btn btn-secondary" onclick="goBack()">
+          Volver atrás · <span lang="en">Go back</span>
+        </button>
       </div>
 
       <div class="features">
         <div class="feature">
           <div class="feature-icon">🎵</div>
-          <div class="feature-title">Música</div>
-          <div class="feature-text">Contenido disponible cuando reconectes</div>
+          <div class="feature-title">Música · <span lang="en">Music</span></div>
+          <div class="feature-text">
+            Contenido disponible cuando reconectes ·
+            <span lang="en">Available when you reconnect</span>
+          </div>
         </div>
         <div class="feature">
           <div class="feature-icon">📱</div>
           <div class="feature-title">PWA</div>
-          <div class="feature-text">Funciona como una app nativa</div>
+          <div class="feature-text">
+            Funciona como una app nativa · <span lang="en">Works like a native app</span>
+          </div>
         </div>
         <div class="feature">
           <div class="feature-icon">⚡</div>
-          <div class="feature-title">Rápido</div>
-          <div class="feature-text">Carga instantánea al reconectar</div>
+          <div class="feature-title">Rápido · <span lang="en">Fast</span></div>
+          <div class="feature-text">
+            Carga instantánea al reconectar · <span lang="en">Instant load on reconnect</span>
+          </div>
         </div>
       </div>
 
@@ -380,7 +402,7 @@
 
         if (isOnline) {
           statusDot.classList.add('online');
-          statusText.textContent = 'Conectado';
+          statusText.textContent = 'Conectado · Online';
 
           // Auto-reload after a short delay to verify connection
           setTimeout(() => {
@@ -388,7 +410,7 @@
           }, 1000);
         } else {
           statusDot.classList.remove('online');
-          statusText.textContent = 'Desconectado';
+          statusText.textContent = 'Desconectado · Offline';
         }
       }
 
@@ -408,11 +430,12 @@
             btn.classList.remove('loading');
 
             // Show feedback
-            const originalText = btn.querySelector('.btn-text').textContent;
-            btn.querySelector('.btn-text').textContent = 'Aún sin conexión';
+            const label = btn.querySelector('.btn-text');
+            const originalHtml = label.innerHTML;
+            label.textContent = 'Aún sin conexión · Still offline';
 
             setTimeout(() => {
-              btn.querySelector('.btn-text').textContent = originalText;
+              label.innerHTML = originalHtml;
             }, 2000);
           });
       }

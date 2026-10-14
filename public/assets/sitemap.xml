@@ -1,15 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://still-louder.com/</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://still-louder.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://still-louder.com/en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://still-louder.com/" />
     <image:image>
       <image:loc>https://still-louder.com/images/album_covers/a-las-10.jpeg</image:loc>
       <image:title>Portada del sencillo A Las 10 de Still Louder</image:title>
       <image:caption>Artwork oficial del sencillo A Las 10 de Still Louder, banda de rock panameña</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://still-louder.com/en</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://still-louder.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://still-louder.com/en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://still-louder.com/" />
+    <image:image>
+      <image:loc>https://still-louder.com/images/album_covers/a-las-10.jpeg</image:loc>
+      <image:title>Cover art of the single A Las 10 by Still Louder</image:title>
+      <image:caption>Official artwork for the single A Las 10 by Still Louder, a rock band from Panama</image:caption>
     </image:image>
   </url>
   <url>

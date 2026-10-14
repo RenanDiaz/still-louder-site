@@ -5,6 +5,7 @@
 
 import CONFIG from './config.js';
 import analytics from './analytics.js';
+import { t } from './i18n.js';
 
 class ShareManager {
   constructor() {
@@ -20,8 +21,8 @@ class ShareManager {
   async share(options = {}) {
     const shareData = {
       title: options.title || `${CONFIG.release.artist} - ${CONFIG.release.title}`,
-      text: options.text || CONFIG.site.description,
-      url: options.url || CONFIG.site.url
+      text: options.text || t(CONFIG.site.description),
+      url: options.url || t(CONFIG.site.pageUrl)
     };
 
     // Try Web Share API first (mobile/modern browsers)
@@ -29,7 +30,7 @@ class ShareManager {
       try {
         await navigator.share(shareData);
         analytics.trackShare('Web Share API');
-        this.showToast(CONFIG.messages.success.shareSuccess);
+        this.showToast(t(CONFIG.messages).success.shareSuccess);
         return true;
       } catch (error) {
         // User cancelled or error occurred
@@ -58,12 +59,12 @@ class ShareManager {
     try {
       await navigator.clipboard.writeText(url);
       analytics.trackShare('Copy to Clipboard');
-      this.showToast(CONFIG.messages.success.copiedToClipboard);
+      this.showToast(t(CONFIG.messages).success.copiedToClipboard);
       return true;
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
       analytics.trackError('clipboard_error', error.message);
-      this.showToast(CONFIG.messages.error.shareFailed, 'error');
+      this.showToast(t(CONFIG.messages).error.shareFailed, 'error');
       return false;
     }
   }
@@ -90,7 +91,7 @@ class ShareManager {
 
       if (successful) {
         analytics.trackShare('Legacy Copy');
-        this.showToast(CONFIG.messages.success.copiedToClipboard);
+        this.showToast(t(CONFIG.messages).success.copiedToClipboard);
         return true;
       }
     } catch (error) {
@@ -98,7 +99,7 @@ class ShareManager {
       document.body.removeChild(textArea);
     }
 
-    this.showToast(CONFIG.messages.error.shareFailed, 'error');
+    this.showToast(t(CONFIG.messages).error.shareFailed, 'error');
     return false;
   }
 
@@ -181,14 +182,14 @@ class ShareManager {
   createShareButton(options = {}) {
     const button = document.createElement('button');
     button.className = options.className || 'share-button';
-    button.setAttribute('aria-label', 'Compartir');
+    button.setAttribute('aria-label', t({ es: 'Compartir', en: 'Share' }));
 
     // Share icon SVG
     button.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
         <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
       </svg>
-      <span>${options.label || 'Compartir'}</span>
+      <span>${options.label || t({ es: 'Compartir', en: 'Share' })}</span>
     `;
 
     button.addEventListener('click', () => this.share(options.shareData));

@@ -9,7 +9,7 @@ written from the code. Remaining gaps are listed under **Known issues**.
 |---|---|---|
 | `public/assets/sw.js` | Service worker: precache, runtime caching, offline fallback, message API | `/sw.js` (verbatim) |
 | `public/assets/js/sw-register.js` | Registers the SW, shows the update banner and install prompt, and emits the analytics events. Self-contained IIFE, loaded as `<script type="module">` | Bundled with a hash into `/assets/js/` |
-| `public/assets/offline.html` | Offline fallback page (inline CSS/JS, retry button, auto-reloads when back online) | `/offline.html` (verbatim; Cloudflare serves it at `/offline` too) |
+| `public/assets/offline.html` | Offline fallback page, bilingual ES/EN since it is the single fallback for `/` and `/en` (inline CSS/JS, retry button, auto-reloads when back online) | `/offline.html` (verbatim; Cloudflare serves it at `/offline` too) |
 | `public/assets/site.webmanifest` | Web app manifest | `/site.webmanifest` (verbatim, unhashed) |
 | `public/index.html`, `public/al-vacio-pre-release.html` | Link the manifest (`<link rel="manifest" href="/site.webmanifest">`) and load `sw-register.js` with `<script type="module" src="/assets/js/sw-register.js">` | Built entries |
 | `public/assets/js/main.js` | `initPWAShortcuts()` handles `?action=` from manifest shortcuts | Bundled |
@@ -29,8 +29,8 @@ manifest must reference other publicDir files by their root path
 ### Cache names and versioning
 
 ```js
-const CACHE_VERSION   = 'still-louder-v1.4.0';
-const OFFLINE_VERSION = 'still-louder-offline-v1.3.0';
+const CACHE_VERSION   = 'still-louder-v1.7.0';
+const OFFLINE_VERSION = 'still-louder-offline-v1.4.0';
 ```
 
 | Cache | Name | Contents |
@@ -77,10 +77,10 @@ age limits.
 
 ### Precache list (`PRECACHE_URLS`)
 
-`/`, `/site.webmanifest`, `/favicon-96x96.png`, `/favicon.svg`,
+`/`, `/en` (English landing, `dist/en.html`), `/site.webmanifest`, `/favicon-96x96.png`, `/favicon.svg`,
 `/apple-touch-icon.png`, `/web-app-manifest-192x192.png`,
 `/web-app-manifest-512x512.png`, and the Google Fonts CSS with **exactly** the
-URL `index.html` loads (`Inter:wght@400;500;600;700&family=Bebas+Neue`).
+URL `index.html` and `en.html` load (`Inter:wght@400;500;600;700&family=Bebas+Neue`).
 
 Only URLs that exist **unhashed** in `dist/` belong here. Hashed CSS/JS bundles
 change name on every build, so the runtime cache picks them up instead. Clean-URL
@@ -90,7 +90,8 @@ Cloudflare (`html_handling`) redirects them, and a redirected response cannot an
 `cache.addAll()` is all-or-nothing. If **any** URL fails (404, network error,
 CSP block), the install promise rejects, the SW never activates, and the browser
 tries again on the next update check. After touching this list, run
-`npm run build` and confirm every entry exists in `dist/`.
+`npm run build && npm run check:dist`, which confirms every entry exists in
+`dist/` (an extensionless page URL like `/en` counts as `dist/en.html`).
 
 `/offline.html` is cached separately by `cacheOfflinePage()`. Cloudflare
 (`html_handling`) answers it with a redirect to

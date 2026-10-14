@@ -114,8 +114,15 @@ export const CONFIG = {
   site: {
     name: 'Still Louder',
     url: 'https://still-louder.com/',
-    description:
-      '¡Ya disponible! Escucha "A Las 10", el nuevo sencillo de Still Louder, en todas las plataformas digitales.',
+    // Per language (`t()` from i18n.js); `url` is the canonical of each page.
+    description: {
+      es: '¡Ya disponible! Escucha "A Las 10", el nuevo sencillo de Still Louder, en todas las plataformas digitales.',
+      en: 'Out now! Listen to "A Las 10", the new single by Still Louder, on every streaming platform.'
+    },
+    pageUrl: {
+      es: 'https://still-louder.com/',
+      en: 'https://still-louder.com/en'
+    },
     locale: 'es_PA',
     themeColor: '#140505'
   },
@@ -186,23 +193,46 @@ export const CONFIG = {
     loadingDelay: 300
   },
 
-  // Error Messages
+  // User-facing messages, per language. Read them through `t()` from i18n.js:
+  // `t(CONFIG.messages).error.generic`. Both languages must define every key.
   messages: {
-    error: {
-      generic: 'Ocurrió un error. Por favor, intenta de nuevo.',
-      network: 'No hay conexión a internet. Verifica tu conexión.',
-      commentEmpty: 'Por favor, escribe un comentario antes de enviar.',
-      commentFailed: 'Ocurrió un error al enviar. Intenta de nuevo.',
-      contactIncomplete: 'Completa tu nombre, correo y mensaje antes de enviar.',
-      contactInvalidEmail: 'Revisa tu correo: parece inválido.',
-      contactFailed: 'No se pudo enviar tu mensaje. Intenta de nuevo.',
-      shareFailed: 'No se pudo compartir el contenido.'
+    es: {
+      error: {
+        generic: 'Ocurrió un error. Por favor, intenta de nuevo.',
+        network: 'No hay conexión a internet. Verifica tu conexión.',
+        commentEmpty: 'Por favor, escribe un comentario antes de enviar.',
+        commentFailed: 'Ocurrió un error al enviar. Intenta de nuevo.',
+        contactIncomplete: 'Completa tu nombre, correo y mensaje antes de enviar.',
+        contactInvalidEmail: 'Revisa tu correo: parece inválido.',
+        contactFailed: 'No se pudo enviar tu mensaje. Intenta de nuevo.',
+        shareFailed: 'No se pudo compartir el contenido.',
+        copyFailed: 'No se pudo copiar el enlace'
+      },
+      success: {
+        commentSent: '¡Gracias por tu comentario!',
+        contactSent: '¡Mensaje enviado! Te responderemos pronto.',
+        shareSuccess: '¡Contenido compartido exitosamente!',
+        copiedToClipboard: '¡Enlace copiado al portapapeles!'
+      }
     },
-    success: {
-      commentSent: '¡Gracias por tu comentario!',
-      contactSent: '¡Mensaje enviado! Te responderemos pronto.',
-      shareSuccess: '¡Contenido compartido exitosamente!',
-      copiedToClipboard: '¡Enlace copiado al portapapeles!'
+    en: {
+      error: {
+        generic: 'Something went wrong. Please try again.',
+        network: 'No internet connection. Check your connection.',
+        commentEmpty: 'Please write a comment before sending.',
+        commentFailed: 'Something went wrong while sending. Please try again.',
+        contactIncomplete: 'Please fill in your name, email and message before sending.',
+        contactInvalidEmail: 'Check your email address: it looks invalid.',
+        contactFailed: "Your message couldn't be sent. Please try again.",
+        shareFailed: "Couldn't share the content.",
+        copyFailed: "Couldn't copy the link"
+      },
+      success: {
+        commentSent: 'Thanks for your comment!',
+        contactSent: "Message sent! We'll get back to you soon.",
+        shareSuccess: 'Shared successfully!',
+        copiedToClipboard: 'Link copied to clipboard!'
+      }
     }
   }
 };
@@ -214,11 +244,15 @@ Object.freeze(CONFIG.social);
 Object.freeze(CONFIG.analytics);
 Object.freeze(CONFIG.release);
 Object.freeze(CONFIG.site);
+Object.freeze(CONFIG.site.description);
+Object.freeze(CONFIG.site.pageUrl);
 Object.freeze(CONFIG.comments);
 Object.freeze(CONFIG.contact);
 Object.freeze(CONFIG.features);
 Object.freeze(CONFIG.ui);
 Object.freeze(CONFIG.messages);
+Object.freeze(CONFIG.messages.es);
+Object.freeze(CONFIG.messages.en);
 Object.freeze(CONFIG.store);
 Object.freeze(CONFIG.shows);
 Object.freeze(CONFIG.shows.upcoming);

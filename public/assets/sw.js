@@ -6,8 +6,8 @@
 // PRECACHE_URLS pasó a contener solo URLs estables de dist/ (los CSS/JS con hash
 // los toma la caché de runtime).
 
-const CACHE_VERSION = 'still-louder-v1.6.1';
-const OFFLINE_VERSION = 'still-louder-offline-v1.3.0';
+const CACHE_VERSION = 'still-louder-v1.7.0';
+const OFFLINE_VERSION = 'still-louder-offline-v1.4.0';
 
 // Cache names
 const PRECACHE_NAME = `${CACHE_VERSION}-precache`;
@@ -21,13 +21,15 @@ const OFFLINE_CACHE_NAME = OFFLINE_VERSION;
 // all-or-nothing, so a single 404 here stops the SW from installing.
 const PRECACHE_URLS = [
   '/',
+  // English landing (dist/en.html, served extensionless by Cloudflare html_handling)
+  '/en',
   '/site.webmanifest',
   '/favicon-96x96.png',
   '/favicon.svg',
   '/apple-touch-icon.png',
   '/web-app-manifest-192x192.png',
   '/web-app-manifest-512x512.png',
-  // Must match the stylesheet URL in index.html exactly.
+  // Must match the stylesheet URL in index.html and en.html exactly.
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap'
 ];
 
