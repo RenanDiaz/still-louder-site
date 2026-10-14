@@ -5,12 +5,14 @@
 > (`click_shows`, `data-shows-link`). Este spec cubre **solo** el lado de
 > `entradas.still-louder.com`.
 
-## Estado: implementado (5 oct 2026) — falta la puesta en marcha manual
+## Estado: implementado (5 oct 2026) y en marcha (verificado 14 oct 2026)
 
-Código implementado según este spec. Antes de que llegue el primer `purchase`
-hay que seguir la [Guía de puesta en marcha](#guía-de-puesta-en-marcha) (migración,
-secreto, GA4 Admin). Mientras tanto, el funnel del cliente funciona igual
-y el servidor no envía nada.
+Código implementado según este spec y [puesta en marcha](#guía-de-puesta-en-marcha)
+completa: migración `0014` aplicada, `GA_MP_API_SECRET` cargado (los `purchase`
+de servidor llegan a GA4 desde el 12 oct), unwanted referral de
+`still-louder.com`, las 5 dimensiones personalizadas y `purchase` como key event.
+Las compras pagadas antes de cargar el secreto no se enviaron y no se
+recuperan (el `purchase` solo sale al pasar la orden a `paid`).
 
 Desviaciones deliberadas:
 
