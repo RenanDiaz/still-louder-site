@@ -17,11 +17,40 @@ meta tags, JSON-LD and the sitemap do not, so they must use `/images/...`.
 
 ## 1. SEO
 
+### 1.0 Languages (`/` and `/en`)
+
+The landing exists in Spanish (`public/index.html`, `/`) and English
+(`public/en.html`, `/en`) — spec `docs/features/i18n-main-site-en.md`. They are
+two hand-edited copies, so **every content change goes in both files**.
+`npm run validate` runs `scripts/check-i18n.js`, which fails when their element
+ids, links, images, `data-*`, `datetime`s, element counts, non-text meta or
+JSON-LD data (everything except `description`, `roleName`, `Offer.name` and
+`WebSite.inLanguage`) differ. It cannot check that the translation is right.
+
+- Each page has its own canonical (`/` and `/en`) and the same reciprocal trio
+  `<link rel="alternate" hreflang="es|en|x-default">` (x-default → `/`). The
+  sitemap repeats it with `xhtml:link` on both URLs.
+- `og:locale` is `es_PA` on `/` and `en_US` on `/en`, each with the other as
+  `og:locale:alternate`. `WebSite.inLanguage` is `es` / `en`;
+  `MusicRecording.inLanguage` stays `es` on both (the song is in Spanish).
+- No automatic redirect by browser language. The header has an `ES | EN`
+  switch (`.lang-switch`, visible at every width); `initLangSwitch()` in
+  `main.js` carries the section being read (`/#faq` → `/en#faq`) and sends
+  `language_switch` `{ from, to }` to GA4.
+- JS-generated copy (toasts, countdown, PWA prompts, contact message labels)
+  is picked by `<html lang>` through `t()` from `assets/js/i18n.js`;
+  `CONFIG.messages` is `{ es, en }`. Messages sent from `/en`'s contact form
+  start with `[EN]`.
+- Links to Spanish-only destinations (ticket system, `/ayuda`) say so in `/en`.
+- Not translated: song titles, band/venue names, nicknames, `/links`,
+  `al-vacio-pre-release`, the ticket system.
+
 ### 1.1 Head metadata (both pages)
 
 - `<title>`, `meta description`, `meta keywords` (search engines ignore
   keywords), `meta robots` = `index, follow, max-image-preview:large, ...`.
-- `<link rel="canonical">`: home `https://still-louder.com/`, pre-release
+- `<link rel="canonical">`: home `https://still-louder.com/`, English home
+  `https://still-louder.com/en`, pre-release
   `https://still-louder.com/al-vacio-pre-release`. There is no `.html`
   suffix because `html_handling: auto-trailing-slash` is set in
   `wrangler.jsonc`.
@@ -48,7 +77,7 @@ meta tags, JSON-LD and the sitemap do not, so they must use `/images/...`.
 
 | Page | Types |
 |---|---|
-| `index.html` | `MusicRecording` (A Las 10, with `recordingOf` `MusicComposition`, `inAlbum` `MusicAlbum` Single, `offers` `AggregateOffer` of streaming links), `MusicGroup` (`@id` `https://still-louder.com/#band`, sameAs, foundingLocation), two `MusicEvent` blocks (one per upcoming show, with `location` `MusicVenue`, `performer`, `offers`), `WebSite` |
+| `index.html` / `en.html` | `MusicRecording` (A Las 10, with `recordingOf` `MusicComposition`, `inAlbum` `MusicAlbum` Single, `offers` `AggregateOffer` of streaming links), `MusicGroup` (`@id` `https://still-louder.com/#band`, sameAs, foundingLocation), two `MusicEvent` blocks (one per upcoming show, with `location` `MusicVenue`, `performer`, `offers`), `WebSite` |
 | `al-vacio-pre-release.html` | `MusicRecording` (Al Vacío), `MusicGroup` (same `#band` `@id`), `WebPage` with `BreadcrumbList` (Inicio > Al Vacío) |
 
 Other blocks reference the band as `{ "@id": "https://still-louder.com/#band" }`.
@@ -56,9 +85,10 @@ Keep that `@id` stable.
 
 ### 1.3 Sitemap and robots
 
-- `public/assets/sitemap.xml` lists two URLs: `/` (priority 1.0, image = A Las 10
-  cover) and `/al-vacio-pre-release` (priority 0.8, image = Al Vacío cover). It
-  uses the `image:` sitemap extension. `/links` is deliberately **not** listed
+- `public/assets/sitemap.xml` lists three URLs: `/` (priority 1.0, image = A Las 10
+  cover), `/en` (priority 0.9, same image, English captions) and
+  `/al-vacio-pre-release` (priority 0.8, image = Al Vacío cover). It uses the
+  `image:` and `xhtml:link` (hreflang alternates of `/` and `/en`) extensions. `/links` is deliberately **not** listed
   (it is `noindex`).
 - `public/assets/robots.txt`: a single `User-agent: *` group with `Allow: /`
   and `Disallow` for `/*.mp3$`, `/.git/`, `/node_modules/` and `/dist/`, plus
@@ -68,6 +98,9 @@ Keep that `@id` stable.
   Google needs them to render.
 
 ### 1.4 Checklist: new release (new single on the home page)
+
+Every `public/index.html` step below applies to `public/en.html` too (in
+English), and `sitemap.xml` has an `/en` entry to update as well.
 
 1. `public/index.html`: `<title>`, `description`, `keywords`, all `og:*`,
    `music:release_date`, `music:preview_url:youtube`, all `twitter:*`
@@ -93,18 +126,19 @@ Keep that `@id` stable.
 Each show needs a card in `#shows` (flyer `<picture>` with a descriptive
 `alt`, plus a ticket link with `aria-label`) and a matching `MusicEvent`
 JSON-LD block. When a show has passed, remove its `MusicEvent` block and move
-the card to the "Último show" list. Shows also have a card in `public/links.html`
+the card to the "Último show" list. Do it in **both** `index.html` and `en.html`
+("Last show"); `npm run validate` fails if they drift. Shows also have a card in `public/links.html`
 (same `ticketsUrl` as `config.js`, `data-expires` = end of the show); delete it
 once the show has passed.
 
 ### 1.6 Checklist: domain change
 
 Grep `public/` for the old host and replace it in all of these places:
-canonical, `og:url`, `og:image*`, `music:*`, `twitter:image`, every JSON-LD
+canonical, `hreflang` alternates (both pages), `og:url`, `og:image*`, `music:*`, `twitter:image`, every JSON-LD
 `url`/`@id`/`image`/`item`/`urlTemplate`, `sitemap.xml` (`loc`,
 `image:loc`), `robots.txt` (comment and `Sitemap:`), `.well-known/security.txt`
-(`Contact`, `Canonical`), `assets/js/config.js` (share URL, ticket/help URLs),
-and `assets/js/main.js` (share URL). Also update `site.webmanifest` if it
+(`Contact`, `Canonical`), `assets/js/config.js` (`site.url`, `site.pageUrl`,
+ticket/help URLs), in both `index.html` and `en.html`. Also update `site.webmanifest` if it
 contains absolute URLs. Then resubmit the sitemap in Search Console.
 
 ---

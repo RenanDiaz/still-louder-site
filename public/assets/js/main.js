@@ -4,6 +4,7 @@
  */
 
 import APP_CONFIG from './config.js';
+import { lang, t } from './i18n.js';
 
 // ============================================
 // CONFIGURATION
@@ -16,8 +17,11 @@ const CONFIG = {
   toastDuration: 3000,
   share: {
     title: 'Still Louder - A Las 10',
-    text: 'Escucha "A Las 10", el nuevo sencillo de Still Louder - Rock panameño disponible ahora en todas las plataformas.',
-    url: 'https://still-louder.com/'
+    text: t({
+      es: 'Escucha "A Las 10", el nuevo sencillo de Still Louder - Rock panameño disponible ahora en todas las plataformas.',
+      en: 'Listen to "A Las 10", the new single by Still Louder - Panamanian rock, out now on every platform.'
+    }),
+    url: t(APP_CONFIG.site.pageUrl)
   },
   analytics: {
     enabled: typeof gtag !== 'undefined'
@@ -276,13 +280,13 @@ const initShare = () => {
 const fallbackCopyToClipboard = async (text) => {
   try {
     await navigator.clipboard.writeText(text);
-    showToast('Enlace copiado al portapapeles', 'success');
+    showToast(t(APP_CONFIG.messages).success.copiedToClipboard, 'success');
     trackEvent('share', {
       event_category: 'engagement',
       event_label: 'clipboard_copy'
     });
   } catch (err) {
-    showToast('No se pudo copiar el enlace', 'error');
+    showToast(t(APP_CONFIG.messages).error.copyFailed, 'error');
   }
 };
 
@@ -390,7 +394,10 @@ const initShowsCountdown = () => {
     const days = Math.ceil((target.getTime() - Date.now()) / msPerDay);
     if (days <= 0) return;
 
-    el.textContent = days === 1 ? 'Falta 1 día' : `Faltan ${days} días`;
+    el.textContent = t({
+      es: days === 1 ? 'Falta 1 día' : `Faltan ${days} días`,
+      en: days === 1 ? '1 day to go' : `${days} days to go`
+    });
   });
 };
 
@@ -412,7 +419,7 @@ const initContactForm = () => {
 
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const { formUrl, messageField } = APP_CONFIG.contact;
-  const { error: errMsg, success: okMsg } = APP_CONFIG.messages;
+  const { error: errMsg, success: okMsg } = t(APP_CONFIG.messages);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -438,8 +445,12 @@ const initContactForm = () => {
     }
 
     // The reused Google Form has a single text field, so we fold name, email
-    // and message into one composed value.
-    const composed = `Nombre: ${name}\nCorreo: ${email}\n\nMensaje:\n${message}`;
+    // and message into one composed value. Messages from /en are tagged [EN] so
+    // the band knows which language to answer in (i18n-main-site-en.md, D5).
+    const composed = t({
+      es: `Nombre: ${name}\nCorreo: ${email}\n\nMensaje:\n${message}`,
+      en: `[EN]\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
+    });
     const formData = new FormData();
     formData.append(messageField, composed);
 
@@ -460,6 +471,29 @@ const initContactForm = () => {
       submitBtn.disabled = false;
       submitBtn.removeAttribute('aria-busy');
     }
+  });
+};
+
+// ============================================
+// LANGUAGE SWITCH (/ <-> /en)
+// ============================================
+
+/**
+ * The switch links are plain `/` and `/en` (they work without JS). On click we
+ * append the section the visitor is reading, so `/#faq` lands on `/en#faq`:
+ * both pages share section ids (enforced by scripts/check-i18n.js). The scroll
+ * spy's active link is more reliable than location.hash, which smooth scroll
+ * never updates.
+ */
+const initLangSwitch = () => {
+  document.querySelectorAll('.lang-switch__link').forEach((link) => {
+    link.addEventListener('click', () => {
+      const active = document.querySelector('.nav-link.active[data-section]');
+      const section = active?.dataset.section ?? window.location.hash.slice(1);
+      const base = link.getAttribute('href').split('#')[0];
+      link.setAttribute('href', section && section !== 'hero' ? `${base}#${section}` : base);
+      trackEvent('language_switch', { from: lang, to: link.hreflang });
+    });
   });
 };
 
@@ -534,6 +568,7 @@ const init = () => {
   initPlatformTracking();
   initShowsCountdown();
   initContactForm();
+  initLangSwitch();
   initParallax();
   initPWAShortcuts();
 

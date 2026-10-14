@@ -1,6 +1,36 @@
 // Still Louder - Service Worker Registration & Install Prompt
 // Version 1.0.0
 
+import { t } from './i18n.js';
+
+// Copy of the injected notices, per page language (i18n-main-site-en.md, D4).
+const TEXT = t({
+  es: {
+    updateTitle: 'Nueva versión disponible',
+    updateBody: 'Hay una actualización disponible para Still Louder.',
+    update: 'Actualizar',
+    later: 'Después',
+    installTitle: 'Instalar Still Louder',
+    installBody: 'Accede rápidamente a tu música favorita desde tu pantalla de inicio.',
+    install: 'Instalar',
+    notNow: 'Ahora no',
+    installedTitle: '¡Instalación exitosa!',
+    installedBody: 'Still Louder está listo para usar'
+  },
+  en: {
+    updateTitle: 'New version available',
+    updateBody: 'An update is available for Still Louder.',
+    update: 'Update',
+    later: 'Later',
+    installTitle: 'Install Still Louder',
+    installBody: 'Get quick access to your favorite music from your home screen.',
+    install: 'Install',
+    notNow: 'Not now',
+    installedTitle: 'Installed!',
+    installedBody: 'Still Louder is ready to use'
+  }
+});
+
 (function () {
   'use strict';
 
@@ -133,10 +163,10 @@
         animation: slideIn 0.3s ease-out;
       ">
         <div style="font-weight: 600; margin-bottom: 8px; font-size: 16px;">
-          Nueva versión disponible
+          ${TEXT.updateTitle}
         </div>
         <div style="color: #cccccc; margin-bottom: 15px; font-size: 14px; line-height: 1.4;">
-          Hay una actualización disponible para Still Louder.
+          ${TEXT.updateBody}
         </div>
         <div style="display: flex; gap: 10px;">
           <button id="sw-update-btn" style="
@@ -151,7 +181,7 @@
             font-size: 14px;
             transition: all 0.2s ease;
           ">
-            Actualizar
+            ${TEXT.update}
           </button>
           <button id="sw-dismiss-btn" style="
             padding: 10px 20px;
@@ -164,7 +194,7 @@
             font-size: 14px;
             transition: all 0.2s ease;
           ">
-            Después
+            ${TEXT.later}
           </button>
         </div>
       </div>
@@ -283,10 +313,10 @@
           <div style="font-size: 36px;">🎵</div>
           <div style="flex: 1;">
             <div style="font-weight: 600; margin-bottom: 8px; font-size: 16px;">
-              Instalar Still Louder
+              ${TEXT.installTitle}
             </div>
             <div style="color: #cccccc; margin-bottom: 15px; font-size: 14px; line-height: 1.4;">
-              Accede rápidamente a tu música favorita desde tu pantalla de inicio.
+              ${TEXT.installBody}
             </div>
             <div style="display: flex; gap: 10px;">
               <button id="sw-install-btn" style="
@@ -301,7 +331,7 @@
                 font-size: 14px;
                 transition: all 0.2s ease;
               ">
-                Instalar
+                ${TEXT.install}
               </button>
               <button id="sw-install-dismiss-btn" style="
                 padding: 12px 20px;
@@ -313,7 +343,7 @@
                 font-size: 14px;
                 transition: all 0.2s ease;
               ">
-                Ahora no
+                ${TEXT.notNow}
               </button>
             </div>
           </div>
@@ -403,9 +433,9 @@
         <div style="display: flex; align-items: center; gap: 12px;">
           <div style="font-size: 24px;">✓</div>
           <div>
-            <div style="font-weight: 600; font-size: 15px;">¡Instalación exitosa!</div>
+            <div style="font-weight: 600; font-size: 15px;">${TEXT.installedTitle}</div>
             <div style="color: #cccccc; font-size: 13px; margin-top: 4px;">
-              Still Louder está listo para usar
+              ${TEXT.installedBody}
             </div>
           </div>
         </div>

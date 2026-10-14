@@ -11,7 +11,7 @@ Where each document lives and what it covers. Start with the root
 | [`main-site/pwa.md`](main-site/pwa.md) | Service worker, caching strategies, manifest, offline page, PWA test checklist |
 | [`main-site/security.md`](main-site/security.md) | Security headers / CSP (`_headers`), links, forms, verification |
 | [`main-site/seo-accessibility.md`](main-site/seo-accessibility.md) | Metadata, structured data, sitemap/robots, a11y conventions, verification |
-| [`features/i18n-main-site-en.md`](features/i18n-main-site-en.md) | Spec: English version of the landing at `/en` (press / international listeners) — proposed |
+| [`features/i18n-main-site-en.md`](features/i18n-main-site-en.md) | Spec: English version of the landing at `/en` (press / international listeners) — implemented (English pending band review) |
 | [`features/comunicados.md`](features/comunicados.md) | Spec: official band statements (`/comunicados`, build-time Markdown pages + home banner) — not implemented |
 | [`features/bio-links.md`](features/bio-links.md) | Spec: link-in-bio page at `/links` (Stratovarius + Halloween tickets, new single) — implemented |
 | [`features/nuevo-single.md`](features/nuevo-single.md) | Spec: re-theme the landing for the single "A Las 10" (release 5 Oct 2026, video ≈ 31 Oct) from the cover + one live photo — Phase 1 implemented, Phase 2 (video) pending |

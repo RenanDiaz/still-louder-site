@@ -10,6 +10,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: '/index.html',
+        // English version of the landing, served at /en (docs/features/i18n-main-site-en.md)
+        en: '/en.html',
         'al-vacio-pre-release': '/al-vacio-pre-release.html',
         links: '/links.html'
       },

@@ -139,6 +139,53 @@ body {
   width: 100%;
 }
 
+/* Pushes the nav next to the actions so the logo stays alone on the left */
+.header-nav {
+  margin-left: auto;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-left: var(--spacing-xl);
+}
+
+/* Language switch (ES | EN): one current label + one link to the other page */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.lang-switch__current,
+.lang-switch__link {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.lang-switch__current {
+  color: var(--color-text-primary);
+}
+
+.lang-switch__link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-radius: var(--border-radius-xs);
+  transition: color var(--transition-fast);
+}
+
+.lang-switch__link:hover,
+.lang-switch__link:focus-visible {
+  color: var(--color-accent-text);
+}
+
+/* Separator between the two codes, whichever comes first */
+.lang-switch > * + * {
+  border-left: 1px solid var(--glass-border);
+}
+
 /* Mobile Menu Button */
 .mobile-menu-btn {
   display: none;
@@ -1547,6 +1594,14 @@ button:focus-visible {
   }
 
   .nav-link {
+    font-size: var(--font-size-xs);
+  }
+
+  .header-actions {
+    margin-left: var(--spacing-md);
+  }
+
+  .lang-switch {
     font-size: var(--font-size-xs);
   }
 }

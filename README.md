@@ -52,7 +52,8 @@ npm run preview    # serve the production build
 
 - **Vite root is `public/`** and `public/assets/` is the static dir (copied
   verbatim to `dist/`). HTML paths are root-relative to `public/`.
-- **Pages:** `index.html` (landing), `al-vacio-pre-release.html` (legacy page of
+- **Pages:** `index.html` (landing, Spanish) and `en.html` (same landing in English at `/en`;
+  every content change goes in both — `npm run validate` checks it), `al-vacio-pre-release.html` (legacy page of
   the previous single), `public/assets/offline.html` (PWA fallback, served at `/offline.html`).
 - **JS:** ES modules under `public/assets/js/`, wired from `main.js`. All URLs,
   dates and copy constants live in the frozen `CONFIG` in

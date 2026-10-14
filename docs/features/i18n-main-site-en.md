@@ -3,7 +3,16 @@
 > Subsistema: **main site** (raíz del repo). El ticket system (`ticket-system/`)
 > queda **fuera de alcance** y sigue solo en español.
 
-## Estado: propuesto (3 oct 2026)
+## Estado: implementado (14 oct 2026)
+
+Pendiente antes de mergear: revisión del inglés por la banda (ver *Traducción*).
+Desvíos menores respecto al texto de abajo:
+
+- El selector `ES | EN` es **uno solo** en el header, visible en todos los
+  anchos (también en mobile, al lado del botón de menú), en vez de duplicarlo
+  dentro del `mobile-nav`: así se ve sin abrir el menú.
+- `share.js`, `ui-utils.js` y `error-handler.js` no los carga ninguna página
+  hoy; igual quedaron con sus strings por idioma.
 
 ## Contexto y objetivo
 

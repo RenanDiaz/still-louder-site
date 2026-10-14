@@ -5,6 +5,7 @@
 
 import CONFIG from './config.js';
 import analytics from './analytics.js';
+import { t } from './i18n.js';
 
 class ErrorHandler {
   constructor() {
@@ -67,7 +68,7 @@ class ErrorHandler {
 
     // Show user-friendly message for critical errors
     if (this.isCritical(error)) {
-      this.showErrorMessage(CONFIG.messages.error.generic);
+      this.showErrorMessage(t(CONFIG.messages).error.generic);
     }
   }
 
@@ -91,11 +92,11 @@ class ErrorHandler {
   handleNetworkError(error) {
     this.handleError({
       type: 'network',
-      message: CONFIG.messages.error.network,
+      message: t(CONFIG.messages).error.network,
       error
     });
 
-    this.showErrorMessage(CONFIG.messages.error.network);
+    this.showErrorMessage(t(CONFIG.messages).error.network);
   }
 
   /**
@@ -115,7 +116,7 @@ class ErrorHandler {
     } else {
       // Add error class for styling
       img.classList.add('image-error');
-      img.alt = 'Imagen no disponible';
+      img.alt = t({ es: 'Imagen no disponible', en: 'Image unavailable' });
     }
   }
 
@@ -126,13 +127,14 @@ class ErrorHandler {
   handleAudioError(audio) {
     const errorCode = audio.error?.code;
     const errorMessages = {
-      1: 'Carga abortada',
-      2: 'Error de red',
-      3: 'Error de decodificación',
-      4: 'Formato no soportado'
+      1: t({ es: 'Carga abortada', en: 'Loading aborted' }),
+      2: t({ es: 'Error de red', en: 'Network error' }),
+      3: t({ es: 'Error de decodificación', en: 'Decoding error' }),
+      4: t({ es: 'Formato no soportado', en: 'Unsupported format' })
     };
 
-    const message = errorMessages[errorCode] || 'Error al cargar el audio';
+    const audioError = t({ es: 'Error al cargar el audio', en: 'Error loading audio' });
+    const message = errorMessages[errorCode] || audioError;
 
     this.handleError({
       type: 'audio_load',
@@ -141,7 +143,7 @@ class ErrorHandler {
       src: audio.src
     });
 
-    this.showErrorMessage(`Error al cargar el audio: ${message}`);
+    this.showErrorMessage(`${audioError}: ${message}`);
   }
 
   /**
@@ -157,7 +159,7 @@ class ErrorHandler {
       error
     });
 
-    this.showErrorMessage(CONFIG.messages.error.commentFailed);
+    this.showErrorMessage(t(CONFIG.messages).error.commentFailed);
   }
 
   /**
@@ -200,7 +202,10 @@ class ErrorHandler {
     // Add close button
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&times;';
-    closeBtn.setAttribute('aria-label', 'Cerrar notificación');
+    closeBtn.setAttribute(
+      'aria-label',
+      t({ es: 'Cerrar notificación', en: 'Dismiss notification' })
+    );
     Object.assign(closeBtn.style, {
       marginLeft: '12px',
       background: 'none',
@@ -287,8 +292,8 @@ class ErrorHandler {
   createRetryButton(retryFn) {
     const button = document.createElement('button');
     button.className = 'retry-button';
-    button.textContent = 'Reintentar';
-    button.setAttribute('aria-label', 'Reintentar');
+    button.textContent = t({ es: 'Reintentar', en: 'Retry' });
+    button.setAttribute('aria-label', button.textContent);
 
     Object.assign(button.style, {
       marginTop: '12px',
