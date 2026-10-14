@@ -74,18 +74,6 @@ export const CONFIG = {
   // Orden cronológico: la primera es la "próxima fecha".
   shows: {
     upcoming: {
-      // 11 oct: teloneros de Stratovarius en su debut en Panamá. La venta NO es
-      // nuestra — la lleva Ticketplus (productora: The Eclectic Agency /
-      // CK Concerts), así que el CTA sale del sitio.
-      stratovarius: {
-        name: 'Stratovarius en Panamá',
-        dateISO: '2026-10-11T20:00:00-05:00',
-        dateLabel: '11 · 10 · 2026',
-        venue: 'Aurora at Soho',
-        city: 'Ciudad de Panamá',
-        ticketsVendor: 'Ticketplus',
-        ticketsUrl: 'https://ventas.ticketpluspty.com/event/stratovarius-xg5o64'
-      },
       // 31 oct: fecha propia, venta directa en el ticket-system (evento
       // `halloween-party`, ver docs/features/entradas-31-10.md). Preventa $10 (primeras
       // 100) desde el 1 oct a las 00:00; general $12.
@@ -234,7 +222,6 @@ Object.freeze(CONFIG.messages);
 Object.freeze(CONFIG.store);
 Object.freeze(CONFIG.shows);
 Object.freeze(CONFIG.shows.upcoming);
-Object.freeze(CONFIG.shows.upcoming.stratovarius);
 Object.freeze(CONFIG.shows.upcoming.oct31);
 
 export default CONFIG;

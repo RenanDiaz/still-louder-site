@@ -264,42 +264,6 @@
       }
     </script>
 
-    <!-- JSON-LD Structured Data - MusicEvent (11 oct 2026, teloneros de Stratovarius) -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "MusicEvent",
-        "name": "Stratovarius en Panamá — Banda nacional: Still Louder",
-        "startDate": "2026-10-11T20:00:00-05:00",
-        "eventStatus": "https://schema.org/EventScheduled",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        "image": "https://still-louder.com/images/shows/stratovarius-panama-2026-10-11.jpg",
-        "location": {
-          "@type": "MusicVenue",
-          "name": "Aurora at Soho",
-          "address": {
-            "@type": "PostalAddress",
-            "addressLocality": "Ciudad de Panamá",
-            "addressCountry": "PA"
-          }
-        },
-        "performer": [
-          { "@type": "MusicGroup", "name": "Stratovarius" },
-          { "@id": "https://still-louder.com/#band" }
-        ],
-        "organizer": {
-          "@type": "Organization",
-          "name": "The Eclectic Agency"
-        },
-        "offers": {
-          "@type": "Offer",
-          "url": "https://ventas.ticketpluspty.com/event/stratovarius-xg5o64",
-          "availability": "https://schema.org/InStock",
-          "priceCurrency": "USD"
-        }
-      }
-    </script>
-
     <!-- JSON-LD Structured Data - MusicEvent (31 oct 2026, fecha propia; venta en el ticket-system) -->
     <script type="application/ld+json">
       {
@@ -693,10 +657,9 @@
       <!--
         Fechas en vivo, en orden cronológico. Cada tarjeta es un <article>
         .shows-card; la primera es la "próxima fecha".
+        Al pasar un show: borrar su tarjeta y su MusicEvent, y pasarlo a
+        "Último show" (checklist 1.5 de docs/main-site/seo-accessibility.md).
 
-        · 11 oct 2026 — teloneros de Stratovarius (Aurora at Soho). Show
-          anunciado con flyer, hora y venta EXTERNA por Ticketplus: el CTA sale
-          del sitio (data-shows-link="stratovarius_tickets" para analytics).
         · 31 oct 2026 — Still Louder's Halloween Party, fecha propia con
           flyer oficial (--featured) y venta DIRECTA en el ticket-system: el
           CTA apunta a CONFIG.shows.upcoming.oct31.ticketsUrl
@@ -714,89 +677,6 @@
           </header>
 
           <div class="shows-upcoming">
-            <article class="shows-card shows-card--featured glass-card reveal-up">
-              <div class="shows-card__poster">
-                <picture>
-                  <source
-                    srcset="assets/images/shows/stratovarius-panama-2026-10-11.avif"
-                    type="image/avif"
-                  />
-                  <source
-                    srcset="assets/images/shows/stratovarius-panama-2026-10-11.webp"
-                    type="image/webp"
-                  />
-                  <img
-                    src="assets/images/shows/stratovarius-panama-2026-10-11.jpg"
-                    alt="Flyer: Stratovarius en Panamá, banda nacional Still Louder. 11 de octubre, Aurora at Soho, 8:00 p.m. Boletos a la venta en Ticketplus."
-                    width="720"
-                    height="900"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </picture>
-              </div>
-
-              <div class="shows-card__body">
-                <p class="shows-card__status">
-                  <span class="shows-card__dot" aria-hidden="true"></span>
-                  Próxima fecha
-                </p>
-
-                <h3 class="shows-card__title">Stratovarius en Panamá</h3>
-                <p class="shows-card__role">Still Louder · banda nacional invitada</p>
-
-                <p class="shows-card__date shows-card__date--sm">
-                  <time datetime="2026-10-11T20:00:00-05:00">11 · 10 · 2026</time>
-                </p>
-                <p class="shows-card__countdown" data-countdown="2026-10-11T20:00:00-05:00">
-                  Domingo 11 de octubre
-                </p>
-
-                <ul class="shows-card__meta">
-                  <li>Aurora at Soho · Ciudad de Panamá</li>
-                  <li>8:00 p.m.</li>
-                </ul>
-
-                <p class="shows-card__text">
-                  Abrimos la noche del debut de Stratovarius en Panamá. Una sola fecha, una sola
-                  tarima: vengan temprano.
-                </p>
-
-                <a
-                  href="https://ventas.ticketpluspty.com/event/stratovarius-xg5o64"
-                  class="btn btn-shows"
-                  data-shows-link="stratovarius_tickets"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Comprar boletos para Stratovarius en Panamá en Ticketplus (se abre en nueva ventana)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path
-                      d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"
-                    />
-                    <line x1="13" y1="7" x2="13" y2="17" stroke-dasharray="2 2" />
-                  </svg>
-                  Comprar en Ticketplus
-                </a>
-                <p class="shows-card__note">
-                  La venta de este show la lleva Ticketplus (producción de The Eclectic Agency y CK
-                  Concerts), no la banda.
-                </p>
-              </div>
-            </article>
-
             <article class="shows-card shows-card--featured shows-card--next glass-card reveal-up">
               <div class="shows-card__poster">
                 <picture>
@@ -822,7 +702,7 @@
               <div class="shows-card__body">
                 <p class="shows-card__status">
                   <span class="shows-card__dot" aria-hidden="true"></span>
-                  Fecha propia · preventa desde el 1 oct
+                  Próxima fecha · fecha propia
                 </p>
 
                 <h3 class="shows-card__title">Still Louder&rsquo;s Halloween Party</h3>
@@ -887,11 +767,11 @@
             <ul class="shows-past__list">
               <li class="shows-past__item">
                 <span class="shows-past__date">
-                  <time datetime="2026-08-01">1 ago 2026</time>
+                  <time datetime="2026-10-11">11 oct 2026</time>
                 </span>
                 <span class="shows-past__body">
-                  <strong class="shows-past__name">When We Were Young 3</strong>
-                  <span class="shows-past__venue">Hops Food &amp; Drinks · David, Chiriquí</span>
+                  <strong class="shows-past__name">Stratovarius en Panamá</strong>
+                  <span class="shows-past__venue">Aurora at Soho · Ciudad de Panamá</span>
                 </span>
               </li>
             </ul>
@@ -1007,13 +887,10 @@
               <summary class="faq-item__q">¿Cómo compro entradas para sus shows?</summary>
               <div class="faq-item__a">
                 <p>
-                  Depende del show. El <strong>11 de octubre de 2026</strong> abrimos para
-                  Stratovarius en Aurora at Soho: esos boletos los vende
-                  <strong>Ticketplus</strong> (el enlace está en la sección
-                  <a href="#shows">Shows</a>). Nuestra fecha propia es el
-                  <strong>31 de octubre de 2026</strong> — Still Louder&rsquo;s Halloween Party en
-                  Hops Food &amp; Drinks, David — y sus entradas se venden en línea directamente con
-                  la banda en
+                  Nuestra próxima fecha (el enlace está en la sección
+                  <a href="#shows">Shows</a>) es el <strong>31 de octubre de 2026</strong> — Still
+                  Louder&rsquo;s Halloween Party en Hops Food &amp; Drinks, David — y sus entradas
+                  se venden en línea directamente con la banda en
                   <a
                     href="https://entradas.still-louder.com/halloween-party"
                     target="_blank"
