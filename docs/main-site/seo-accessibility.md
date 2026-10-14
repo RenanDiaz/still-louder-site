@@ -137,8 +137,8 @@ Grep `public/` for the old host and replace it in all of these places:
 canonical, `hreflang` alternates (both pages), `og:url`, `og:image*`, `music:*`, `twitter:image`, every JSON-LD
 `url`/`@id`/`image`/`item`/`urlTemplate`, `sitemap.xml` (`loc`,
 `image:loc`), `robots.txt` (comment and `Sitemap:`), `.well-known/security.txt`
-(`Contact`, `Canonical`), `assets/js/config.js` (share URL, ticket/help URLs),
-and `assets/js/main.js` (share URL). Also update `site.webmanifest` if it
+(`Contact`, `Canonical`), `assets/js/config.js` (`site.url`, `site.pageUrl`,
+ticket/help URLs), in both `index.html` and `en.html`. Also update `site.webmanifest` if it
 contains absolute URLs. Then resubmit the sitemap in Search Console.
 
 ---

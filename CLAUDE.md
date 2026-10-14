@@ -382,7 +382,7 @@ Example:
 
 ### HTML
 
-- **Language**: `lang="es"` (Spanish content)
+- **Language**: `lang="es"` in `index.html`, `lang="en"` in `en.html` (JS copy depends on it). Any HTML change goes in both
 - **Semantic elements**: Use `<main>`, `<nav>`, `<section>`, `<footer>` appropriately
 - **ARIA labels**: Add `aria-label` for interactive elements, especially links
 - **External links**: Always include `target="_blank" rel="noopener noreferrer"`
@@ -405,8 +405,8 @@ CONFIG.platforms.spotify.url
 // Access UI settings
 CONFIG.ui.animationDuration
 
-// Access messages
-CONFIG.messages.success.copiedToClipboard
+// Access messages (per language: see "Two languages")
+t(CONFIG.messages).success.copiedToClipboard
 ```
 
 ### Design Tokens (`variables.css`)
@@ -472,7 +472,8 @@ platforms: {
 }
 ```
 
-2. Add the HTML in `public/index.html` following the existing pattern with proper ARIA labels.
+2. Add the HTML in `public/index.html` **and** `public/en.html` following the existing pattern with proper ARIA labels
+   (translated in `en.html`, same `href`).
 
 3. Add brand color to `variables.css` if needed.
 
@@ -528,7 +529,7 @@ Use toast notifications via the UI utils:
 import uiUtils from './ui-utils.js';
 
 // Show success message
-uiUtils.showToast(CONFIG.messages.success.copiedToClipboard, 'success');
+uiUtils.showToast(t(CONFIG.messages).success.copiedToClipboard, 'success');
 ```
 
 ---
@@ -571,7 +572,7 @@ npm run deploy:cloudflare    # build + wrangler deploy (main site)
 ### Environment
 
 - No environment variables required for basic functionality
-- Google Analytics ID is hardcoded in `index.html` and `config.js`
+- Google Analytics ID is hardcoded in `index.html`, `en.html` and `config.js`
 
 ### Cloudflare Workers
 
@@ -600,7 +601,7 @@ Key rules when touching either app:
 
 ### Update streaming platform URLs
 
-Edit `public/assets/js/config.js` → `platforms` object and update the corresponding links in `public/index.html`.
+Edit `public/assets/js/config.js` → `platforms` object and update the corresponding links in `public/index.html` **and** `public/en.html`.
 
 ### Change theme colors
 
@@ -608,7 +609,7 @@ Edit `public/assets/css/variables.css` → modify `--color-*` variables.
 
 ### Add new content section
 
-1. Add semantic HTML to `public/index.html`
+1. Add semantic HTML to `public/index.html` and its translation to `public/en.html` (same `id`s, links and structure)
 2. Add styles to `public/assets/css/style.css`
 3. Use existing CSS variables for consistency
 
