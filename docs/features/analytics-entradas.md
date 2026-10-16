@@ -313,7 +313,7 @@ QR llegan como `(direct) / (none)` y el funnel no dice de dónde salió la venta
 
 | Parámetro | Valor | Nota |
 |---|---|---|
-| `utm_source` | `instagram`, `whatsapp`, `facebook`, `tiktok`, `flyer`, o el slug de una banda invitada (`fabula-sarcastica`) | Minúsculas, sin espacios. Misma convención que `/links` (`bio-links.md`). |
+| `utm_source` | `instagram`, `whatsapp`, `facebook`, `tiktok`, `flyer`, o el slug de una banda invitada (`elefreak`) | Minúsculas, sin espacios. Misma convención que `/links` (`bio-links.md`). |
 | `utm_medium` | `social` (redes y mensajería) · `qr` (impreso) | `social` cae en *Organic Social* del channel grouping por defecto de GA4. `/links` conserva su `utm_medium=bio`. |
 | `utm_campaign` | `<slug>-<año>` (p. ej. `halloween-party-2026`) | Uno por show: es el filtro del funnel. |
 | `utm_content` | `story`, `dm`, `estado`, `chat`, `post`, `bio`, `impreso` | Dónde se colocó el link. Opcional. |
@@ -343,7 +343,7 @@ Ejemplo, Halloween Party 2026:
 | Facebook | `https://entradas.still-louder.com/halloween-party?utm_source=facebook&utm_medium=social&utm_campaign=halloween-party-2026&utm_content=post` |
 | TikTok | `https://entradas.still-louder.com/halloween-party?utm_source=tiktok&utm_medium=social&utm_campaign=halloween-party-2026&utm_content=bio` |
 | QR de flyer impreso | `https://entradas.still-louder.com/halloween-party?utm_source=flyer&utm_medium=qr&utm_campaign=halloween-party-2026&utm_content=impreso` |
-| Banda invitada | `https://entradas.still-louder.com/halloween-party?utm_source=fabula-sarcastica&utm_medium=social&utm_campaign=halloween-party-2026` (ídem `elefreak`) |
+| Banda invitada | `https://entradas.still-louder.com/halloween-party?utm_source=elefreak&utm_medium=social&utm_campaign=halloween-party-2026` |
 
 En el funnel (paso 5), el breakdown por **Session source / medium** separa los
 canales y **Session manual ad content** los placements dentro de un canal.
