@@ -40,7 +40,7 @@ cupo race-safe, Yappy V2, Google Wallet, cortesías, regalos, reembolsos,
 > todo el flyer para el OG, D11) y el checklist de operativa.
 >
 > **Confirmado:** nombre **Still Louder's Halloween Party**, invitados
-> **Fábula Sarcástica & Elefreak** (`tagline`), código QR `SL3110`; lugar
+> **Elefreak** (`tagline`; Fábula Sarcástica canceló), código QR `SL3110`; lugar
 > **Hops Food & Drinks, David, Chiriquí** (mismo que WWWY3), aforo **230**
 > (mismo que WWWY3), **preventa $10 para las primeras 100** entradas (etapa 1 =
 > 100, etapa 2 = 0) y **general $12** para el resto. Las cortesías siguen
