@@ -1,4 +1,4 @@
-// GA4 for the PUBLIC surfaces only (/entradas, /halloween-party, /ayuda) —
+// GA4 for the PUBLIC surfaces only (/entradas, /halloween-party, /ayuda, /como-comprar) —
 // spec: docs/features/analytics-entradas.md. Same property as the main site;
 // the `_ga` cookie lives on .still-louder.com so both share the client_id.
 //

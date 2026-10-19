@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 //   /halloween-party -> same app as /entradas (src/entradas/main.tsx); the file only
 //                 exists so the link preview carries the show's own meta tags
 //   /ayuda     -> public help / FAQ + contact (static, no backend)
+//   /como-comprar -> public step-by-step purchase guide (static, no backend)
 //   /admin     -> staff back office (mark paid, stats, stage 2)
 //   /validar   -> gate scanner (PWA-ish)
 //   /support   -> staff customer support (read-only lookup + resend QR email)
@@ -29,6 +30,7 @@ export default defineConfig({
         entradas: resolve(__dirname, 'entradas.html'),
         halloween: resolve(__dirname, 'halloween-party.html'),
         ayuda: resolve(__dirname, 'ayuda.html'),
+        comoComprar: resolve(__dirname, 'como-comprar.html'),
         admin: resolve(__dirname, 'admin.html'),
         validar: resolve(__dirname, 'validar.html'),
         support: resolve(__dirname, 'support.html'),

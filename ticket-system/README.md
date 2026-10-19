@@ -21,6 +21,7 @@ Yappy V2** (ver "Yappy — Botón de Pago V2").
 | `/validar`  | Staff/puerta | Escáner de QR con resultado verde/rojo + sonido.                |
 | `/support`  | Soporte      | **Solo lectura**: buscar órdenes por email/teléfono/nombre/# de orden, ver su estado y sus entradas, y reenviar el correo con el QR. Sin acceso a mutaciones (pagar, cancelar, anular, cortesías, Etapa 2) ni a las estadísticas de ventas. |
 | `/ayuda`    | Público      | FAQ + canales oficiales de contacto; la copia sale del evento actual (`/api/presale/status`). Sin datos del usuario. El reenvío del QR **no** vive aquí a propósito — lo hace el staff desde `/support` cuando el comprador escribe. |
+| `/como-comprar` | Público | Paso a paso de compra (para compartir en historias/chats). El enlace del paso 1 apunta a la página del evento actual (`eventPath()` en `src/shared/config.ts`) y los pasos de Yappy solo salen si `/api/yappy/config` lo tiene habilitado. Sin datos del usuario. |
 | `/regalo/<token>` | Público (oculto) | Formulario de reclamo de regalo, alcanzable **solo** con el token de una campaña QR. `noindex`, nunca enlazado. Ver `docs/features/gift-qr-campaigns.md`. |
 | `/halloween-party` | Público | Show del 31 oct 2026: la **misma app** de `/entradas` (slug `halloween-party`). En `teaser` muestra solo la fecha; en `on_sale`, el flujo de compra. `halloween-party.html` existe solo para que el preview del enlace tenga sus propias meta. El path viejo `/31-10` redirige (301) aquí. |
 
@@ -70,6 +71,7 @@ ticket-system/
 │   ├── shared/               # api.ts, config.ts, styles.css
 │   ├── entradas/             # compra/teaser de cualquier evento (+ Teaser.tsx, theme.css, themes/)
 │   ├── ayuda/                # FAQ + contacto (público)
+│   ├── como-comprar/         # Paso a paso de compra (público)
 │   ├── regalo/               # reclamo de regalo (público, oculto)
 │   ├── admin/                # panel (+ EventosTab.tsx, CuantoappTab.tsx)
 │   ├── support/              # soporte (solo lectura)
@@ -86,7 +88,7 @@ ticket-system/
 │   ├── 0009_fix_claim_gift_ambiguous_status.sql
 │   ├── 0010_total_capacity.sql          # aforo total del evento
 │   └── 0011_events.sql                  # multi-evento: events + event_tier, event_id en todo
-├── index.html · entradas.html · halloween-party.html · ayuda.html · regalo.html
+├── index.html · entradas.html · halloween-party.html · ayuda.html · como-comprar.html · regalo.html
 ├── admin.html · support.html · validar.html
 ├── vite.config.ts · wrangler.jsonc · .env.example
 └── tsconfig.json · tsconfig.api.json · tsconfig.cloudflare.json
@@ -332,7 +334,7 @@ Apple Developer de pago).
 
 Spec y guía de configuración: `docs/features/analytics-entradas.md`. Misma
 propiedad que el main site (`G-ZZ4XG8CD88`), solo en las superficies públicas
-(`/entradas`, `/halloween-party`, `/ayuda`) y solo en el host de producción.
+(`/entradas`, `/halloween-party`, `/ayuda`, `/como-comprar`) y solo en el host de producción.
 
 - **Cliente** — `src/shared/analytics.ts` inyecta gtag.js (sin script inline:
   la CSP no permite `'unsafe-inline'`) y manda el funnel: `page_view`
