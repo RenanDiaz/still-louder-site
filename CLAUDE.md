@@ -95,7 +95,9 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   `vite.config.ts`): `/entradas` (public purchase flow), `/ayuda` (public,
   static customer help: FAQ + official contact channels — no backend, no user
   data; the QR-resend self-service deliberately does NOT live here, the staff
-  resend it from `/support` when a customer writes in), `/admin` (tabbed
+  resend it from `/support` when a customer writes in), `/como-comprar` (public,
+  static step-by-step purchase guide for the current event, meant to be shared;
+  its copy quotes the `/entradas` form labels — keep them in sync), `/admin` (tabbed
   panel: reports, orders — mark paid / cancel pending / resend QR email —,
   ticket tracking with revoke/unrevoke, courtesy issuance, live check-in,
   stage-2 toggle, CSV export), `/validar` (gate QR scanner with
@@ -181,7 +183,7 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   Firebase and Google Analytics endpoints — keep it in sync when adding
   external calls.
 - **Analytics** (`docs/features/analytics-entradas.md`): GA4 loads only on the
-  public surfaces (`/entradas`, event pages, `/ayuda`) via
+  public surfaces (`/entradas`, event pages, `/ayuda`, `/como-comprar`) via
   `src/shared/analytics.ts`, never on staff pages or `/regalo`. `purchase` is
   sent server-side (Measurement Protocol, `api/_lib/ga.ts`) from `issue.ts`,
   once per order and best-effort. Never send PII to GA.

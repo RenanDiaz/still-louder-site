@@ -102,3 +102,15 @@ export function formatDotDate(iso: string): string {
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
   return `${get('day')}.${get('month')}.${get('year')}`;
 }
+
+// Ruta pública de los eventos que tienen una propia (un .html con sus meta, como
+// halloween-party.html, o un rewrite en public/_redirects). Mantener en sync con
+// esos dos sitios; cualquier otro evento se abre con /entradas?evento=<slug>.
+const EVENT_PATHS: Record<string, string> = {
+  'halloween-party': '/halloween-party',
+  'when-we-were-young-3': '/when-we-were-young-3'
+};
+
+export function eventPath(slug: string): string {
+  return EVENT_PATHS[slug] ?? `/entradas?evento=${encodeURIComponent(slug)}`;
+}

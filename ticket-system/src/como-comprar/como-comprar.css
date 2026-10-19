@@ -1,0 +1,55 @@
+/*
+  Estilos propios de /como-comprar (lista de pasos). Se montan SOBRE el tema
+  público de /entradas (theme.css) y los estilos de /ayuda (ayuda.css), de los
+  que heredan tokens, fuentes y la tarjeta de contacto (.help-contact).
+*/
+
+/* Cada paso es un sticker de papel sólido, igual que las preguntas de /ayuda. */
+.buy-steps {
+  max-width: 520px;
+  margin: 26px auto 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buy-steps__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 0 5px 0 var(--ink);
+  padding: 14px 18px;
+}
+
+.buy-steps__num {
+  flex: 0 0 auto;
+  min-width: 1ch;
+  font-family: var(--font-patch);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--pink);
+}
+
+.buy-steps__text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.buy-steps__text a {
+  color: #c01a5b;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.help-contact a {
+  color: #c01a5b;
+  font-weight: 600;
+}

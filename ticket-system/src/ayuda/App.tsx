@@ -61,7 +61,8 @@ function buildFaqs(event: PublicEvent | null, phase: Phase): Faq[] {
               <b>entradas.still-louder.com</b>
             </a>
             , directamente con la banda. Pagas con Yappy, tarjeta (CuantoApp) o efectivo y tu entrada
-            con código QR llega a tu correo al confirmarse el pago.
+            con código QR llega a tu correo al confirmarse el pago. Mira el{' '}
+            <a href="/como-comprar">paso a paso</a>.
           </p>
         )
       },
