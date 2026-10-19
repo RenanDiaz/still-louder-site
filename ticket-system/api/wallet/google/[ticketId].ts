@@ -1,7 +1,8 @@
 import { getSupabase } from '../../_lib/supabase.js';
 import { type ApiRequest, type ApiResponse, methodNotAllowed, sendJson, withErrorHandling } from '../../_lib/http.js';
 import { makeToken } from '../../_lib/hmac.js';
-import { buildWalletSaveUrl, isGoogleWalletConfigured } from '../../_lib/google-wallet.js';
+import { buildWalletSaveUrl, isGoogleWalletConfigured, tryEnsureEventTicketClass } from '../../_lib/google-wallet.js';
+import type { EventRow } from '../../_lib/events.js';
 
 // =============================================================================
 // GET /api/wallet/google/:ticketId — on-demand "Add to Google Wallet" link.
@@ -23,7 +24,7 @@ interface TicketRow {
   tier: string;
   status: string;
   orders: { id: string; buyer_name: string } | null;
-  events: { code: string } | null;
+  events: EventRow | null;
 }
 
 export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
@@ -35,7 +36,7 @@ export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
 
   const { data, error } = await getSupabase()
     .from('tickets')
-    .select('id, tier, status, orders!inner(id, buyer_name), events!inner(code)')
+    .select('id, tier, status, orders!inner(id, buyer_name), events!inner(*)')
     .eq('id', ticketId)
     .maybeSingle<TicketRow>();
   if (error) throw new Error(`wallet ticket lookup failed: ${error.message}`);
@@ -44,6 +45,9 @@ export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (data.status === 'void') return sendJson(res, 410, { error: 'ticket_void' });
 
   if (!data.events) return sendJson(res, 404, { error: 'ticket_not_found' });
+  // The save JWT references the class by id only; create it if this is the
+  // first link for a new show (cached per isolate, never throws).
+  await tryEnsureEventTicketClass(data.events);
   const saveUrl = buildWalletSaveUrl({
     token: makeToken(data.events.code, data.id),
     buyerName: data.orders?.buyer_name ?? '',

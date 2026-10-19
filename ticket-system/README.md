@@ -306,9 +306,12 @@ HMAC, no Google Wallet.
 - **Endpoint on-demand:** `GET /api/wallet/google/:ticketId` redirige (302) al
   `saveUrl`, o con `?format=json` lo devuelve. Acotado al ticket (su UUID es la
   capacidad, igual que `/api/orders/:id/status`); no expone nada secreto.
-- **Clase del evento:** botón **"Clase de Google Wallet"** en el panel admin
-  (pestaña Resumen) → `POST /api/admin/wallet/google/ensure-class`. Córrelo una
-  vez tras configurar las variables `GOOGLE_WALLET_*`. Re-ejecutarlo es no-op.
+- **Clase del evento:** se crea **sola** antes de entregar cualquier enlace
+  (al armar el correo y en el endpoint on-demand; `tryEnsureEventTicketClass`,
+  cacheada por isolate y best-effort: si Google falla se loguea y la emisión
+  sigue). El botón **"Clase de Google Wallet"** del panel admin (pestaña
+  Resumen) → `POST /api/admin/wallet/google/ensure-class` queda para verificarla
+  a mano: es no-op si ya existe y, si falla, muestra el error real de Google.
 
 **Puesta en marcha:**
 
@@ -318,10 +321,10 @@ HMAC, no Google Wallet.
    de la cuenta de servicio como usuario (Developer/Admin).
 3. Configurar `GOOGLE_WALLET_ISSUER_ID`, `GOOGLE_WALLET_SA_EMAIL` y
    `GOOGLE_WALLET_SA_PRIVATE_KEY` (ver `.env.example`).
-4. Con el evento elegido en el panel, pulsar **"Clase de Google Wallet"**
-   (Resumen) → `POST /api/admin/wallet/google/ensure-class?event=<id>`. **Una
-   clase por evento** (`${ISSUER_ID}.${código en minúsculas}`): repetirlo para
-   cada show nuevo.
+4. **Una clase por evento** (`${ISSUER_ID}.${código en minúsculas}`). Se crea
+   automáticamente con el primer correo/enlace del show; opcionalmente,
+   verificarla antes con **"Clase de Google Wallet"** (Resumen) →
+   `POST /api/admin/wallet/google/ensure-class?event=<id>`.
 
 **Demo mode:** mientras el Issuer esté en demo, el pase solo se guarda con
 cuentas de prueba (Admin/Developer o test accounts de la consola) y sale con

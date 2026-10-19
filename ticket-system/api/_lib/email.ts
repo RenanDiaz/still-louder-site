@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { env } from './env.js';
 import { tokenToPngBuffer } from './qr.js';
-import { buildWalletSaveUrl } from './google-wallet.js';
+import { buildWalletSaveUrl, tryEnsureEventTicketClass } from './google-wallet.js';
 import { formatEventDateTime, formatEventShortDay, type EventRow } from './events.js';
 import type { Order } from './types.js';
 
@@ -123,6 +123,10 @@ export async function sendTicketEmail(order: Order, event: EventRow, tokens: str
       content: await tokenToPngBuffer(token)
     }))
   );
+
+  // The Wallet links below reference the event's class by id only, so make
+  // sure it exists first (cached per isolate; no-op when Wallet is off).
+  await tryEnsureEventTicketClass(event);
 
   const tierLabel = TIER_LABEL[order.tier] ?? order.tier;
   // Tipografía email-safe que hace eco de la identidad del sitio: titulares en

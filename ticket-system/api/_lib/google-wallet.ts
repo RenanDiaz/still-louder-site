@@ -17,8 +17,12 @@ import type { EventRow } from './events.js';
 //   1. buildWalletSaveUrl()       — pure crypto, no network. Builds the
 //      eventTicketObject inline, signs the save JWT, returns the pay.google.com
 //      save link. Used during issuance (email) and by the on-demand endpoint.
-//   2. ensureEventTicketClass()   — idempotent network call (admin-triggered)
-//      that creates the event's Passes Class once via the Wallet REST API.
+//   2. ensureEventTicketClass()   — idempotent network call that creates the
+//      event's Passes Class once via the Wallet REST API. Runs automatically
+//      (best-effort, tryEnsureEventTicketClass) before any save link is handed
+//      out — ticket email and on-demand endpoint — so a new show never ships
+//      links to a class that doesn't exist. The admin button stays as a manual
+//      re-check that surfaces Google's error.
 // =============================================================================
 
 const WALLET_API = 'https://walletobjects.googleapis.com/walletobjects/v1';
@@ -136,7 +140,21 @@ export function buildWalletSaveUrl(input: WalletTicketInput): string | null {
   }
 }
 
-// --- Class creation (admin-triggered, idempotent) -----------------------------
+// --- Class creation (idempotent) -----------------------------------------------
+
+/** A Wallet REST/OAuth failure; `detail` is Google's response body (admin-only). */
+export class WalletApiError extends Error {
+  constructor(
+    message: string,
+    readonly detail: string
+  ) {
+    super(`${message}: ${detail}`);
+  }
+}
+
+// Class ids confirmed to exist in this isolate, so the automatic check costs a
+// network round-trip once per isolate per event, not once per email/click.
+const ensuredClasses = new Set<string>();
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
@@ -167,7 +185,7 @@ async function getAccessToken(): Promise<string> {
 
   const data = (await res.json().catch(() => ({}))) as { access_token?: string; expires_in?: number; error_description?: string };
   if (!res.ok || !data.access_token) {
-    throw new Error(`wallet oauth failed (${res.status}): ${data.error_description ?? 'no access_token'}`);
+    throw new WalletApiError(`wallet oauth failed (${res.status})`, data.error_description ?? 'no access_token');
   }
 
   cachedToken = { value: data.access_token, expiresAt: now + (data.expires_in ?? 3600) };
@@ -211,17 +229,19 @@ export interface EnsureClassResult {
  */
 export async function ensureEventTicketClass(event: EventRow): Promise<EnsureClassResult> {
   const classId = getClassId(event.code);
+  if (ensuredClasses.has(classId)) return { classId, created: false };
   const accessToken = await getAccessToken();
 
   const getRes = await fetch(`${WALLET_API}/eventTicketClass/${encodeURIComponent(classId)}`, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
   if (getRes.ok) {
+    ensuredClasses.add(classId);
     return { classId, created: false };
   }
   if (getRes.status !== 404) {
     const detail = await getRes.text().catch(() => '');
-    throw new Error(`wallet class lookup failed (${getRes.status}): ${detail.slice(0, 300)}`);
+    throw new WalletApiError(`wallet class lookup failed (${getRes.status})`, detail.slice(0, 300));
   }
 
   const postRes = await fetch(`${WALLET_API}/eventTicketClass`, {
@@ -231,8 +251,23 @@ export async function ensureEventTicketClass(event: EventRow): Promise<EnsureCla
   });
   if (!postRes.ok) {
     const detail = await postRes.text().catch(() => '');
-    throw new Error(`wallet class create failed (${postRes.status}): ${detail.slice(0, 300)}`);
+    throw new WalletApiError(`wallet class create failed (${postRes.status})`, detail.slice(0, 300));
   }
 
+  ensuredClasses.add(classId);
   return { classId, created: true };
+}
+
+/**
+ * Best-effort ensureEventTicketClass for the automatic paths (email, on-demand
+ * link). Never throws: a Wallet outage must not block issuance or the email —
+ * at worst the save link fails on Google's side, as it would have anyway.
+ */
+export async function tryEnsureEventTicketClass(event: EventRow): Promise<void> {
+  if (!isGoogleWalletConfigured()) return;
+  try {
+    await ensureEventTicketClass(event);
+  } catch (err) {
+    console.error('[google-wallet] ensure class failed', err instanceof Error ? err.message : err);
+  }
 }
