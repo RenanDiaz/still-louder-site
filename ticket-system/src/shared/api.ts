@@ -4,6 +4,7 @@
 
 export interface ApiError {
   error: string;
+  detail?: string;
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -20,6 +21,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const err = new Error((data as ApiError).error ?? `http_${res.status}`);
     (err as Error & { status?: number }).status = res.status;
     (err as Error & { code?: string }).code = (data as ApiError).error;
+    (err as Error & { detail?: string }).detail = (data as ApiError).detail;
     throw err;
   }
   return data as T;

@@ -14,7 +14,7 @@ import { refundOrder, RefundError } from './_lib/refund.js';
 import { buildRefundReceiptHtml } from './_lib/receipt.js';
 import { MAX_QUANTITY_PER_ORDER, priceBreakdown } from './_lib/pricing.js';
 import { listCuantoappLinks } from './_lib/cuantoapp.js';
-import { ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
+import { WalletApiError, ensureEventTicketClass, isGoogleWalletConfigured } from './_lib/google-wallet.js';
 import { tokenToDataUrl } from './_lib/qr.js';
 import { env } from './_lib/env.js';
 import {
@@ -813,8 +813,17 @@ async function ensureWalletClass(res: ApiResponse, event: EventRow): Promise<voi
   if (!isGoogleWalletConfigured()) {
     return sendJson(res, 400, { error: 'google_wallet_not_configured' });
   }
-  const result = await ensureEventTicketClass(event);
-  return sendJson(res, 200, result);
+  try {
+    return sendJson(res, 200, await ensureEventTicketClass(event));
+  } catch (err) {
+    // Admin-only route: hand back Google's own message so the panel shows the
+    // real cause (bad key, issuer permissions, invalid class field…).
+    if (err instanceof WalletApiError) {
+      console.error('[google-wallet] ensure class failed', err.message);
+      return sendJson(res, 502, { error: 'wallet_api_error', detail: err.detail });
+    }
+    throw err;
+  }
 }
 
 // --- CuantoApp -------------------------------------------------------------------

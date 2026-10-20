@@ -362,12 +362,12 @@ function ResumenTab({ password, event }: { password: string; event: AdminEvent }
       const { classId, created } = await ensureWalletClass(password, event.id);
       setMessage(created ? `✓ Clase de Google Wallet creada (${classId}).` : `✓ La clase de Google Wallet ya existía (${classId}).`);
     } catch (err) {
-      const code = (err as Error & { code?: string }).code;
+      const { code, detail } = err as Error & { code?: string; detail?: string };
       setMessage('');
       setError(
         code === 'google_wallet_not_configured'
           ? 'Google Wallet no está configurado (faltan las variables GOOGLE_WALLET_*).'
-          : 'Error al crear la clase de Google Wallet.'
+          : `Error al crear la clase de Google Wallet${detail ? `: ${detail}` : '.'}`
       );
     }
   }
