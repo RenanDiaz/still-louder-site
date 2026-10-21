@@ -1,6 +1,10 @@
 # Campañas de promoción por correo
 
-> **Estado (5 oct 2026):** Fase 0 implementada (opt-in en la compra); Fases 1–2 sin implementar.
+> **Estado (21 oct 2026):** Fase 0 en producción (opt-in en la compra, PR #96,
+> migración `0015`). Fase 1 especificada, sin implementar; se implementa
+> **después** de la Halloween Party (31 oct). Fase 2 sin implementar.
+> Pendiente de infraestructura antes del primer envío: dominio
+> `noticias.still-louder.com` en Resend (ver D8).
 > Subsistema: `ticket-system/` (los contactos salen de `orders`, el envío reusa
 > Resend y la gestión vive en `/admin`). No toca el sitio principal.
 
@@ -25,15 +29,16 @@ pocos envíos al año, escritos a mano, a una base pequeña.
 |---|---|---|
 | D1 | Dónde vive | En `ticket-system/` (datos en Supabase, envío por Resend, UI como tab **Campañas** de `/admin`). Solo `isAdmin`; `/support` y staff no ven nada. |
 | D2 | Motor de envío | **Propio sobre Resend** (`resend.batch.send`), **no** Resend Broadcasts/Audiences. Motivo: la selección (olas, allegados, tope de frecuencia, exclusiones por evento) depende de nuestros datos; sincronizar contactos a Audiences duplica PII y crea dos fuentes de verdad de las bajas. Costo: la baja y la supresión son nuestras (ver D6). |
-| D3 | Origen de los contactos | Correos únicos (`lower(email)`) de órdenes `paid` de **cualquier** evento, **incluidas cortesías** (`courtesy`) y regalos (`gift`) — las cortesías suelen ser allegados, justo la muestra inicial. Se excluyen órdenes solo `pending`/`cancelled` y las 100% reembolsadas. |
+| D3 | Origen de los contactos | Correos únicos (`lower(email)`) de órdenes `paid` de **cualquier** evento, **incluidas cortesías** (`courtesy`) y regalos (`gift`) — las cortesías suelen ser allegados, justo la muestra inicial. Solo cuentan órdenes con `status = 'paid'`: `pending`, `cancelled` y `refunded` (el reembolso es de la orden completa, migración `0006`) no generan contacto. |
 | D4 | Base legal | Ley 81 de 2019 (Panamá, datos personales). Los compradores previos no dieron consentimiento explícito para promociones → se tratan como **relación previa de cliente** (`consent_source = 'legacy_buyer'`), con baja en un clic en todo correo y aviso claro de por qué lo reciben. Desde ahora se pide **opt-in explícito** en la compra (Fase 0). ⚠️ Ver P1. |
 | D5 | Audiencia vs. entrega | Son ejes separados. **Audiencia**: todos los elegibles / por etiqueta / por evento / selección manual. **Entrega**: inmediata u **olas**. Las tres opciones de la UI ("todos", "escalonado", "seleccionados") son atajos sobre esos dos ejes. |
 | D6 | Baja (unsubscribe) | Obligatoria en todo correo de campaña: enlace visible + headers `List-Unsubscribe` / `List-Unsubscribe-Post` (one-click, RFC 8058). La baja es global para promociones y **nunca** afecta los correos transaccionales (QR, comprobantes). |
 | D7 | "Poco invasivo" | Sin pixel de apertura ni tracking de clics de Resend. Tope de frecuencia: un contacto no recibe más de **1 campaña cada 14 días** (configurable). Medición solo con UTM hacia el sitio (GA4 ya existe). |
-| D8 | Dominio de envío | Subdominio propio para correo **no transaccional**: `Still Louder <hola@noticias.still-louder.com>`, separado de `entradas@still-louder.com` (QRs), para que una queja de spam no afecte la entrega de entradas. El subdominio es solo DNS de correo (SPF/DKIM/DMARC en Resend), no sirve páginas. Requisito antes del primer envío: verificar `noticias.still-louder.com` en Resend (SPF/DKIM) y publicar DMARC. Ver "Relación con Comunicados". |
+| D8 | Dominio de envío | Subdominio propio para correo **no transaccional**: `Still Louder <hola@noticias.still-louder.com>`, separado de `entradas@still-louder.com` (QRs), para que una queja de spam no afecte la entrega de entradas. El subdominio es solo DNS de correo (SPF/DKIM/DMARC en Resend), no sirve páginas. Requisito antes del primer envío: verificar `noticias.still-louder.com` en Resend (SPF/DKIM) y publicar DMARC; **open tracking y click tracking desactivados** en ese dominio (D7). Ver "Relación con Comunicados". |
 | D9 | Contenido | Asunto + preheader + cuerpo en **Markdown** (render server-side) sobre una plantilla fija con la paleta `mono` de `api/_lib/email.ts`. Sin HTML libre. Una imagen opcional (URL https). |
 | D10 | Olas | **Manuales**: el admin pulsa "Enviar siguiente ola". Sin cron: es a propósito, queremos revisar la reacción entre olas antes de seguir (Cloudflare permitiría programarlas; ver Fase 2). |
 | D11 | Teléfonos / WhatsApp | Fuera de alcance. Solo correo. |
+| D12 | Consentimiento en la audiencia | Mientras P1 siga abierta, toda audiencia incluye por defecto solo contactos `checkout_opt_in` **más** los etiquetados `allegado`. Incluir `legacy_buyer` sin etiqueta exige marcar explícitamente "Incluir compradores sin opt-in" (`audience.include_legacy = true`), con aviso en la UI. Así P1 no bloquea el código, solo esa casilla. |
 
 ## Alcance
 
@@ -71,7 +76,10 @@ un contacto más sin consentimiento explícito. Debe salir **antes** que el rest
   y revisar su dashboard (la muestra es pequeña).
 - Programar una ola a una hora (si en Fase 1 hace falta).
 
-## Modelo de datos (`supabase/migrations/0016_marketing_campaigns.sql`)
+## Modelo de datos (`supabase/migrations/0017_marketing_campaigns.sql`)
+
+> `0016` ya lo usa `0016_stock_display.sql`. Si al implementar existe otra
+> migración más nueva, usar el siguiente número libre.
 
 Todas las tablas con RLS habilitado y **sin policies** (solo service-role).
 
@@ -98,7 +106,7 @@ marketing_campaign
   image_url        text null
   cta_label        text null
   cta_url          text null          -- https; se le agregan UTM al render
-  audience         jsonb              -- {kind:'all'|'tags'|'events'|'manual', tags?, event_ids?, exclude_event_ids?}
+  audience         jsonb              -- {kind:'all'|'tags'|'events'|'manual', tags?, event_ids?, exclude_event_ids?, emails?, include_legacy?}
   delivery         text  (immediate | waves)
   wave_size        int null  (> 0 si waves)
   status           text  (draft | ready | sending | paused | completed | cancelled)
@@ -123,16 +131,20 @@ marketing_recipient                   -- snapshot de la audiencia al congelar
 
 RPC `sync_marketing_contacts()` (idempotente, la llama el admin al abrir el
 tab y antes de congelar): `INSERT … ON CONFLICT (email) DO UPDATE` con nombre y
-fechas de `orders` según D3. **Nunca** reescribe `status` ni `tags`; solo sube
+fechas de `orders` según D3. **Nunca** reescribe `tags`; solo sube
 `consent_source` de `legacy_buyer` a `checkout_opt_in` si aparece una orden con
-`marketing_opt_in`. Una baja no se revierte por comprar de nuevo; solo volviendo
-a marcar la casilla de Fase 0 (registrado con fecha).
+`marketing_opt_in`. `status` no se toca, con **una** excepción: un contacto
+`unsubscribed` vuelve a `subscribed` solo si tiene una orden con
+`marketing_opt_in_at > unsubscribed_at` (volvió a marcar la casilla después de
+darse de baja). Comprar de nuevo sin marcarla no revierte la baja. `bounced` y
+`complained` nunca se revierten automáticamente.
 
 ### Congelar la audiencia
 
 `freeze_campaign(p_campaign_id)`: exige `status = 'draft'` y `test_sent_at` no
-nulo; inserta en `marketing_recipient` los contactos `subscribed` que cumplen
-`audience`, con `position` así:
+nulo (y posterior al último `updated_at` del contenido: editar tras la prueba
+obliga a otra prueba); inserta en `marketing_recipient` los contactos
+`subscribed` que cumplen `audience` y D12, con `position` así:
 
 - **Escalonado**: primero los que tienen la etiqueta `allegado` (la muestra),
   luego el resto en orden aleatorio (`order by random()`, fijado al congelar).
@@ -271,7 +283,12 @@ Si en el futuro se quiere **avisar por correo** de un comunicado, hay dos casos:
 - [ ] Quien recibió una cortesía aparece en Contactos con su evento.
 - [ ] La lista de contactos no tiene duplicados por mayúsculas/espacios y no
       incluye compradores con órdenes solo `pending`/`cancelled`.
-- [ ] No se puede congelar una campaña sin envío de prueba.
+- [ ] No se puede congelar una campaña sin envío de prueba, ni si el contenido
+      cambió después de la última prueba.
+- [ ] Sin `include_legacy`, un `legacy_buyer` sin etiqueta `allegado` no entra
+      en la audiencia (D12); la vista previa lo cuenta aparte.
+- [ ] Un contacto dado de baja que vuelve a comprar **sin** la casilla sigue
+      `unsubscribed`; si la marca, vuelve a `subscribed`.
 - [ ] Un contacto `unsubscribed` nunca recibe una campaña, aunque se haya dado
       de baja **entre olas** de la misma campaña (queda `skipped/unsubscribed`).
 - [ ] Un contacto que recibió una campaña hace < 14 días queda
@@ -290,7 +307,7 @@ Si en el futuro se quiere **avisar por correo** de un comunicado, hay dos casos:
 
 ## Verificación end-to-end
 
-1. Aplicar `0016_marketing_campaigns.sql`. Con `npm run preview:cloudflare`:
+1. Aplicar `0017_marketing_campaigns.sql`. Con `npm run preview:cloudflare`:
 2. Admin → Campañas → Contactos: se sincronizan; etiquetar 3 correos propios
    como `allegado`.
 3. Nueva campaña, escalonado, olas de 2 → prueba a tu correo → congelar.
@@ -309,8 +326,12 @@ Si en el futuro se quiere **avisar por correo** de un comunicado, hay dos casos:
   sabiendo de nosotros?" y solo quien acepte queda `subscribed`. La muestra de
   allegados no depende de esto en la práctica, pero conviene decidirlo antes de
   la primera campaña a todos.
+  Mientras tanto, D12 deja fuera a los `legacy_buyer` sin etiqueta salvo
+  decisión explícita en cada campaña.
 - **P2 — ¿Hay que agregar una política de privacidad?** Hoy ni `/entradas` ni
   el sitio principal enlazan una. La casilla de Fase 0 debería enlazar a una.
+  No bloquea el código de Fase 1, pero conviene tenerla antes del primer envío
+  fuera de allegados.
 
 ## Fuera de alcance
 
