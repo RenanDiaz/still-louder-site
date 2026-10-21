@@ -33,6 +33,12 @@ export const env = {
   // El dominio en Resend solo está verificado para ENVIAR: sin esto, responder
   // al correo de entradas no llega a nadie. Opcional: si no se configura, el
   // correo no invita a responder y solo menciona los canales oficiales.
+  // Remitente de las campañas de promoción (docs/features/campanas-promocion.md,
+  // D8): un subdominio propio, separado de entradas@, para que una queja de
+  // spam no afecte la entrega de QRs. No es secreto (va en "vars").
+  get campaignEmailFrom() {
+    return optional('CAMPAIGN_EMAIL_FROM', 'Still Louder <hola@noticias.still-louder.com>');
+  },
   get emailReplyTo() {
     return optional('EMAIL_REPLY_TO');
   },

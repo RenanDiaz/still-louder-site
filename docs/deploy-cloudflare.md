@@ -84,6 +84,7 @@ existía como secret, bórralo antes (`npx wrangler secret delete <NOMBRE>`).
 | `SUPABASE_URL` | `https://ymvygyvidzxtwobpmral.supabase.co` | URL pública del proyecto; la credencial es `SUPABASE_SERVICE_ROLE_KEY` (secret). |
 | `EMAIL_FROM` | `Still Louder <entradas@still-louder.com>` | Dominio verificado en Resend. |
 | `EMAIL_REPLY_TO` | `stilllouder.pa@gmail.com` | Sin esto el correo no invita a responder. |
+| `CAMPAIGN_EMAIL_FROM` | `Still Louder <hola@noticias.still-louder.com>` | Remitente de las campañas (`docs/features/campanas-promocion.md`, D8). Subdominio verificado en Resend con open/click tracking apagados. |
 | `YAPPY_BTN_DOMAIN` | `https://entradas.still-louder.com` | Tiene que coincidir con el dominio registrado en el portal de Yappy. |
 | `YAPPY_BTN_ENV` | `prod` | Sin esto el default es `test` (sandbox). |
 | `YAPPY_BTN_MERCHANT_ID` | id del comercio | Identificador, no credencial (la credencial es `YAPPY_BTN_SECRET_KEY`). |

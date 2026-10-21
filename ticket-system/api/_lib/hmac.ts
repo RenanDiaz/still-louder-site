@@ -47,3 +47,24 @@ export function verifyToken(token: string): VerifiedToken | null {
 
   return { code, ticketId };
 }
+
+// --- Generic domain-separated HMAC -----------------------------------------------
+// Other signed tokens (e.g. the marketing unsubscribe link, api/_lib/marketing.ts)
+// reuse TICKET_HMAC_SECRET with their OWN prefix (`unsub:` …), so a signature
+// minted for one purpose can never verify as another and no new secret has to
+// be propagated through release-cloudflare.mjs.
+export function signWithPrefix(prefix: string, message: string, hexLen = SIG_HEX_LEN): string {
+  return createHmac('sha256', env.ticketHmacSecret)
+    .update(`${prefix}${message}`)
+    .digest('hex')
+    .slice(0, hexLen);
+}
+
+/** Timing-safe check of `sig` against signWithPrefix(prefix, message). */
+export function verifyWithPrefix(prefix: string, message: string, sig: string, hexLen = SIG_HEX_LEN): boolean {
+  if (typeof sig !== 'string') return false;
+  const a = Buffer.from(sig);
+  const b = Buffer.from(signWithPrefix(prefix, message, hexLen));
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}

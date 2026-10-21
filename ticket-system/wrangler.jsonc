@@ -70,6 +70,8 @@
     "SUPABASE_URL": "https://ymvygyvidzxtwobpmral.supabase.co",
     "EMAIL_FROM": "Still Louder <entradas@still-louder.com>",
     "EMAIL_REPLY_TO": "stilllouder.pa@gmail.com",
+    // Promotional campaigns (docs/features/campanas-promocion.md, D8).
+    "CAMPAIGN_EMAIL_FROM": "Still Louder <hola@noticias.still-louder.com>",
 
     "YAPPY_BTN_DOMAIN": "https://entradas.still-louder.com",
     "YAPPY_BTN_ENV": "prod",

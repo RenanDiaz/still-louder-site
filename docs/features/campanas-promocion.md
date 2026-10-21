@@ -1,8 +1,10 @@
 # Campañas de promoción por correo
 
 > **Estado (21 oct 2026):** Fase 0 en producción (opt-in en la compra, PR #96,
-> migración `0015`). Fase 1 especificada, sin implementar; se implementa
-> **después** de la Halloween Party (31 oct). Fase 2 sin implementar.
+> migración `0015`). Fase 1 **implementada** (migración `0017`, tab Campañas,
+> `/baja`); pendiente de aplicar la migración en producción y desplegar, y de
+> probar con Resend real (one-click de Gmail, headers, sin pixel). Ver
+> "Notas de implementación (Fase 1)". Fase 2 sin implementar.
 > Pendiente de infraestructura antes del primer envío: dominio
 > `noticias.still-louder.com` en Resend (ver D8).
 > Subsistema: `ticket-system/` (los contactos salen de `orders`, el envío reusa
@@ -276,33 +278,74 @@ Si en el futuro se quiere **avisar por correo** de un comunicado, hay dos casos:
   fuera de este spec (sería una acción "Avisar a compradores" en el tab
   Eventos).
 
+## Notas de implementación (Fase 1)
+
+Lo que el código agrega o precisa sobre el modelo de arriba (migración `0017`):
+
+- **`marketing_campaign.content_updated_at`**: el gate de congelado compara
+  `test_sent_at` contra el último cambio de **contenido** (asunto, preheader,
+  cuerpo, imagen, CTA), no contra `updated_at`. Cambiar solo la audiencia no
+  cambia el correo y no exige otra prueba.
+- **`marketing_recipient.claimed_at`**: momento de `queued → sending`; es lo que
+  mide los "más de 10 min" del reintento de huérfanos.
+- **`skip_reason = 'cancelled'`**: los `queued` de una campaña cancelada.
+- **`audience`**: `kind = 'all'` es todos; cualquier otro `kind` es la **unión**
+  de `tags`, `event_ids` y `emails` que traiga (el `kind` solo recuerda qué eligió
+  la UI). `exclude_event_ids` e `include_legacy` aplican siempre.
+- **Tope de frecuencia**: 14 días, constante `FREQUENCY_CAP_DAYS` en
+  `api/_lib/marketing.ts` que se pasa como parámetro a las RPCs. `freeze_campaign`
+  incluye a quien hoy está dentro del tope; `claim_wave` lo omite si sigue dentro
+  cuando le toca su ola.
+- **RPCs auxiliares** (para no hacer una llamada por contacto; el Worker tiene
+  tope de subrequests): `marketing_audience` (usada por la vista previa **y** por
+  `freeze_campaign`, así D12 vive en un solo lugar), `marketing_contact_events`,
+  `tag_marketing_contacts`, `record_marketing_results`,
+  `marketing_campaign_stats`. Todas sin `EXECUTE` para `anon`/`authenticated`.
+- **Bajas atribuidas**: destinatarios `sent` que hoy están `unsubscribed` con
+  `unsubscribed_at ≥ sent_at` (el token de baja no lleva la campaña).
+- **Endpoints extra** en `api/admin.ts`: `…/resume` (una pausa sin reanudar
+  sería un cancelar), `…/requeue` (huérfanos) y `…/duplicate` (el "cancelar y
+  duplicar" de arriba; slug `<slug>-v2`, sin prueba). El freno de ≥ 5 % también
+  se aplica en el servidor: sin `confirm_rate: true` responde
+  `409 wave_brake`.
+- **Envío**: `resend.batch.send(payload, { idempotencyKey })` (verificado en
+  `resend@4.8.0`: manda el header `Idempotency-Key` y respeta los `headers` por
+  correo). Si Resend no responde, se reintenta una vez con la misma clave; si
+  sigue sin responder, el lote se queda en `sending` y el envío se corta. Un
+  error de Resend marca el lote `failed`. Modo inmediato: hasta 8 lotes de 100
+  o 20 s por llamada; devuelve `{ remaining }` y la UI vuelve a llamar.
+- **Una baja de alguien que no es contacto** (p. ej. reenviaron la prueba) crea
+  la fila ya `unsubscribed`, para que un sync posterior no lo suscriba.
+- **Pie**: `legacy_buyer` dice "compraste **o recibiste** entradas" (las
+  cortesías y regalos también son contactos).
+
 ## Criterios de aceptación
 
 - [ ] Una compra con la casilla marcada guarda `marketing_opt_in = true`; sin
       marcar, `false`; la compra no exige la casilla. (Fase 0)
-- [ ] Quien recibió una cortesía aparece en Contactos con su evento.
-- [ ] La lista de contactos no tiene duplicados por mayúsculas/espacios y no
+- [x] Quien recibió una cortesía aparece en Contactos con su evento.
+- [x] La lista de contactos no tiene duplicados por mayúsculas/espacios y no
       incluye compradores con órdenes solo `pending`/`cancelled`.
-- [ ] No se puede congelar una campaña sin envío de prueba, ni si el contenido
+- [x] No se puede congelar una campaña sin envío de prueba, ni si el contenido
       cambió después de la última prueba.
-- [ ] Sin `include_legacy`, un `legacy_buyer` sin etiqueta `allegado` no entra
+- [x] Sin `include_legacy`, un `legacy_buyer` sin etiqueta `allegado` no entra
       en la audiencia (D12); la vista previa lo cuenta aparte.
-- [ ] Un contacto dado de baja que vuelve a comprar **sin** la casilla sigue
+- [x] Un contacto dado de baja que vuelve a comprar **sin** la casilla sigue
       `unsubscribed`; si la marca, vuelve a `subscribed`.
-- [ ] Un contacto `unsubscribed` nunca recibe una campaña, aunque se haya dado
+- [x] Un contacto `unsubscribed` nunca recibe una campaña, aunque se haya dado
       de baja **entre olas** de la misma campaña (queda `skipped/unsubscribed`).
-- [ ] Un contacto que recibió una campaña hace < 14 días queda
+- [x] Un contacto que recibió una campaña hace < 14 días queda
       `skipped/frequency_cap`.
-- [ ] Dos llamadas concurrentes a `send` no envían dos veces al mismo contacto
+- [x] Dos llamadas concurrentes a `send` no envían dos veces al mismo contacto
       (cada `(campaign_id, email)` se envía como mucho una vez).
-- [ ] En modo escalonado, la ola 1 sale solo a allegados si hay ≥ N; cada ola
+- [x] En modo escalonado, la ola 1 sale solo a allegados si hay ≥ N; cada ola
       requiere un clic.
 - [ ] Gmail muestra "Cancelar suscripción" junto al remitente (headers de D6) y
       funciona sin abrir la página.
-- [ ] Abrir el enlace de baja sin pulsar el botón **no** da de baja.
+- [x] Abrir el enlace de baja sin pulsar el botón **no** da de baja.
 - [ ] Darse de baja no impide recibir el correo con QR de una compra nueva.
 - [ ] El HTML no contiene pixel de seguimiento ni enlaces reescritos por Resend.
-- [ ] `npm run typecheck` y `npm run build` pasan; la ruta nueva está en
+- [x] `npm run typecheck` y `npm run build` pasan; la ruta nueva está en
       `cloudflare/worker.ts`.
 
 ## Verificación end-to-end

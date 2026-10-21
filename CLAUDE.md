@@ -106,7 +106,10 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   no mutations, no sales stats; gated by `SUPPORT_PASSWORD` or the admin
   password via `isSupport()`), `/regalo/<token>` (public **hidden** gift-claim
   form, reachable only via a campaign QR token; `noindex`, never linked; the
-  first N claimants get a `regalo` ticket — see `docs/features/gift-qr-campaigns.md`).
+  first N claimants get a `regalo` ticket — see `docs/features/gift-qr-campaigns.md`),
+  `/baja?t=<token>` (public unsubscribe from promotional emails; `noindex`, no
+  GA4; opening it NEVER unsubscribes — only its button's POST does, plus the
+  RFC 8058 one-click POST — see `docs/features/campanas-promocion.md`).
   `/halloween-party` (the 31 Oct 2026 show, slug `halloween-party` since
   migration 0013; the old `/31-10` 301-redirects here: `halloween-party.html` loads the SAME app as
   `/entradas` — it exists only so the link preview has the show's own meta;
@@ -126,7 +129,7 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   (`src/entradas/theme.css`), not the dark shared `styles.css` used by the staff
   surfaces.
 - **Frontend**: `src/entradas/` (incl. `Teaser.tsx`, `themes/`), `src/ayuda/`, `src/admin/`,
-  `src/validar/`, `src/support/`, `src/regalo/`, plus `src/shared/` (`api.ts`,
+  `src/validar/`, `src/support/`, `src/regalo/`, `src/baja/`, plus `src/shared/` (`api.ts`,
   `config.ts`, `styles.css`).
 - **Backend**: `api/` handlers (Node-style `req`/`res`, typed `ApiRequest`/
   `ApiResponse` in `api/_lib/http.ts`, adapted to the Worker by
@@ -145,7 +148,15 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   add the `gift_campaign`/`gift_claim` tables and a `regalo` tier / `gift`
   payment method (0008); `claim_gift` reserves a slot race-safely (same `FOR
   UPDATE` + conditional-`UPDATE` pattern as `create_order`) and `regalo`/`gift`
-  are deliberately excluded from presale-capacity counting.
+  are deliberately excluded from presale-capacity counting. Promotional
+  campaigns (0017) add `marketing_contact`/`marketing_campaign`/
+  `marketing_recipient` and the RPCs `sync_marketing_contacts`,
+  `freeze_campaign` (applies D12: no `legacy_buyer` without the `allegado` tag
+  unless `audience.include_legacy`) and `claim_wave` (same `FOR UPDATE` +
+  conditional-`UPDATE` pattern: each `(campaign_id, email)` is sent at most
+  once; re-checks unsubscribes and the frequency cap before every wave), plus
+  helpers `marketing_audience`, `marketing_contact_events`,
+  `tag_marketing_contacts`, `record_marketing_results`, `marketing_campaign_stats`.
 
 ### Architecture invariants (do not break)
 
@@ -182,6 +193,14 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   theirs from `cloudflare/adapter.ts`) intentionally allows Supabase, Yappy,
   Firebase and Google Analytics endpoints — keep it in sync when adding
   external calls.
+- **Promotional email never touches transactional email**
+  (`docs/features/campanas-promocion.md`): `issue.ts`/`sendTicketEmail` never
+  read `marketing_contact`, so an unsubscribe can't block a QR. Campaign mail
+  goes from `CAMPAIGN_EMAIL_FROM` (own subdomain), always with
+  `List-Unsubscribe` + `List-Unsubscribe-Post` and the visible `/baja` link, no
+  tracking pixel or link rewriting (UTM only on our own domains). The
+  unsubscribe token is an HMAC over `unsub:` + email with `TICKET_HMAC_SECRET`
+  (no new secret).
 - **Analytics** (`docs/features/analytics-entradas.md`): GA4 loads only on the
   public surfaces (`/entradas`, event pages, `/ayuda`, `/como-comprar`) via
   `src/shared/analytics.ts`, never on staff pages or `/regalo`. `purchase` is

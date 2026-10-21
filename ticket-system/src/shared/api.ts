@@ -131,6 +131,26 @@ export function createOrder(input: CreateOrderInput): Promise<CreateOrderRespons
   });
 }
 
+// --- Baja de promociones (/baja, docs/features/campanas-promocion.md) ------------
+// The token in the link IS the authorization. GET never unsubscribes (mail
+// link scanners open links); only the POST from the button does.
+
+export interface UnsubscribeStatus {
+  email_masked: string;
+  status: 'subscribed' | 'unsubscribed';
+}
+
+export function getUnsubscribeStatus(token: string): Promise<UnsubscribeStatus> {
+  return request<UnsubscribeStatus>(`/api/marketing/unsubscribe?t=${encodeURIComponent(token)}`);
+}
+
+export function confirmUnsubscribe(token: string): Promise<{ status: 'unsubscribed' }> {
+  return request<{ status: 'unsubscribed' }>('/api/marketing/unsubscribe', {
+    method: 'POST',
+    body: JSON.stringify({ t: token })
+  });
+}
+
 // --- Yappy (Botón de Pago) -----------------------------------------------------
 // All Yappy credentials/tokens live server-side. The client only learns whether
 // the button is enabled, which CDN serves the web component, and — per order —
@@ -630,6 +650,227 @@ export function setEventStatus(password: string, id: string, status: EventStatus
     headers: authHeader(password),
     body: JSON.stringify({ status })
   });
+}
+
+// --- Admin: marketing campaigns (docs/features/campanas-promocion.md) -----------
+// Admin only and not event-scoped. The server owns the audience rules (D12) and
+// the once-per-contact guarantee; the panel only shows and confirms.
+
+export type ContactStatus = 'subscribed' | 'unsubscribed' | 'bounced' | 'complained';
+export type ConsentSource = 'legacy_buyer' | 'checkout_opt_in';
+export type CampaignStatus = 'draft' | 'ready' | 'sending' | 'paused' | 'completed' | 'cancelled';
+export type AudienceKind = 'all' | 'tags' | 'events' | 'manual';
+
+export interface MarketingContact {
+  email: string;
+  name: string | null;
+  consent_source: ConsentSource;
+  status: ContactStatus;
+  tags: string[];
+  first_order_at: string | null;
+  last_order_at: string | null;
+  last_campaign_at: string | null;
+  unsubscribed_at: string | null;
+  event_ids: string[];
+}
+
+export interface MarketingContactsResponse {
+  contacts: MarketingContact[];
+  counts: Record<ContactStatus, number>;
+  total: number;
+  tags: string[];
+}
+
+export interface Audience {
+  kind: AudienceKind;
+  tags?: string[];
+  event_ids?: string[];
+  exclude_event_ids?: string[];
+  emails?: string[];
+  include_legacy?: boolean;
+}
+
+export interface MarketingCampaign {
+  id: string;
+  slug: string;
+  subject: string;
+  preheader: string;
+  body_md: string;
+  image_url: string | null;
+  cta_label: string | null;
+  cta_url: string | null;
+  audience: Audience;
+  delivery: 'immediate' | 'waves';
+  wave_size: number | null;
+  status: CampaignStatus;
+  test_sent_at: string | null;
+  content_updated_at: string;
+  frozen_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CampaignTotals {
+  recipients: number;
+  queued: number;
+  sending: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+  skipped_by_reason: Record<'unsubscribed' | 'bounced' | 'complained' | 'frequency_cap' | 'cancelled', number>;
+  unsubscribed: number;
+  waves: number;
+}
+
+export interface CampaignWaveStats {
+  wave: number | null;
+  queued: number;
+  sending: number;
+  sent: number;
+  failed: number;
+  skipped_unsubscribed: number;
+  skipped_bounced: number;
+  skipped_complained: number;
+  skipped_frequency_cap: number;
+  skipped_cancelled: number;
+  unsubscribed: number;
+  first_sent_at: string | null;
+}
+
+export interface CampaignDetail {
+  campaign: MarketingCampaign;
+  totals: CampaignTotals;
+  waves: CampaignWaveStats[];
+  last_wave: { wave: number; rate: number; over_brake: boolean } | null;
+  orphans: number;
+  frequency_cap_days: number;
+}
+
+export type AudienceOutcome = 'eligible' | 'frequency_cap' | 'no_consent' | ContactStatus;
+
+export interface CampaignPreview {
+  html: string;
+  counts: Record<AudienceOutcome, number> | null;
+  frequency_cap_days: number;
+}
+
+export type CampaignInput = Partial<
+  Pick<
+    MarketingCampaign,
+    'slug' | 'subject' | 'preheader' | 'body_md' | 'image_url' | 'cta_label' | 'cta_url' | 'audience' | 'delivery' | 'wave_size'
+  >
+>;
+
+export interface CampaignSendResult {
+  sent: number;
+  failed: number;
+  waves: number[];
+  remaining: number;
+  status: CampaignStatus;
+}
+
+const MARKETING = '/api/admin/marketing';
+
+export function fetchMarketingContacts(
+  password: string,
+  params: { q?: string; status?: string; tag?: string; event?: string } = {}
+): Promise<MarketingContactsResponse> {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) if (value) qs.set(key, value);
+  const suffix = qs.toString() ? `?${qs}` : '';
+  return request<MarketingContactsResponse>(`${MARKETING}/contacts${suffix}`, { headers: authHeader(password) });
+}
+
+export function tagMarketingContacts(
+  password: string,
+  input: { emails: string[]; add_tags?: string[]; remove_tags?: string[] }
+): Promise<{ updated: number }> {
+  return request<{ updated: number }>(`${MARKETING}/contacts`, {
+    method: 'PATCH',
+    headers: authHeader(password),
+    body: JSON.stringify(input)
+  });
+}
+
+export function listMarketingCampaigns(
+  password: string
+): Promise<{ campaigns: (MarketingCampaign & { totals: CampaignTotals })[] }> {
+  return request(`${MARKETING}/campaigns`, { headers: authHeader(password) });
+}
+
+export function createMarketingCampaign(password: string, input: CampaignInput): Promise<{ campaign: MarketingCampaign }> {
+  return request<{ campaign: MarketingCampaign }>(`${MARKETING}/campaigns`, {
+    method: 'POST',
+    headers: authHeader(password),
+    body: JSON.stringify(input)
+  });
+}
+
+export function getMarketingCampaign(password: string, id: string): Promise<CampaignDetail> {
+  return request<CampaignDetail>(`${MARKETING}/campaigns/${id}`, { headers: authHeader(password) });
+}
+
+export function updateMarketingCampaign(
+  password: string,
+  id: string,
+  input: CampaignInput
+): Promise<{ campaign: MarketingCampaign }> {
+  return request<{ campaign: MarketingCampaign }>(`${MARKETING}/campaigns/${id}`, {
+    method: 'PATCH',
+    headers: authHeader(password),
+    body: JSON.stringify(input)
+  });
+}
+
+export function deleteMarketingCampaign(password: string, id: string): Promise<{ deleted: boolean }> {
+  return request<{ deleted: boolean }>(`${MARKETING}/campaigns/${id}`, {
+    method: 'DELETE',
+    headers: authHeader(password)
+  });
+}
+
+function campaignAction<T>(password: string, id: string, action: string, body: unknown = {}): Promise<T> {
+  return request<T>(`${MARKETING}/campaigns/${id}/${action}`, {
+    method: 'POST',
+    headers: authHeader(password),
+    body: JSON.stringify(body)
+  });
+}
+
+export function previewMarketingCampaign(password: string, id: string, audience?: Audience): Promise<CampaignPreview> {
+  return campaignAction<CampaignPreview>(password, id, 'preview', audience ? { audience } : {});
+}
+
+export function testMarketingCampaign(password: string, id: string, email: string): Promise<{ test_sent_at: string | null }> {
+  return campaignAction(password, id, 'test', { email });
+}
+
+export function freezeMarketingCampaign(password: string, id: string): Promise<{ recipients: number }> {
+  return campaignAction(password, id, 'freeze');
+}
+
+export function sendMarketingCampaign(
+  password: string,
+  id: string,
+  input: { size?: number; confirm_rate?: boolean } = {}
+): Promise<CampaignSendResult> {
+  return campaignAction<CampaignSendResult>(password, id, 'send', input);
+}
+
+export function marketingCampaignAction(
+  password: string,
+  id: string,
+  action: 'pause' | 'resume' | 'cancel'
+): Promise<{ campaign: MarketingCampaign }> {
+  return campaignAction(password, id, action);
+}
+
+export function requeueMarketingOrphans(password: string, id: string): Promise<{ requeued: number }> {
+  return campaignAction(password, id, 'requeue');
+}
+
+export function duplicateMarketingCampaign(password: string, id: string): Promise<{ campaign: MarketingCampaign }> {
+  return campaignAction(password, id, 'duplicate');
 }
 
 // --- Support (read-only customer support) ------------------------------------

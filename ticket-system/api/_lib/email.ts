@@ -29,7 +29,7 @@ const METHOD_LABEL: Record<string, string> = {
 // de correo no cargan CSS externo. `wwwy3` conserva el morado/rosa original;
 // cualquier otro tema cae en `mono` (negro + hueso), sin heredar la identidad
 // de WWWY3. `halloween` sigue el flyer del 31-10 (noche, rojo sangre, hueso).
-interface EmailPalette {
+export interface EmailPalette {
   frame: string;
   header: string;
   accent: string;
@@ -77,7 +77,7 @@ const PALETTES: Record<string, EmailPalette> = {
   }
 };
 
-function paletteFor(theme: string): EmailPalette {
+export function paletteFor(theme: string): EmailPalette {
   return PALETTES[theme] ?? PALETTES.mono;
 }
 
@@ -97,7 +97,7 @@ function formatPanamaDate(iso: string): string {
   }
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

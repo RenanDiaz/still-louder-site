@@ -16,3 +16,7 @@
 
 /regalo/*
   X-Robots-Tag: noindex, nofollow
+
+# Unsubscribe page: personal token link (docs/features/campanas-promocion.md).
+/baja
+  X-Robots-Tag: noindex, nofollow
