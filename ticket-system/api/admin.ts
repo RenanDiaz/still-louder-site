@@ -29,6 +29,29 @@ import {
   type StockDisplay
 } from './_lib/events.js';
 import { randomBytes } from 'node:crypto';
+import {
+  CONTENT_FIELDS,
+  ORPHAN_AFTER_MS,
+  TAG_RE,
+  WAVE_BRAKE_RATE,
+  MAX_WAVE_SIZE,
+  FREQUENCY_CAP_DAYS,
+  SendError,
+  campaignStats,
+  countAudience,
+  isValidEmail,
+  lastWaveRate,
+  listContactsWithEvents,
+  normalizeEmail,
+  parseAudience,
+  parseCampaignBody,
+  sendCampaign,
+  sendTestEmail,
+  syncContacts,
+  type MarketingCampaign,
+  type WaveStats
+} from './_lib/marketing.js';
+import { prepareCampaignEmail } from './_lib/marketing-email.js';
 import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_lib/types.js';
 
 // Single handler for EVERY /api/admin/* route (historically a Vercel Hobby
@@ -64,6 +87,23 @@ import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_l
 //   GET  /api/admin/orders/:id              one order + its tickets (support)
 //   POST /api/admin/wallet/google/ensure-class create the Google Wallet event class (idempotent)
 //   GET  /api/admin/cuantoapp?event=           CuantoApp links per quantity + the amount each must charge
+//
+// Promotional email campaigns (docs/features/campanas-promocion.md) — admin
+// only, NOT event-scoped (like events):
+//   GET   /api/admin/marketing/contacts?tag=&status=&q=&event=   sync + list + counts
+//   PATCH /api/admin/marketing/contacts        bulk tag { emails[], add_tags?, remove_tags? }
+//   GET   /api/admin/marketing/campaigns       list + metrics
+//   POST  /api/admin/marketing/campaigns       create a draft
+//   GET   /api/admin/marketing/campaigns/:id   detail + per-wave metrics
+//   PATCH /api/admin/marketing/campaigns/:id   edit a draft
+//   DELETE /api/admin/marketing/campaigns/:id  delete a draft
+//   POST  …/campaigns/:id/preview              rendered HTML + audience counts { audience? }
+//   POST  …/campaigns/:id/test                 test send { email } (sets test_sent_at)
+//   POST  …/campaigns/:id/freeze               freeze_campaign (snapshot the audience)
+//   POST  …/campaigns/:id/send                 claim_wave + send { size?, confirm_rate? }
+//   POST  …/campaigns/:id/pause | resume | cancel
+//   POST  …/campaigns/:id/requeue              orphaned 'sending' (> 10 min, no resend_id) -> queued
+//   POST  …/campaigns/:id/duplicate            new draft with the same content
 //
 // Everything is admin-gated except:
 //   - orders/cleanup, which also accepts the cron secret (daily Worker cron);
@@ -138,6 +178,8 @@ export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
 
   // --- Everything below is admin-only ----------------------------------------
   if (!admin) return sendJson(res, 401, { error: 'unauthorized' });
+
+  if (segments[0] === 'marketing') return handleMarketing(req, res, segments.slice(1));
 
   if (segments[0] === 'orders' && segments.length === 3 && segments[2] === 'refund-receipt') {
     if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
@@ -1135,4 +1177,424 @@ async function setEventStatus(req: ApiRequest, res: ApiResponse, id: string): Pr
   if (error) throw new Error(`event status update failed: ${error.message}`);
   if (!data) return sendJson(res, 409, { error: 'status_changed' });
   return sendJson(res, 200, { event: data });
+}
+
+// --- Marketing campaigns -------------------------------------------------------------
+// docs/features/campanas-promocion.md. Admin-only and not event-scoped. The
+// logic lives in api/_lib/marketing.ts; the once-per-contact guarantee lives in
+// claim_wave() (migration 0017). These handlers only parse, gate and map
+// RPC outcomes to HTTP.
+
+const CAMPAIGN_ACTIONS = ['preview', 'test', 'freeze', 'send', 'pause', 'resume', 'cancel', 'requeue', 'duplicate'];
+
+async function handleMarketing(req: ApiRequest, res: ApiResponse, segments: string[]): Promise<void> {
+  res.setHeader('Cache-Control', 'no-store');
+  const route = segments.join('/');
+  if (route === 'contacts') {
+    if (req.method === 'GET') return listMarketingContacts(req, res);
+    if (req.method === 'PATCH') return tagMarketingContacts(req, res);
+    return methodNotAllowed(res, ['GET', 'PATCH']);
+  }
+  if (route === 'campaigns') {
+    if (req.method === 'GET') return listMarketingCampaigns(res);
+    if (req.method === 'POST') return createMarketingCampaign(req, res);
+    return methodNotAllowed(res, ['GET', 'POST']);
+  }
+  if (segments[0] === 'campaigns' && segments.length >= 2) {
+    const id = segments[1];
+    if (!UUID_RE.test(id)) return sendJson(res, 400, { error: 'invalid_id' });
+    const campaign = await getMarketingCampaign(id);
+    if (!campaign) return sendJson(res, 404, { error: 'not_found' });
+
+    if (segments.length === 2) {
+      if (req.method === 'GET') return getMarketingCampaignDetail(res, campaign);
+      if (req.method === 'PATCH') return updateMarketingCampaign(req, res, campaign);
+      if (req.method === 'DELETE') return deleteMarketingCampaign(res, campaign);
+      return methodNotAllowed(res, ['GET', 'PATCH', 'DELETE']);
+    }
+    const action = segments[2];
+    if (segments.length === 3 && CAMPAIGN_ACTIONS.includes(action)) {
+      if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
+      if (action === 'preview') return previewMarketingCampaign(req, res, campaign);
+      if (action === 'test') return testMarketingCampaign(req, res, campaign);
+      if (action === 'freeze') return freezeMarketingCampaign(res, campaign);
+      if (action === 'send') return sendMarketingCampaign(req, res, campaign);
+      if (action === 'pause') return setMarketingCampaignStatus(res, campaign, ['ready', 'sending'], 'paused');
+      if (action === 'resume') return resumeMarketingCampaign(res, campaign);
+      if (action === 'cancel') return cancelMarketingCampaign(res, campaign);
+      if (action === 'requeue') return requeueMarketingOrphans(res, campaign);
+      if (action === 'duplicate') return duplicateMarketingCampaign(res, campaign);
+    }
+  }
+  return sendJson(res, 404, { error: 'not_found' });
+}
+
+async function getMarketingCampaign(id: string): Promise<MarketingCampaign | null> {
+  const { data, error } = await getSupabase()
+    .from('marketing_campaign')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle<MarketingCampaign>();
+  if (error) throw new Error(`marketing campaign lookup failed: ${error.message}`);
+  return data;
+}
+
+function queryString(req: ApiRequest, key: string): string {
+  const raw = req.query[key];
+  return ((Array.isArray(raw) ? raw[0] : raw) ?? '').trim();
+}
+
+async function listMarketingContacts(req: ApiRequest, res: ApiResponse): Promise<void> {
+  // Sync first (spec: the tab syncs on open) — idempotent and cheap.
+  await syncContacts();
+  const all = await listContactsWithEvents();
+
+  const counts: Record<string, number> = { subscribed: 0, unsubscribed: 0, bounced: 0, complained: 0 };
+  const tagSet = new Set<string>();
+  for (const c of all) {
+    counts[c.status] = (counts[c.status] ?? 0) + 1;
+    c.tags.forEach((t) => tagSet.add(t));
+  }
+
+  const tag = queryString(req, 'tag');
+  const status = queryString(req, 'status');
+  const eventId = queryString(req, 'event');
+  const q = queryString(req, 'q').toLowerCase();
+  const contacts = all.filter(
+    (c) =>
+      (!tag || c.tags.includes(tag)) &&
+      (!status || c.status === status) &&
+      (!eventId || c.event_ids.includes(eventId)) &&
+      (!q || c.email.includes(q) || (c.name ?? '').toLowerCase().includes(q))
+  );
+  return sendJson(res, 200, { contacts, counts, total: all.length, tags: [...tagSet].sort() });
+}
+
+async function tagMarketingContacts(req: ApiRequest, res: ApiResponse): Promise<void> {
+  const body = parseBody<{ emails?: unknown; add_tags?: unknown; remove_tags?: unknown }>(req);
+  const list = (v: unknown) => (Array.isArray(v) && v.every((x) => typeof x === 'string') ? (v as string[]) : null);
+  const emails = list(body.emails)?.map(normalizeEmail);
+  const add = list(body.add_tags ?? [])?.map((t) => t.trim().toLowerCase());
+  const remove = list(body.remove_tags ?? [])?.map((t) => t.trim().toLowerCase());
+  if (!emails || emails.length === 0 || emails.length > 5000 || !emails.every(isValidEmail)) {
+    return sendJson(res, 400, { error: 'invalid_emails' });
+  }
+  if (!add || !remove || ![...add, ...remove].every((t) => TAG_RE.test(t)) || add.length + remove.length === 0) {
+    return sendJson(res, 400, { error: 'invalid_tags' });
+  }
+  const { data, error } = await getSupabase().rpc('tag_marketing_contacts', {
+    p_emails: emails,
+    p_add: add,
+    p_remove: remove
+  });
+  if (error) throw new Error(`tag_marketing_contacts failed: ${error.message}`);
+  return sendJson(res, 200, { updated: Number(data ?? 0) });
+}
+
+interface CampaignTotals {
+  recipients: number;
+  queued: number;
+  sending: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+  skipped_by_reason: Record<'unsubscribed' | 'bounced' | 'complained' | 'frequency_cap' | 'cancelled', number>;
+  unsubscribed: number;
+  waves: number;
+}
+
+function totalsOf(waves: WaveStats[]): CampaignTotals {
+  const t: CampaignTotals = {
+    recipients: 0,
+    queued: 0,
+    sending: 0,
+    sent: 0,
+    failed: 0,
+    skipped: 0,
+    skipped_by_reason: { unsubscribed: 0, bounced: 0, complained: 0, frequency_cap: 0, cancelled: 0 },
+    unsubscribed: 0,
+    waves: 0
+  };
+  for (const w of waves) {
+    const skipped =
+      w.skipped_unsubscribed + w.skipped_bounced + w.skipped_complained + w.skipped_frequency_cap + w.skipped_cancelled;
+    t.queued += w.queued;
+    t.sending += w.sending;
+    t.sent += w.sent;
+    t.failed += w.failed;
+    t.skipped += skipped;
+    t.skipped_by_reason.unsubscribed += w.skipped_unsubscribed;
+    t.skipped_by_reason.bounced += w.skipped_bounced;
+    t.skipped_by_reason.complained += w.skipped_complained;
+    t.skipped_by_reason.frequency_cap += w.skipped_frequency_cap;
+    t.skipped_by_reason.cancelled += w.skipped_cancelled;
+    t.unsubscribed += w.unsubscribed;
+    t.recipients += w.queued + w.sending + w.sent + w.failed + skipped;
+    if (w.wave !== null) t.waves = Math.max(t.waves, w.wave);
+  }
+  return t;
+}
+
+async function listMarketingCampaigns(res: ApiResponse): Promise<void> {
+  const { data, error } = await getSupabase()
+    .from('marketing_campaign')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) throw new Error(`marketing campaigns query failed: ${error.message}`);
+  const stats = await campaignStats();
+  const campaigns = ((data ?? []) as MarketingCampaign[]).map((c) => ({
+    ...c,
+    totals: totalsOf(stats.filter((s) => s.campaign_id === c.id))
+  }));
+  return sendJson(res, 200, { campaigns });
+}
+
+async function createMarketingCampaign(req: ApiRequest, res: ApiResponse): Promise<void> {
+  const parsed = parseCampaignBody(parseBody(req));
+  if ('error' in parsed) return sendJson(res, 400, { error: parsed.error });
+  const { fields } = parsed;
+  if (!fields.slug) return sendJson(res, 400, { error: 'missing_slug' });
+  if (!fields.subject) return sendJson(res, 400, { error: 'missing_subject' });
+  if (fields.delivery === 'waves' && !fields.wave_size) fields.wave_size = 20;
+  if ((fields.cta_label ?? null) === null !== ((fields.cta_url ?? null) === null)) {
+    return sendJson(res, 400, { error: 'incomplete_cta' });
+  }
+  const { data, error } = await getSupabase().from('marketing_campaign').insert(fields).select('*').single<MarketingCampaign>();
+  if (isUniqueViolation(error)) return sendJson(res, 409, { error: 'slug_taken' });
+  if (error) throw new Error(`marketing campaign insert failed: ${error.message}`);
+  return sendJson(res, 201, { campaign: data });
+}
+
+async function orphanCount(campaignId: string): Promise<number> {
+  const { count, error } = await getSupabase()
+    .from('marketing_recipient')
+    .select('email', { count: 'exact', head: true })
+    .eq('campaign_id', campaignId)
+    .eq('status', 'sending')
+    .is('resend_id', null)
+    .lt('claimed_at', new Date(Date.now() - ORPHAN_AFTER_MS).toISOString());
+  if (error) throw new Error(`orphan count failed: ${error.message}`);
+  return count ?? 0;
+}
+
+async function getMarketingCampaignDetail(res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  const waves = (await campaignStats(campaign.id)).sort((a, b) => (a.wave ?? Infinity) - (b.wave ?? Infinity));
+  const brake = lastWaveRate(waves);
+  return sendJson(res, 200, {
+    campaign,
+    totals: totalsOf(waves),
+    waves,
+    last_wave: brake ? { ...brake, over_brake: brake.rate >= WAVE_BRAKE_RATE } : null,
+    orphans: await orphanCount(campaign.id),
+    frequency_cap_days: FREQUENCY_CAP_DAYS
+  });
+}
+
+async function updateMarketingCampaign(req: ApiRequest, res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  // After freezing, content and audience are read-only (fix = cancel + duplicate).
+  if (campaign.status !== 'draft') return sendJson(res, 409, { error: 'not_draft' });
+  const parsed = parseCampaignBody(parseBody(req));
+  if ('error' in parsed) return sendJson(res, 400, { error: parsed.error });
+  const { fields } = parsed;
+
+  const merged = { ...campaign, ...fields };
+  if (merged.delivery === 'waves' && !merged.wave_size) fields.wave_size = 20;
+  if ((merged.cta_label === null) !== (merged.cta_url === null)) return sendJson(res, 400, { error: 'incomplete_cta' });
+
+  const now = new Date().toISOString();
+  // Only a content change invalidates the test send (freeze_campaign compares
+  // test_sent_at against content_updated_at).
+  const contentChanged = CONTENT_FIELDS.some((k) => fields[k] !== undefined && fields[k] !== campaign[k]);
+  const { data, error } = await getSupabase()
+    .from('marketing_campaign')
+    .update({ ...fields, updated_at: now, ...(contentChanged ? { content_updated_at: now } : {}) })
+    .eq('id', campaign.id)
+    .eq('status', 'draft')
+    .select('*')
+    .maybeSingle<MarketingCampaign>();
+  if (isUniqueViolation(error)) return sendJson(res, 409, { error: 'slug_taken' });
+  if (error) throw new Error(`marketing campaign update failed: ${error.message}`);
+  if (!data) return sendJson(res, 409, { error: 'not_draft' });
+  return sendJson(res, 200, { campaign: data });
+}
+
+async function deleteMarketingCampaign(res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  if (campaign.status !== 'draft') return sendJson(res, 409, { error: 'not_draft' });
+  const { data, error } = await getSupabase()
+    .from('marketing_campaign')
+    .delete()
+    .eq('id', campaign.id)
+    .eq('status', 'draft')
+    .select('id');
+  if (error) throw new Error(`marketing campaign delete failed: ${error.message}`);
+  if (!data || data.length === 0) return sendJson(res, 409, { error: 'not_draft' });
+  return sendJson(res, 200, { deleted: true });
+}
+
+async function previewMarketingCampaign(req: ApiRequest, res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  const body = parseBody<{ audience?: unknown }>(req);
+  const audience = body.audience === undefined ? campaign.audience : parseAudience(body.audience);
+  if ('error' in audience) return sendJson(res, 400, { error: audience.error });
+
+  const { html } = prepareCampaignEmail(campaign)({
+    name: 'Ana Pérez',
+    consentSource: 'legacy_buyer',
+    unsubscribeUrl: `${env.publicBaseUrl}/baja?t=ejemplo`
+  });
+  // Counts only make sense before freezing; afterwards the snapshot (detail
+  // metrics) is the truth.
+  const counts = campaign.status === 'draft' ? await countAudience(audience) : null;
+  return sendJson(res, 200, { html, counts, frequency_cap_days: FREQUENCY_CAP_DAYS });
+}
+
+async function testMarketingCampaign(req: ApiRequest, res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  const body = parseBody<{ email?: unknown }>(req);
+  const email = typeof body.email === 'string' ? normalizeEmail(body.email) : '';
+  if (!isValidEmail(email)) return sendJson(res, 400, { error: 'invalid_email' });
+  try {
+    await sendTestEmail(campaign, email);
+  } catch (err) {
+    if (err instanceof SendError) return sendJson(res, 502, { error: 'send_failed', detail: err.message });
+    throw err;
+  }
+  if (campaign.status !== 'draft') return sendJson(res, 200, { test_sent_at: campaign.test_sent_at });
+  // Conditional on the content we just sent: an edit in between leaves the gate closed.
+  const { data, error } = await getSupabase()
+    .from('marketing_campaign')
+    .update({ test_sent_at: new Date().toISOString() })
+    .eq('id', campaign.id)
+    .eq('status', 'draft')
+    .eq('content_updated_at', campaign.content_updated_at)
+    .select('test_sent_at')
+    .maybeSingle<{ test_sent_at: string }>();
+  if (error) throw new Error(`test_sent_at update failed: ${error.message}`);
+  return sendJson(res, 200, { test_sent_at: data?.test_sent_at ?? null });
+}
+
+async function freezeMarketingCampaign(res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  await syncContacts();
+  const { data, error } = await getSupabase().rpc('freeze_campaign', {
+    p_campaign_id: campaign.id,
+    p_frequency_days: FREQUENCY_CAP_DAYS
+  });
+  if (error) throw new Error(`freeze_campaign failed: ${error.message}`);
+  const row = (Array.isArray(data) ? data[0] : data) as { status: string; recipients: number | null } | undefined;
+  if (!row) throw new Error('freeze_campaign returned no row');
+  if (row.status === 'frozen') return sendJson(res, 200, { recipients: row.recipients });
+  if (row.status === 'not_found') return sendJson(res, 404, { error: 'not_found' });
+  return sendJson(res, 409, { error: row.status });
+}
+
+async function sendMarketingCampaign(req: ApiRequest, res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  if (campaign.status !== 'ready' && campaign.status !== 'sending') {
+    return sendJson(res, 409, { error: 'not_sendable', status: campaign.status });
+  }
+  const body = parseBody<{ size?: unknown; confirm_rate?: unknown }>(req);
+  let size: number | undefined;
+  if (body.size !== undefined && body.size !== null) {
+    size = Number(body.size);
+    if (!Number.isInteger(size) || size < 1 || size > MAX_WAVE_SIZE) return sendJson(res, 400, { error: 'invalid_size' });
+  }
+  if (campaign.delivery === 'waves' && body.confirm_rate !== true) {
+    // Wave brake: the UI asks for explicit confirmation; enforced here too.
+    const last = lastWaveRate(await campaignStats(campaign.id));
+    if (last && last.rate >= WAVE_BRAKE_RATE) {
+      return sendJson(res, 409, { error: 'wave_brake', wave: last.wave, rate: last.rate });
+    }
+  }
+  try {
+    return sendJson(res, 200, await sendCampaign(campaign, size));
+  } catch (err) {
+    if (err instanceof SendError) return sendJson(res, 502, { error: 'send_interrupted', detail: err.message });
+    throw err;
+  }
+}
+
+async function setMarketingCampaignStatus(
+  res: ApiResponse,
+  campaign: MarketingCampaign,
+  from: string[],
+  to: string
+): Promise<void> {
+  const { data, error } = await getSupabase()
+    .from('marketing_campaign')
+    .update({ status: to, updated_at: new Date().toISOString() })
+    .eq('id', campaign.id)
+    .in('status', from)
+    .select('*')
+    .maybeSingle<MarketingCampaign>();
+  if (error) throw new Error(`marketing campaign status update failed: ${error.message}`);
+  if (!data) return sendJson(res, 409, { error: 'invalid_transition', status: campaign.status });
+  return sendJson(res, 200, { campaign: data });
+}
+
+async function resumeMarketingCampaign(res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  const waves = await campaignStats(campaign.id);
+  const started = waves.some((w) => w.wave !== null);
+  return setMarketingCampaignStatus(res, campaign, ['paused'], started ? 'sending' : 'ready');
+}
+
+async function cancelMarketingCampaign(res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  const supabase = getSupabase();
+  // Campaign first: from here claim_wave refuses it (it re-reads the status
+  // under FOR UPDATE), so no queued row can be claimed after this point.
+  const { data, error } = await supabase
+    .from('marketing_campaign')
+    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+    .eq('id', campaign.id)
+    .in('status', ['ready', 'sending', 'paused'])
+    .select('*')
+    .maybeSingle<MarketingCampaign>();
+  if (error) throw new Error(`marketing campaign cancel failed: ${error.message}`);
+  if (!data) return sendJson(res, 409, { error: 'invalid_transition', status: campaign.status });
+  const { error: recError } = await supabase
+    .from('marketing_recipient')
+    .update({ status: 'skipped', skip_reason: 'cancelled' })
+    .eq('campaign_id', campaign.id)
+    .eq('status', 'queued');
+  if (recError) throw new Error(`marketing recipients cancel failed: ${recError.message}`);
+  return sendJson(res, 200, { campaign: data });
+}
+
+async function requeueMarketingOrphans(res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  if (!['ready', 'sending', 'paused'].includes(campaign.status)) {
+    return sendJson(res, 409, { error: 'invalid_transition', status: campaign.status });
+  }
+  const { data, error } = await getSupabase()
+    .from('marketing_recipient')
+    .update({ status: 'queued', wave: null, claimed_at: null })
+    .eq('campaign_id', campaign.id)
+    .eq('status', 'sending')
+    .is('resend_id', null)
+    .lt('claimed_at', new Date(Date.now() - ORPHAN_AFTER_MS).toISOString())
+    .select('email');
+  if (error) throw new Error(`requeue failed: ${error.message}`);
+  return sendJson(res, 200, { requeued: data?.length ?? 0 });
+}
+
+async function duplicateMarketingCampaign(res: ApiResponse, campaign: MarketingCampaign): Promise<void> {
+  const base = campaign.slug.replace(/-v\d+$/, '').slice(0, 55);
+  const copy = {
+    subject: campaign.subject,
+    preheader: campaign.preheader,
+    body_md: campaign.body_md,
+    image_url: campaign.image_url,
+    cta_label: campaign.cta_label,
+    cta_url: campaign.cta_url,
+    audience: campaign.audience,
+    delivery: campaign.delivery,
+    wave_size: campaign.wave_size
+  };
+  for (let n = 2; n < 50; n++) {
+    const { data, error } = await getSupabase()
+      .from('marketing_campaign')
+      .insert({ ...copy, slug: `${base}-v${n}` })
+      .select('*')
+      .single<MarketingCampaign>();
+    if (isUniqueViolation(error)) continue;
+    if (error) throw new Error(`marketing campaign duplicate failed: ${error.message}`);
+    return sendJson(res, 201, { campaign: data });
+  }
+  return sendJson(res, 409, { error: 'slug_taken' });
 }

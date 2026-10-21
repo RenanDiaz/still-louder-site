@@ -15,6 +15,7 @@ import { runHandler } from './adapter.js';
 
 import adminHandler from '../api/admin.js';
 import giftsHandler from '../api/gifts.js';
+import marketingHandler from '../api/marketing.js';
 import ordersHandler from '../api/orders.js';
 import orderStatusHandler from '../api/orders/[id]/status.js';
 import presaleStatusHandler from '../api/presale/status.js';
@@ -32,6 +33,7 @@ interface Env {
 
 const FIXED_ROUTES: Record<string, ApiHandler> = {
   '/api/gifts': giftsHandler,
+  '/api/marketing/unsubscribe': marketingHandler,
   '/api/orders': ordersHandler,
   '/api/presale/status': presaleStatusHandler,
   '/api/tickets/qr': ticketsQrHandler,
