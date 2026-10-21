@@ -45,6 +45,8 @@ ticket-system/
 │   │   ├── hmac.ts           # firma/verificación del token del QR
 │   │   ├── qr.ts             # render del QR (PNG / data URL)
 │   │   ├── email.ts          # envío con Resend
+│   │   ├── marketing.ts      # campañas: audiencia, token de baja, envío por lotes
+│   │   ├── marketing-email.ts # plantilla de campaña + Markdown mínimo
 │   │   ├── pricing.ts        # recargo por método + ventana de reserva (server-side)
 │   │   ├── events.ts         # eventos: lookup, evento actual, precios, reglas de fecha/estado
 │   │   ├── issue.ts          # rutina de emisión (idempotente, agnóstica al pago)
@@ -57,6 +59,7 @@ ticket-system/
 │   ├── orders/[id]/status.ts # GET   /api/orders/:id/status      (público, polling)
 │   ├── presale/status.ts     # GET   /api/presale/status         (público)
 │   ├── gifts.ts              # GET/POST /api/gifts               (campañas de regalo)
+│   ├── marketing.ts          # GET/POST /api/marketing/unsubscribe (público, token firmado)
 │   ├── tickets/validate.ts   # POST  /api/tickets/validate       (staff)
 │   ├── tickets/qr.ts         # GET   /api/tickets/qr?t=<token>   (imagen del QR)
 │   ├── wallet/google/[ticketId].ts # GET /api/wallet/google/:id   (302 al saveUrl)
@@ -73,7 +76,8 @@ ticket-system/
 │   ├── ayuda/                # FAQ + contacto (público)
 │   ├── como-comprar/         # Paso a paso de compra (público)
 │   ├── regalo/               # reclamo de regalo (público, oculto)
-│   ├── admin/                # panel (+ EventosTab.tsx, CuantoappTab.tsx)
+│   ├── baja/                 # baja de promociones (público, noindex, sin GA4)
+│   ├── admin/                # panel (+ EventosTab.tsx, CuantoappTab.tsx, CampanasTab.tsx)
 │   ├── support/              # soporte (solo lectura)
 │   └── validar/              # escáner de puerta
 ├── supabase/migrations/
@@ -87,8 +91,10 @@ ticket-system/
 │   ├── 0008_gift_campaigns.sql          # gift_campaign/gift_claim + RPC claim_gift
 │   ├── 0009_fix_claim_gift_ambiguous_status.sql
 │   ├── 0010_total_capacity.sql          # aforo total del evento
-│   └── 0011_events.sql                  # multi-evento: events + event_tier, event_id en todo
-├── index.html · entradas.html · halloween-party.html · ayuda.html · como-comprar.html · regalo.html
+│   ├── 0011_events.sql                  # multi-evento: events + event_tier, event_id en todo
+│   ├── …                                # 0012–0016
+│   └── 0017_marketing_campaigns.sql     # campañas: contactos, campañas, destinatarios + RPCs
+├── index.html · entradas.html · halloween-party.html · ayuda.html · como-comprar.html · regalo.html · baja.html
 ├── admin.html · support.html · validar.html
 ├── vite.config.ts · wrangler.jsonc · .env.example
 └── tsconfig.json · tsconfig.api.json · tsconfig.cloudflare.json
@@ -143,6 +149,18 @@ tickets y que `claim_gift` saque el evento de la campaña, y **elimina
 provisionales, ver "Eventos"). Aforo, caps y precios se editan desde la pestaña
 Eventos del admin.
 
+La migración `0017` agrega las **campañas de promoción por correo** (spec
+`docs/features/campanas-promocion.md`, Fase 1): `marketing_contact` (derivada
+de las órdenes pagadas, con etiquetas y estado de suscripción),
+`marketing_campaign` y `marketing_recipient` (snapshot de la audiencia al
+congelar), más las RPCs `sync_marketing_contacts`, `freeze_campaign` y
+`claim_wave` (`FOR UPDATE` sobre la campaña + `UPDATE` condicional: cada
+`(campaña, correo)` se envía como mucho una vez) y las auxiliares
+`marketing_audience`, `marketing_contact_events`, `tag_marketing_contacts`,
+`record_marketing_results` y `marketing_campaign_stats`. Ninguna parte del
+flujo transaccional (`issue.ts`, `sendTicketEmail`) lee estas tablas: una baja
+nunca bloquea un QR.
+
 ## Panel de admin
 
 Un **selector de evento** arriba (recordado en el dispositivo) y seis pestañas,
@@ -169,6 +187,11 @@ los eventos" por accidente):
 - **Regalos:** campañas de QR oculto del evento (ver `gift-qr-campaigns.md`).
 - **Eventos:** tabla de todos los shows (estado, precios, vendidas/aforo) +
   formulario crear/editar + botones de transición de estado. Ver "Eventos".
+- **Campañas:** correos de promoción, no scopeada al evento (rutas
+  `/api/admin/marketing/*`, solo `ADMIN_PASSWORD`). Contactos (filtros +
+  etiquetado de `allegado`), lista de campañas con métricas y editor con el
+  flujo **Prueba → Congelar → Enviar**, olas manuales y freno de ≥ 5 % de
+  bajas + fallidos entre olas. Spec `docs/features/campanas-promocion.md`.
 
 > **Rutas de admin:** TODAS las rutas `/api/admin/*` viven en **un solo
 > handler** (`api/admin.ts`) que enruta internamente por `req.query.path`
@@ -192,6 +215,9 @@ RESEND_API_KEY, EMAIL_FROM="Still Louder <entradas@still-louder.com>"
 EMAIL_REPLY_TO                # opcional: buzón real (p. ej. Gmail) que recibe las respuestas
                               # del comprador; sin esto el correo no invita a responder
 ORDER_NOTIFICATION_EMAIL      # opcional: aviso interno al registrarse una compra (lista separada por comas)
+CAMPAIGN_EMAIL_FROM           # opcional (va en "vars", no es secreto): remitente de las campañas,
+                              # default "Still Louder <hola@noticias.still-louder.com>"; el dominio
+                              # debe estar verificado en Resend con open/click tracking APAGADOS
 GA_MP_API_SECRET              # opcional: GA4 Measurement Protocol; sin esto no se manda el `purchase`
                               # (docs/features/analytics-entradas.md)
 TICKET_HMAC_SECRET            # openssl rand -hex 32

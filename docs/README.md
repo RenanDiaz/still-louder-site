@@ -26,7 +26,7 @@ Where each document lives and what it covers. Start with the root
 | [`features/gift-qr-campaigns.md`](features/gift-qr-campaigns.md) | Spec: hidden-QR gift ticket campaigns (`/regalo/<token>`) |
 | [`features/analytics-entradas.md`](features/analytics-entradas.md) | Spec: GA4 on the public ticket surfaces + server-side `purchase` via Measurement Protocol — implemented and live |
 | [`features/contador-boletos.md`](features/contador-boletos.md) | Spec: per-event toggle for the public "quedan N boletos" counter (always / never / below a threshold), hidden server-side — implemented |
-| [`features/campanas-promocion.md`](features/campanas-promocion.md) | Spec: promotional email campaigns to past buyers (all / staggered waves / selected), opt-in at checkout, one-click unsubscribe — Phase 0 (checkout opt-in) implemented |
+| [`features/campanas-promocion.md`](features/campanas-promocion.md) | Spec: promotional email campaigns to past buyers (all / staggered waves / selected), opt-in at checkout, one-click unsubscribe — Phases 0 (checkout opt-in) and 1 (campaigns, waves, `/baja`) implemented |
 
 ## Deployment (both apps)
 
