@@ -30,6 +30,7 @@ import {
 import { TIER_LABELS } from '../shared/config';
 import { EventosTab } from './EventosTab';
 import { CuantoappTab } from './CuantoappTab';
+import { CampanasTab } from './CampanasTab';
 
 const STORAGE_KEY = 'sl_admin_pw';
 // Last event picked in the selector (persists across sessions on this device).
@@ -168,7 +169,7 @@ function Gate({
   );
 }
 
-type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin' | 'cuantoapp' | 'eventos';
+type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin' | 'cuantoapp' | 'eventos' | 'campanas';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'resumen', label: 'Resumen' },
@@ -177,7 +178,8 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'regalos', label: 'Regalos' },
   { key: 'checkin', label: 'Check-in' },
   { key: 'cuantoapp', label: 'CuantoApp' },
-  { key: 'eventos', label: 'Eventos' }
+  { key: 'eventos', label: 'Eventos' },
+  { key: 'campanas', label: 'Campañas' }
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -245,7 +247,7 @@ function Dashboard({ password, onLogout }: { password: string; onLogout: () => v
         </button>
       </header>
 
-      {/* Todo lo de abajo (salvo Eventos) está scopeado al evento elegido. */}
+      {/* Todo lo de abajo (salvo Eventos y Campañas) está scopeado al evento elegido. */}
       {events && events.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <label htmlFor="event-select">Evento</label>
@@ -276,7 +278,11 @@ function Dashboard({ password, onLogout }: { password: string; onLogout: () => v
       {tab === 'eventos' && events && (
         <EventosTab password={password} events={events} onChanged={reloadEvents} onSelect={selectEvent} />
       )}
-      {tab !== 'eventos' && !event && events && <p className="muted">No hay eventos: crea uno en la pestaña Eventos.</p>}
+      {/* Campañas tampoco depende del evento elegido (docs/features/campanas-promocion.md). */}
+      {tab === 'campanas' && events && <CampanasTab password={password} events={events} />}
+      {tab !== 'eventos' && tab !== 'campanas' && !event && events && (
+        <p className="muted">No hay eventos: crea uno en la pestaña Eventos.</p>
+      )}
       {event && (
         <>
           {/* key={event.id}: al cambiar de evento cada pestaña arranca de cero. */}

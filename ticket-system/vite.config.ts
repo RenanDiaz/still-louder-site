@@ -14,6 +14,7 @@ import { resolve } from 'node:path';
 //   /validar   -> gate scanner (PWA-ish)
 //   /support   -> staff customer support (read-only lookup + resend QR email)
 //   /regalo    -> hidden gift-claim form, reached only via a campaign QR token
+//   /baja      -> unsubscribe from promotional emails (token link, noindex, no GA4)
 // The root index.html just redirects to /entradas.
 //
 // Other event slugs reach the same app via rewrites (public/_redirects,
@@ -34,7 +35,8 @@ export default defineConfig({
         admin: resolve(__dirname, 'admin.html'),
         validar: resolve(__dirname, 'validar.html'),
         support: resolve(__dirname, 'support.html'),
-        regalo: resolve(__dirname, 'regalo.html')
+        regalo: resolve(__dirname, 'regalo.html'),
+        baja: resolve(__dirname, 'baja.html')
       }
     }
   },
