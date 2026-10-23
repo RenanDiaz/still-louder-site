@@ -6,7 +6,7 @@
 // PRECACHE_URLS pasó a contener solo URLs estables de dist/ (los CSS/JS con hash
 // los toma la caché de runtime).
 
-const CACHE_VERSION = 'still-louder-v1.7.0';
+const CACHE_VERSION = 'still-louder-v1.7.1';
 const OFFLINE_VERSION = 'still-louder-offline-v1.4.0';
 
 // Cache names

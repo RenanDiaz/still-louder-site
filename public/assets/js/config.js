@@ -79,7 +79,7 @@ export const CONFIG = {
       // 100) desde el 1 oct a las 00:00; general $12.
       oct31: {
         name: "Still Louder's Halloween Party",
-        guests: 'Elefreak',
+        guests: 'Elefreak & John Key',
         dateISO: '2026-10-31T20:00:00-05:00',
         dateLabel: '31 · 10 · 2026',
         venue: 'Hops Food & Drinks',
