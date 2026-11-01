@@ -3,10 +3,10 @@
 > Subsistema: `ticket-system/`. Superficie: `/admin`, tab nuevo **Reportes**.
 > Solo admin (`ADMIN_PASSWORD`); soporte y puerta no ven dinero.
 
-## Estado: borrador (1 nov 2026)
+## Estado: listo para implementar (1 nov 2026)
 
-Pendiente de cerrar las [preguntas abiertas](#preguntas-abiertas) antes de
-implementar.
+Preguntas de diseño resueltas (ver [Decisiones](#decisiones), D11–D13). Queda
+una [pregunta abierta](#preguntas-abiertas) menor que no bloquea.
 
 ## Problema
 
@@ -39,6 +39,9 @@ Hoy existe algo, pero no sirve para cerrar:
 | D8 | **Imprimible solo para el cierre**: HTML del servidor con botón "Imprimir / Guardar PDF", mismo patrón que el comprobante de reembolso (`receipt.ts` + `window.open` + `sl-print`). PDF = imprimir del navegador. | Cero dependencias. Un PDF generado en el Worker no aporta nada sobre "Guardar como PDF". |
 | D9 | El cierre sale con marca **PRELIMINAR** mientras el evento no haya terminado (`now < event_end`) **o** haya órdenes `pending` vigentes. | Evita entregar como final un cierre que todavía cambia. |
 | D10 | Gráficos con barras CSS, sin librería. | El bundle del admin no necesita Recharts para 3 barras. |
+| D11 | **Comisión en reembolsos — regla del mismo día, para Yappy y CuantoApp**: si `refunded_at` cae el **mismo día de Panamá** que `paid_at`, el procesador devuelve la comisión (pérdida 0); si cae otro día, la comisión estimada de esa orden se **pierde**. Efectivo: nunca hay comisión. La regla vive en una sola función de `api/_lib/reports.ts` (`refundFeeLost(order)`) para poder cambiarla por método. | Yappy lo confirma así; para CuantoApp es un **supuesto sin verificar** (podría no devolverla nunca). Se aplica la misma regla por simplicidad, y el cierre lo rotula "estimado". Si se confirma lo contrario, se cambia solo esa función. |
+| D12 | **Efectivo — sin desglose por cobrador.** El cierre lista las órdenes en efectivo con su nota (`payment_ref`) tal cual, rotulada "nota libre", para cuadrar a mano. No se agrupa por la nota. | La nota no es un campo fiable (mayúsculas, apodos, vacía); agruparla daría totales por cobrador falsamente precisos. Un campo estructurado de cobrador queda fuera de alcance. |
+| D13 | **Sin snapshot del cierre en v1.** El imprimible lleva fecha/hora de generación y la marca PRELIMINAR (D9). | Basta para saber qué versión se entregó. Si un reembolso posterior cambia el cierre, se reimprime. |
 
 ## Alcance
 
@@ -62,7 +65,9 @@ Universo: órdenes/entradas con `event_id` = evento. Montos en centavos en BD.
 | Recargo cobrado | Σ `fee_cents` de pagadas |
 | Neto | Σ `net_cents` de pagadas (lo que debe recibir la banda) |
 | Comisión estimada (por método) | Σ por orden de `max(pct × total + fijo, mínimo)` con `PAYMENT_FEES`; 0 para `cash`/`courtesy`/`gift` |
-| Depósito esperado (por método) | Bruto del método − comisión estimada del método |
+| Depósito esperado (por método) | Bruto del método − comisión estimada del método − comisión perdida por reembolsos del método |
+| Comisión perdida por reembolsos | Σ comisión estimada de las órdenes `refunded` del método cuyo `refunded_at` (día Panamá) ≠ `paid_at` (día Panamá) — D11 |
+| Neto final | Neto − comisión perdida por reembolsos (lo que efectivamente le queda a la banda) |
 | Residuo de redondeo | Recargo cobrado − comisión estimada (debe ser ≥ 0 y de centavos) |
 | Reembolsado | `status = 'refunded'`: n.º órdenes, Σ `quantity`, Σ `total_cents` devuelto. **Excluido** de bruto/neto. |
 | Anuladas sin reembolso | Entradas `void` cuya orden sigue `paid` (revocadas a mano). El dinero sigue contando; se listan por transparencia. |
@@ -86,13 +91,17 @@ Bloques (pantalla e imprimible iguales):
    cortesías, regalos, emitidas, ocupación.
 3. **Dinero por método** (`yappy`, `cuantoapp`, `cash`): órdenes, entradas,
    bruto, recargo, neto, comisión estimada, depósito esperado. Fila total.
-4. **Reembolsos**: totales + lista (comprador, fecha, monto, `refund_ref`).
-5. **Excepciones**: anuladas sin reembolso; pendientes vigentes.
-6. **Asistencia** (si el evento ya pasó): asistieron, no-show, tasa.
-7. **Firmas** (solo imprimible): "Preparado por" / "Recibido por", con fecha.
+4. **Reembolsos**: totales + lista (comprador, método, fecha de pago, fecha de
+   reembolso, monto devuelto, "¿mismo día?", comisión perdida, `refund_ref`).
+   Total de comisión perdida y **neto final**.
+5. **Efectivo** (D12): lista de órdenes en efectivo pagadas (comprador,
+   entradas, monto, fecha de pago, nota libre) con total; para cuadrar a mano.
+6. **Excepciones**: anuladas sin reembolso; pendientes vigentes.
+7. **Asistencia** (si el evento ya pasó): asistieron, no-show, tasa.
+8. **Firmas** (solo imprimible): "Preparado por" / "Recibido por", con fecha.
 
 CSV del cierre: una fila por (sección, concepto, método) con columnas
-`seccion,concepto,metodo,ordenes,entradas,bruto,recargo,neto,comision_estimada,deposito_esperado`.
+`seccion,concepto,metodo,ordenes,entradas,bruto,recargo,neto,comision_estimada,comision_perdida,deposito_esperado`.
 Las listas (reembolsos, excepciones) van en el export de detalle de órdenes, no
 aquí.
 
@@ -144,7 +153,7 @@ Sin tablas nuevas. Funciones `stable`, `language sql`, solo lectura, con
 | RPC | Devuelve |
 |---|---|
 | `report_settlement(p_event_id uuid)` | Una fila por (status, tier, payment_method): n.º órdenes, Σ quantity, Σ total/net/fee. El TS arma bloques y comisiones. |
-| `report_settlement_exceptions(p_event_id uuid)` | Reembolsadas, anuladas-sin-reembolso y pendientes vigentes (filas cortas, sin PII más allá de nombre). |
+| `report_settlement_exceptions(p_event_id uuid)` | Filas cortas (sin PII más allá del nombre) de: reembolsadas (con método, `total_cents`, `paid_at`, `refunded_at`, `refund_ref` — el TS aplica D11), pagadas en efectivo (con `payment_ref`), anuladas-sin-reembolso y pendientes vigentes. |
 | `report_sales_daily(p_event_id uuid)` | Serie diaria de D4/§2 con días en cero. |
 | `report_checkin(p_event_id uuid, p_bucket_minutes int default 15)` | Franjas, por estación y por tarifa (o tres funciones; a criterio del implementador). |
 | `report_events_comparison()` | Una fila por evento no `draft`. |
@@ -200,19 +209,22 @@ Sin tablas nuevas. Funciones `stable`, `language sql`, solo lectura, con
 3. Σ neto del día de Ventas por día = neto del Cierre (incluye un caso con una
    orden pagada un día y reembolsada otro).
 4. Una orden pagada a las 23:30 hora de Panamá cae en ese día, no en el siguiente.
-5. Para cada método, depósito esperado = bruto − comisión estimada, y residuo de
-   redondeo ≥ 0.
-6. El Cierre muestra PRELIMINAR antes de `event_end` o con pendientes vigentes;
+5. Para cada método, depósito esperado = bruto − comisión estimada − comisión
+   perdida por reembolsos, y residuo de redondeo ≥ 0.
+6. Una orden Yappy (y una CuantoApp) reembolsada el mismo día de Panamá en que
+   se pagó tiene comisión perdida 0; reembolsada otro día, pierde su comisión
+   estimada, que se descuenta del neto final y del depósito esperado.
+7. El Cierre muestra PRELIMINAR antes de `event_end` o con pendientes vigentes;
    sin marca en otro caso.
-7. Cortesías y regalos aparecen en cantidades y nunca suman a bruto/neto.
-8. Una entrada revocada de una orden pagada aparece en "anuladas sin
+8. Cortesías y regalos aparecen en cantidades y nunca suman a bruto/neto.
+9. Una entrada revocada de una orden pagada aparece en "anuladas sin
    reembolso" y su dinero sigue en el neto.
-9. Un `buyer_name` `=1+1` aparece literal (`'=1+1`) al abrir el CSV en Excel.
-10. El CSV abre con acentos correctos en Excel (Windows y Mac).
-11. Con contraseña de soporte o de staff, todas las rutas `reports/*` → 401.
-12. El imprimible se ve completo en una hoja carta y el botón imprime (CSP).
-13. Comparativo lista todos los eventos no `draft` sin elegir evento.
-14. `npm run typecheck` pasa.
+10. Un `buyer_name` `=1+1` aparece literal (`'=1+1`) al abrir el CSV en Excel.
+11. El CSV abre con acentos correctos en Excel (Windows y Mac).
+12. Con contraseña de soporte o de staff, todas las rutas `reports/*` → 401.
+13. El imprimible se ve completo en una hoja carta y el botón imprime (CSP).
+14. Comparativo lista todos los eventos no `draft` sin elegir evento.
+15. `npm run typecheck` pasa.
 
 ## Verificación
 
@@ -225,22 +237,17 @@ Sin tablas nuevas. Funciones `stable`, `language sql`, solo lectura, con
 
 ## Preguntas abiertas
 
-1. **¿Yappy/CuantoApp devuelven su comisión en un reembolso?** Si no, cada
-   reembolso le cuesta a la banda la comisión de esa orden y el cierre debería
-   mostrarla como pérdida. Hay que confirmarlo con cada procesador.
-2. **¿El venue se lleva un porcentaje o un fijo?** Si el cierre se usa para
-   liquidar con el venue, haría falta un campo por evento (p. ej.
-   `events.venue_split`) y una línea "corresponde al venue". Fuera de este spec
-   salvo que lo confirmes.
-3. **¿Quién recibe el efectivo y cómo se cuadra?** Hoy `payment_ref` es texto
-   libre. Si el efectivo lo cobran varias personas, conviene un desglose por
-   `payment_ref`/cobrador en el cierre.
-4. **¿Hay que congelar el cierre?** (Guardar un snapshot firmado al cerrar el
-   evento, para que un reembolso posterior no cambie un PDF ya entregado.) Mi
-   recomendación: **no en v1**; el imprimible lleva fecha/hora de generación y
-   PRELIMINAR, suficiente para rastrear qué versión se entregó.
-5. ¿Los nombres de estación de `/validar` son confiables o conviene normalizarlos
-   (lista fija) antes de reportar por estación?
+1. ¿Los nombres de estación de `/validar` son confiables o conviene normalizarlos
+   (lista fija) antes de reportar por estación? No bloquea: v1 reporta el texto
+   tal cual.
+
+### Resueltas
+
+- **Comisión en reembolsos** → D11 (regla del mismo día para ambos; CuantoApp
+  pendiente de confirmar con el procesador).
+- **Participación del venue** → no se modela; ningún evento la ha tenido.
+- **Efectivo por cobrador** → D12 (lista con nota libre, sin agrupar).
+- **Snapshot del cierre** → D13 (no en v1).
 
 ## Fuera de alcance
 
@@ -248,5 +255,8 @@ Sin tablas nuevas. Funciones `stable`, `language sql`, solo lectura, con
 - Ventas por fuente/campaña (lo cubre GA4, `analytics-entradas.md`) y métricas de
   campañas de correo (ya están en el tab Campañas).
 - Rol de solo lectura para la banda/venue.
+- Participación del venue (porcentaje o fijo) en el cierre.
+- Campo estructurado de cobrador para el efectivo.
+- Snapshot/congelado del cierre.
 - Envío programado de reportes por correo.
 - Escaneos rechazados en la puerta (no se registran hoy).
