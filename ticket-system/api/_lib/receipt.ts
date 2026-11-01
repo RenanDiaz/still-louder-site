@@ -18,7 +18,7 @@ function formatMoney(totalCents: number): string {
   return `$${(totalCents / 100).toFixed(2)}`;
 }
 
-function formatPanamaDate(iso: string | null): string {
+export function formatPanamaDate(iso: string | null): string {
   if (!iso) return '—';
   try {
     return new Intl.DateTimeFormat('es-PA', {
@@ -31,7 +31,7 @@ function formatPanamaDate(iso: string | null): string {
   }
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

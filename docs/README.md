@@ -27,6 +27,7 @@ Where each document lives and what it covers. Start with the root
 | [`features/analytics-entradas.md`](features/analytics-entradas.md) | Spec: GA4 on the public ticket surfaces + server-side `purchase` via Measurement Protocol — implemented and live |
 | [`features/contador-boletos.md`](features/contador-boletos.md) | Spec: per-event toggle for the public "quedan N boletos" counter (always / never / below a threshold), hidden server-side — implemented |
 | [`features/campanas-promocion.md`](features/campanas-promocion.md) | Spec: promotional email campaigns to past buyers (all / staggered waves / selected), opt-in at checkout, one-click unsubscribe — Phases 0 (checkout opt-in) and 1 (campaigns, waves, `/baja`) implemented |
+| [`features/reportes-admin.md`](features/reportes-admin.md) | Spec: admin **Reportes** tab — event settlement (screen + CSV + printable), daily sales, check-in, cross-event comparison, uncapped server-side CSV exports — implemented |
 
 ## Deployment (both apps)
 

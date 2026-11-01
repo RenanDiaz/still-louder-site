@@ -52,6 +52,7 @@ import {
   type WaveStats
 } from './_lib/marketing.js';
 import { prepareCampaignEmail } from './_lib/marketing-email.js';
+import { fetchSettlementGroups, handleReports, salesStatsFromGroups } from './_lib/reports.js';
 import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_lib/types.js';
 
 // Single handler for EVERY /api/admin/* route (historically a Vercel Hobby
@@ -87,6 +88,16 @@ import type { GiftCampaign, GiftClaim, Order, PresaleStatus, Ticket } from './_l
 //   GET  /api/admin/orders/:id              one order + its tickets (support)
 //   POST /api/admin/wallet/google/ensure-class create the Google Wallet event class (idempotent)
 //   GET  /api/admin/cuantoapp?event=           CuantoApp links per quantity + the amount each must charge
+//
+// Reports (docs/features/reportes-admin.md) — admin only, GET, ?format=json|csv
+// (settlement also html = printable). Aggregated in Postgres (0018_reports.sql);
+// CSV exports read every row (never capped by the on-screen list):
+//   GET  /api/admin/reports/settlement?event=&format=  event settlement ("cierre")
+//   GET  /api/admin/reports/sales-daily?event=&format= sales per Panama day
+//   GET  /api/admin/reports/checkin?event=&format=     check-in by 15-min slot / station / tier
+//   GET  /api/admin/reports/events?format=             cross-event comparison (no ?event=)
+//   GET  /api/admin/reports/orders.csv?event=          every order of the event (CSV)
+//   GET  /api/admin/reports/tickets.csv?event=         every ticket of the event (CSV)
 //
 // Promotional email campaigns (docs/features/campanas-promocion.md) — admin
 // only, NOT event-scoped (like events):
@@ -180,6 +191,11 @@ export default withErrorHandling(async (req: ApiRequest, res: ApiResponse) => {
   if (!admin) return sendJson(res, 401, { error: 'unauthorized' });
 
   if (segments[0] === 'marketing') return handleMarketing(req, res, segments.slice(1));
+
+  if (segments[0] === 'reports') {
+    if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
+    return handleReports(req, res, segments.slice(1), () => requireEvent(req, res));
+  }
 
   if (segments[0] === 'orders' && segments.length === 3 && segments[2] === 'refund-receipt') {
     if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
@@ -319,36 +335,10 @@ async function listOrders(
     .single<PresaleStatus>();
   if (presaleErr) throw new Error(`presale_status failed: ${presaleErr.message}`);
 
-  const { data: paidOrders, error: paidErr } = await supabase
-    .from('orders')
-    .select('tier, quantity, total_cents, net_cents, fee_cents, payment_method')
-    .eq('event_id', event.id)
-    .eq('status', 'paid');
-  if (paidErr) throw new Error(`stats query failed: ${paidErr.message}`);
-
-  // Refunded orders are excluded from every revenue figure above (those only
-  // count status='paid'); report them separately for reconciliation.
-  const { data: refundedOrders, error: refundedErr } = await supabase
-    .from('orders')
-    .select('quantity, total_cents')
-    .eq('event_id', event.id)
-    .eq('status', 'refunded');
-  if (refundedErr) throw new Error(`refund stats query failed: ${refundedErr.message}`);
-  const refunded = (refundedOrders ?? []) as Pick<Order, 'quantity' | 'total_cents'>[];
-
-  const paid = (paidOrders ?? []) as Pick<
-    Order,
-    'tier' | 'quantity' | 'total_cents' | 'net_cents' | 'fee_cents' | 'payment_method'
-  >[];
-  const sumQty = (rows: typeof paid) => rows.reduce((sum, o) => sum + o.quantity, 0);
-  // revenueByMethod reporta el NETO por método (lo que realmente recibe la
-  // banda), no el bruto cobrado: el recargo por servicio solo cubre la comisión.
-  const revenueByMethod: Record<string, number> = { yappy: 0, cuantoapp: 0, cash: 0 };
-  for (const o of paid) {
-    if (o.payment_method in revenueByMethod) {
-      revenueByMethod[o.payment_method] += o.net_cents;
-    }
-  }
+  // Sales figures come from report_settlement, the same aggregation the
+  // Reportes → Cierre uses, so both always show identical numbers
+  // (docs/features/reportes-admin.md, D2) and nothing is capped by max_rows.
+  const sales = salesStatsFromGroups(await fetchSettlementGroups(event.id));
 
   const stats = {
     presale: {
@@ -361,19 +351,7 @@ async function listOrders(
       stage2Cap: presale!.stage2_cap,
       soldOut: presale!.sold_out
     },
-    generalPaid: sumQty(paid.filter((o) => o.tier === 'general')),
-    courtesyTickets: sumQty(paid.filter((o) => o.tier === 'cortesia')),
-    totalTicketsPaid: sumQty(paid),
-    // revenueCents = neto que recibe la banda. feesCents = recargos por servicio
-    // que se fueron en comisiones. grossCents = total cobrado al comprador.
-    revenueCents: paid.reduce((sum, o) => sum + o.net_cents, 0),
-    feesCents: paid.reduce((sum, o) => sum + o.fee_cents, 0),
-    grossCents: paid.reduce((sum, o) => sum + o.total_cents, 0),
-    revenueByMethod,
-    // Reembolsos (no cuentan en los ingresos de arriba).
-    refundedOrders: refunded.length,
-    refundedTickets: refunded.reduce((sum, o) => sum + o.quantity, 0),
-    refundedGrossCents: refunded.reduce((sum, o) => sum + o.total_cents, 0)
+    ...sales
   };
 
   res.setHeader('Cache-Control', 'no-store');
