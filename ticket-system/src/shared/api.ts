@@ -962,3 +962,257 @@ export interface GateEvent {
 export function listGateEvents(password: string): Promise<{ events: GateEvent[] }> {
   return request<{ events: GateEvent[] }>('/api/tickets/validate', { headers: authHeader(password) });
 }
+
+// --- Reportes (docs/features/reportes-admin.md) -------------------------------------
+// Shapes de GET /api/admin/reports/* (ver api/_lib/reports.ts). Montos en centavos;
+// porcentajes ya calculados (null cuando el divisor es 0).
+
+export type ReportKind = 'settlement' | 'sales-daily' | 'checkin' | 'events';
+
+export interface ReportEventSummary {
+  id: string;
+  slug: string;
+  name: string;
+  venue: string | null;
+  startsAt: string;
+  eventEnd: string;
+  status: EventStatus;
+  totalCapacity: number;
+}
+
+export interface ReportAttendance {
+  issued: number;
+  used: number;
+  valid: number;
+  noShow: number | null;
+  rate: number | null;
+}
+
+export interface SettlementMethodRow {
+  method: 'yappy' | 'cuantoapp' | 'cash';
+  label: string;
+  orders: number;
+  tickets: number;
+  grossCents: number;
+  feeCents: number;
+  netCents: number;
+  processorFeeCents: number;
+  lostFeeCents: number;
+  expectedDepositCents: number;
+}
+
+export interface SettlementReport {
+  event: ReportEventSummary;
+  generatedAt: string;
+  preliminary: boolean;
+  preliminaryReasons: string[];
+  tiers: { tier: string; label: string; free: boolean; orders: number; tickets: number; netCents: number }[];
+  totals: {
+    soldTickets: number;
+    freeTickets: number;
+    issuedTickets: number;
+    capacity: number;
+    occupancyPct: number | null;
+    orders: number;
+    grossCents: number;
+    feeCents: number;
+    netCents: number;
+    processorFeeCents: number;
+    roundingResidueCents: number;
+    lostFeeCents: number;
+    expectedDepositCents: number;
+    finalNetCents: number;
+  };
+  byMethod: SettlementMethodRow[];
+  refunds: {
+    orders: number;
+    tickets: number;
+    refundedCents: number;
+    lostFeeCents: number;
+    list: {
+      orderId: string;
+      buyerName: string;
+      method: string;
+      tier: string;
+      quantity: number;
+      totalCents: number;
+      paidAt: string | null;
+      refundedAt: string | null;
+      sameDay: boolean | null;
+      lostFeeCents: number;
+      refundRef: string | null;
+    }[];
+  };
+  cash: {
+    orders: number;
+    tickets: number;
+    totalCents: number;
+    list: {
+      orderId: string;
+      buyerName: string;
+      tier: string;
+      quantity: number;
+      totalCents: number;
+      paidAt: string | null;
+      note: string | null;
+    }[];
+  };
+  voidUnrefunded: {
+    tickets: number;
+    list: {
+      orderId: string;
+      buyerName: string;
+      method: string;
+      tier: string;
+      quantity: number;
+      voidTickets: number;
+      netCents: number;
+    }[];
+  };
+  pending: {
+    orders: number;
+    tickets: number;
+    totalCents: number;
+    list: {
+      orderId: string;
+      buyerName: string;
+      method: string;
+      tier: string;
+      quantity: number;
+      totalCents: number;
+      createdAt: string;
+      expiresAt: string | null;
+    }[];
+  };
+  expiredPendingOrders: number;
+  attendance: ReportAttendance & { ended: boolean };
+}
+
+export interface SalesDailyReport {
+  event: ReportEventSummary;
+  generatedAt: string;
+  days: {
+    day: string;
+    paidOrders: number;
+    preventaTickets: number;
+    generalTickets: number;
+    soldTickets: number;
+    freeTickets: number;
+    grossCents: number;
+    netCents: number;
+    netByMethod: { yappy: number; cuantoapp: number; cash: number };
+    refundedOrders: number;
+    refundedTickets: number;
+    refundedNetCents: number;
+    dayNetCents: number;
+    cumulativeTickets: number;
+    cumulativeNetCents: number;
+    cumulativeCapacityPct: number | null;
+  }[];
+  totals: { soldTickets: number; freeTickets: number; netCents: number };
+}
+
+export interface CheckinReport {
+  event: ReportEventSummary;
+  generatedAt: string;
+  ended: boolean;
+  totals: ReportAttendance;
+  slots: { slot: string; tickets: number; cumulative: number; cumulativePct: number | null }[];
+  stations: { station: string; tickets: number }[];
+  tiers: (ReportAttendance & { tier: string; label: string })[];
+}
+
+export interface EventsComparisonReport {
+  generatedAt: string;
+  events: {
+    id: string;
+    slug: string;
+    name: string;
+    status: EventStatus;
+    startsAt: string;
+    capacity: number;
+    preventaSold: number;
+    generalSold: number;
+    soldTickets: number;
+    freeIssued: number;
+    issuedTickets: number;
+    occupancyPct: number | null;
+    grossCents: number;
+    netCents: number;
+    refundedOrders: number;
+    refundedCents: number;
+    daysOnSale: number;
+    soldOutAt: string | null;
+    attendanceRate: number | null;
+  }[];
+}
+
+function reportPath(kind: string, eventId: string | null, format: string): string {
+  const qs = new URLSearchParams();
+  if (eventId) qs.set('event', eventId);
+  if (format !== 'json') qs.set('format', format);
+  const query = qs.toString();
+  return `/api/admin/reports/${kind}${query ? `?${query}` : ''}`;
+}
+
+export function fetchSettlementReport(password: string, eventId: string): Promise<SettlementReport> {
+  return request(reportPath('settlement', eventId, 'json'), { headers: authHeader(password) });
+}
+
+export function fetchSalesDailyReport(password: string, eventId: string): Promise<SalesDailyReport> {
+  return request(reportPath('sales-daily', eventId, 'json'), { headers: authHeader(password) });
+}
+
+export function fetchCheckinReport(password: string, eventId: string): Promise<CheckinReport> {
+  return request(reportPath('checkin', eventId, 'json'), { headers: authHeader(password) });
+}
+
+export function fetchEventsComparisonReport(password: string): Promise<EventsComparisonReport> {
+  return request(reportPath('events', null, 'json'), { headers: authHeader(password) });
+}
+
+async function fetchReportResponse(password: string, path: string): Promise<Response> {
+  const res = await fetch(path, { headers: authHeader(password) });
+  if (!res.ok) {
+    let code = `http_${res.status}`;
+    try {
+      const data = (await res.json()) as ApiError;
+      if (data.error) code = data.error;
+    } catch {
+      // non-JSON error body; keep the http_<status> code
+    }
+    const err = new Error(code) as Error & { status?: number; code?: string };
+    err.status = res.status;
+    err.code = code;
+    throw err;
+  }
+  return res;
+}
+
+/**
+ * Descarga un CSV de reportes. No sirve un <a href> directo porque la
+ * contraseña viaja en el header Authorization: se pide con fetch y se baja
+ * como Blob, con el nombre que manda el servidor (Content-Disposition).
+ * `kind`: 'settlement' | 'sales-daily' | 'checkin' | 'events' | 'orders.csv' | 'tickets.csv'.
+ */
+export async function downloadReportCsv(password: string, kind: string, eventId: string | null): Promise<void> {
+  const path = reportPath(kind, eventId, kind.endsWith('.csv') ? 'json' : 'csv');
+  const res = await fetchReportResponse(password, path);
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `${kind.replace('.csv', '')}.csv`;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** HTML imprimible del cierre (se escribe en una pestaña nueva, como el comprobante de reembolso). */
+export async function fetchSettlementHtml(password: string, eventId: string): Promise<string> {
+  const res = await fetchReportResponse(password, reportPath('settlement', eventId, 'html'));
+  return res.text();
+}

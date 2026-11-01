@@ -5,6 +5,7 @@ import {
   closeGiftCampaign,
   createCourtesyOrder,
   createGiftCampaign,
+  downloadReportCsv,
   ensureWalletClass,
   fetchAdminOrders,
   fetchAdminTickets,
@@ -31,6 +32,7 @@ import { TIER_LABELS } from '../shared/config';
 import { EventosTab } from './EventosTab';
 import { CuantoappTab } from './CuantoappTab';
 import { CampanasTab } from './CampanasTab';
+import { ReportesTab } from './ReportesTab';
 
 const STORAGE_KEY = 'sl_admin_pw';
 // Last event picked in the selector (persists across sessions on this device).
@@ -62,27 +64,6 @@ function fmtDateTime(iso: string | null): string {
     hour: '2-digit',
     minute: '2-digit'
   });
-}
-
-function downloadCsv(filename: string, rows: (string | number | null | undefined)[][]) {
-  const csv = rows
-    .map((row) =>
-      row
-        .map((cell) => {
-          const s = cell == null ? '' : String(cell);
-          return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-        })
-        .join(',')
-    )
-    .join('\n');
-  // BOM so Excel opens the UTF-8 accents correctly.
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 export default function App() {
@@ -169,7 +150,16 @@ function Gate({
   );
 }
 
-type TabKey = 'resumen' | 'ordenes' | 'entradas' | 'regalos' | 'checkin' | 'cuantoapp' | 'eventos' | 'campanas';
+type TabKey =
+  | 'resumen'
+  | 'ordenes'
+  | 'entradas'
+  | 'regalos'
+  | 'checkin'
+  | 'reportes'
+  | 'cuantoapp'
+  | 'eventos'
+  | 'campanas';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'resumen', label: 'Resumen' },
@@ -177,6 +167,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'entradas', label: 'Entradas' },
   { key: 'regalos', label: 'Regalos' },
   { key: 'checkin', label: 'Check-in' },
+  { key: 'reportes', label: 'Reportes' },
   { key: 'cuantoapp', label: 'CuantoApp' },
   { key: 'eventos', label: 'Eventos' },
   { key: 'campanas', label: 'Campañas' }
@@ -280,7 +271,9 @@ function Dashboard({ password, onLogout }: { password: string; onLogout: () => v
       )}
       {/* Campañas tampoco depende del evento elegido (docs/features/campanas-promocion.md). */}
       {tab === 'campanas' && events && <CampanasTab password={password} events={events} />}
-      {tab !== 'eventos' && tab !== 'campanas' && !event && events && (
+      {/* Reportes: Cierre/Ventas/Asistencia usan el evento; Comparativo no (docs/features/reportes-admin.md). */}
+      {tab === 'reportes' && events && <ReportesTab key={event?.id ?? 'none'} password={password} event={event} />}
+      {tab !== 'eventos' && tab !== 'campanas' && tab !== 'reportes' && !event && events && (
         <p className="muted">No hay eventos: crea uno en la pestaña Eventos.</p>
       )}
       {event && (
@@ -298,7 +291,7 @@ function Dashboard({ password, onLogout }: { password: string; onLogout: () => v
   );
 }
 
-// --- Resumen (reportes) --------------------------------------------------------
+// --- Resumen --------------------------------------------------------
 
 function ResumenTab({ password, event }: { password: string; event: AdminEvent }) {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -748,26 +741,14 @@ function OrdenesTab({ password, event }: { password: string; event: AdminEvent }
     }
   }
 
-  function exportCsv() {
-    const rows: (string | number | null)[][] = [
-      ['Comprador', 'Correo', 'Teléfono', 'Tipo', 'Cantidad', 'Neto', 'Cargo por servicio', 'Total cobrado', 'Pago', 'Referencia', 'Estado', 'Creada', 'Pagada'],
-      ...orders.map((o) => [
-        o.buyer_name,
-        o.buyer_email,
-        o.buyer_phone,
-        TIER_LABELS[o.tier] ?? o.tier,
-        o.quantity,
-        (o.net_cents / 100).toFixed(2),
-        (o.fee_cents / 100).toFixed(2),
-        (o.total_cents / 100).toFixed(2),
-        METHOD_LABELS[o.payment_method] ?? o.payment_method,
-        o.payment_ref,
-        o.status,
-        o.created_at,
-        o.paid_at
-      ])
-    ];
-    downloadCsv(`ordenes-${event.slug}-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  // Server-side export: EVERY order of the event, regardless of the on-screen
+  // filters or the 200-row list cap (docs/features/reportes-admin.md, D6).
+  async function exportCsv() {
+    try {
+      await downloadReportCsv(password, 'orders.csv', event.id);
+    } catch {
+      notifyError('No se pudo descargar el CSV.');
+    }
   }
 
   return (
@@ -818,8 +799,8 @@ function OrdenesTab({ password, event }: { password: string; event: AdminEvent }
           <button className="secondary" onClick={load}>
             Refrescar
           </button>
-          <button className="secondary" onClick={exportCsv} disabled={orders.length === 0}>
-            Exportar CSV
+          <button className="secondary" onClick={exportCsv} title="Todas las órdenes del evento, sin filtros">
+            Exportar CSV (todas)
           </button>
         </div>
 
@@ -1351,21 +1332,15 @@ function EntradasTab({ password, event }: { password: string; event: AdminEvent 
     }
   }
 
-  function exportCsv() {
-    const rows: (string | number | null)[][] = [
-      ['Entrada', 'Comprador', 'Correo', 'Tipo', 'Estado', 'Usada', 'Estación', 'Emitida'],
-      ...tickets.map((t) => [
-        t.id,
-        t.buyer_name,
-        t.buyer_email,
-        TIER_LABELS[t.tier] ?? t.tier,
-        TICKET_STATUS_LABELS[t.status] ?? t.status,
-        t.used_at,
-        t.used_by,
-        t.created_at
-      ])
-    ];
-    downloadCsv(`entradas-${event.slug}-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  // Server-side export: EVERY ticket of the event, regardless of the on-screen
+  // filters or the 1000-row list cap (docs/features/reportes-admin.md, D6).
+  async function exportCsv() {
+    try {
+      await downloadReportCsv(password, 'tickets.csv', event.id);
+    } catch {
+      setMessage('');
+      setError('No se pudo descargar el CSV.');
+    }
   }
 
   return (
@@ -1410,8 +1385,8 @@ function EntradasTab({ password, event }: { password: string; event: AdminEvent 
           <button className="secondary" onClick={load}>
             Refrescar
           </button>
-          <button className="secondary" onClick={exportCsv} disabled={tickets.length === 0}>
-            Exportar CSV
+          <button className="secondary" onClick={exportCsv} title="Todas las entradas del evento, sin filtros">
+            Exportar CSV (todas)
           </button>
         </div>
 

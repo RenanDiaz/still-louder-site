@@ -100,7 +100,9 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   its copy quotes the `/entradas` form labels — keep them in sync), `/admin` (tabbed
   panel: reports, orders — mark paid / cancel pending / resend QR email —,
   ticket tracking with revoke/unrevoke, courtesy issuance, live check-in,
-  stage-2 toggle, CSV export), `/validar` (gate QR scanner with
+  stage-2 toggle, server-side CSV export, **Reportes** tab — settlement with
+  printable/PDF, daily sales, check-in, cross-event comparison, see
+  `docs/features/reportes-admin.md`), `/validar` (gate QR scanner with
   camera + sound), `/support` (staff read-only customer support: look up orders
   by email/phone/name/order-id, view order + ticket status, resend QR email —
   no mutations, no sales stats; gated by `SUPPORT_PASSWORD` or the admin
@@ -157,6 +159,10 @@ There is no test suite; `npm run typecheck` is the validation gate. The root
   once; re-checks unsubscribes and the frequency cap before every wave), plus
   helpers `marketing_audience`, `marketing_contact_events`,
   `tag_marketing_contacts`, `record_marketing_results`, `marketing_campaign_stats`.
+  Reports (0018) add read-only `report_*` RPCs that aggregate in Postgres
+  (Panama-time day/hour buckets); `api/_lib/reports.ts` derives processor fees
+  from `pricing.ts` and formats JSON/CSV/HTML. Money figures in the admin
+  (Resumen and Reportes) come from `report_settlement` — don't re-sum orders in JS.
 
 ### Architecture invariants (do not break)
 

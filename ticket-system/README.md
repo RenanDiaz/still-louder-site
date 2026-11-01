@@ -93,7 +93,8 @@ ticket-system/
 │   ├── 0010_total_capacity.sql          # aforo total del evento
 │   ├── 0011_events.sql                  # multi-evento: events + event_tier, event_id en todo
 │   ├── …                                # 0012–0016
-│   └── 0017_marketing_campaigns.sql     # campañas: contactos, campañas, destinatarios + RPCs
+│   ├── 0017_marketing_campaigns.sql     # campañas: contactos, campañas, destinatarios + RPCs
+│   └── 0018_reports.sql                 # RPCs de solo lectura de la pestaña Reportes
 ├── index.html · entradas.html · halloween-party.html · ayuda.html · como-comprar.html · regalo.html · baja.html
 ├── admin.html · support.html · validar.html
 ├── vite.config.ts · wrangler.jsonc · .env.example
@@ -149,6 +150,13 @@ tickets y que `claim_gift` saque el evento de la campaña, y **elimina
 provisionales, ver "Eventos"). Aforo, caps y precios se editan desde la pestaña
 Eventos del admin.
 
+La migración `0018` agrega las RPCs de solo lectura de la pestaña **Reportes**
+(spec `docs/features/reportes-admin.md`): `report_settlement`,
+`report_settlement_lists`, `report_ticket_breakdown`, `report_checkin_slots`,
+`report_sales_daily` y `report_events_comparison`. Agregan en Postgres (cortes
+por día/hora en `America/Panama`); el Worker deriva comisiones y formatea
+JSON/CSV/HTML en `api/_lib/reports.ts`. Sin tablas nuevas.
+
 La migración `0017` agrega las **campañas de promoción por correo** (spec
 `docs/features/campanas-promocion.md`, Fase 1): `marketing_contact` (derivada
 de las órdenes pagadas, con etiquetas y estado de suscripción),
@@ -177,13 +185,21 @@ los eventos" por accidente):
   correo con los QR** de una pagada (excluye entradas anuladas), **reembolsar**
   una pagada (reversa Yappy + anula sus entradas, ver abajo), generar
   **cortesías** (orden $0 que pasa por el mismo `issueOrder()` idempotente, con
-  o sin correo) y exportar CSV.
+  o sin correo) y exportar CSV (en el servidor: **todas** las órdenes del
+  evento, sin importar filtros ni el tope de 200 de la lista).
 - **Entradas:** lista por comprador/tipo/estado con fecha y estación de uso;
   **anular** (`valid → void`, la puerta la rechaza) y **restaurar**
   (`void → valid`) con UPDATEs condicionales atómicos — una entrada usada no se
-  puede anular ni restaurar. Export CSV.
+  puede anular ni restaurar. Export CSV (todas las entradas, en el servidor).
 - **Check-in:** asistencia en vivo (auto-refresh cada 10 s): adentro/por llegar
   por tipo, barra de progreso y últimas validaciones con estación.
+- **Reportes:** **Cierre** del evento (bruto/recargo/neto y depósito esperado
+  por método con comisiones estimadas, comisión perdida por reembolsos de otro
+  día, neto final, reembolsos, efectivo con su nota, anuladas sin reembolso,
+  pendientes vigentes, asistencia; marca PRELIMINAR) con CSV e imprimible/PDF;
+  **Ventas por día**, **Asistencia** (franjas de 15 min, estación, tipo) y
+  **Comparativo** entre eventos, cada uno con CSV. El Resumen usa la misma
+  agregación que el Cierre. Ver `docs/features/reportes-admin.md`.
 - **Regalos:** campañas de QR oculto del evento (ver `gift-qr-campaigns.md`).
 - **Eventos:** tabla de todos los shows (estado, precios, vendidas/aforo) +
   formulario crear/editar + botones de transición de estado. Ver "Eventos".

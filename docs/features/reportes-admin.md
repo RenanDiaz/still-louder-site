@@ -3,10 +3,17 @@
 > Subsistema: `ticket-system/`. Superficie: `/admin`, tab nuevo **Reportes**.
 > Solo admin (`ADMIN_PASSWORD`); soporte y puerta no ven dinero.
 
-## Estado: listo para implementar (1 nov 2026)
+## Estado: implementado (1 nov 2026)
 
-Preguntas de diseño resueltas (ver [Decisiones](#decisiones), D11–D13). Queda
-una [pregunta abierta](#preguntas-abiertas) menor que no bloquea.
+Implementado según este spec (migración `0018_reports.sql`,
+`api/_lib/reports.ts`, `src/admin/ReportesTab.tsx`), con estos detalles:
+
+| Spec | Implementación | Por qué |
+|---|---|---|
+| `report_checkin(...)` | Dos RPCs: `report_checkin_slots` (franjas) y `report_ticket_breakdown` (tarifa × estado × estación), esta última reutilizada por el bloque de asistencia del cierre | Una sola fuente de conteos de entradas. |
+| Comisión estimada por orden | Por grupo: `pct × Σ total + fijo × n.º órdenes` (`estimateProcessorFeeCents` en `pricing.ts`), con el mínimo por transacción como piso | Postgres devuelve sumas, no filas; el mínimo de Yappy ($0.02) solo aplica a totales < $1.87. |
+| Botones de export de Órdenes/Entradas | Ahora dicen "Exportar CSV (todas)" | Deja claro que ignoran los filtros de la pantalla. |
+| — | Las tablas del tab tienen scroll horizontal propio | Sin desborde de página en móvil. |
 
 ## Problema
 

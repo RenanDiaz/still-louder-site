@@ -71,6 +71,20 @@ export function priceBreakdown(unitPriceCents: number, quantity: number, method:
   return { netCents, feeCents: totalCents - netCents, totalCents };
 }
 
+/**
+ * Comisión ESTIMADA que el procesador cobra sobre `orders` transacciones que
+ * suman `totalCents` (docs/features/reportes-admin.md, D5): pct × total + fijo
+ * por transacción, con el mínimo por transacción como piso. Es una estimación
+ * para el cierre (cuánto debe depositar cada procesador), no el estado de
+ * cuenta real. 0 para efectivo/cortesía/regalo.
+ */
+export function estimateProcessorFeeCents(method: PaymentMethod, totalCents: number, orders: number): number {
+  const fee = PAYMENT_FEES[method];
+  if (!fee || orders <= 0 || totalCents <= 0) return 0;
+  const estimate = Math.round(totalCents * fee.pct + fee.fixedCents * orders);
+  return Math.max(estimate, fee.minFeeCents * orders);
+}
+
 // How long a pending order holds its presale cupo before cleanup frees it.
 // Manual methods (cash / CuantoApp) need a generous window because
 // reconciliation is human; Yappy confirms instantly so it can be short.
