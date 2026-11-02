@@ -22,7 +22,7 @@ Where each document lives and what it covers. Start with the root
 |---|---|
 | [`../ticket-system/README.md`](../ticket-system/README.md) | Architecture, env vars, Supabase, Yappy, operations — read before touching the app |
 | [`features/multi-evento.md`](features/multi-evento.md) | Spec: multi-event foundation (`events` table, migration 0011) — implemented |
-| [`features/entradas-31-10.md`](features/entradas-31-10.md) | Spec: Halloween Party sale (31 Oct 2026, slug `halloween-party`) — implemented, on sale since 1 Oct |
+| [`features/entradas-31-10.md`](features/entradas-31-10.md) | Spec: Halloween Party sale (31 Oct 2026, slug `halloween-party`) — implemented; show held, site moved to "Last show" (archive the event in `/admin`) |
 | [`features/gift-qr-campaigns.md`](features/gift-qr-campaigns.md) | Spec: hidden-QR gift ticket campaigns (`/regalo/<token>`) |
 | [`features/analytics-entradas.md`](features/analytics-entradas.md) | Spec: GA4 on the public ticket surfaces + server-side `purchase` via Measurement Protocol — implemented and live |
 | [`features/contador-boletos.md`](features/contador-boletos.md) | Spec: per-event toggle for the public "quedan N boletos" counter (always / never / below a threshold), hidden server-side — implemented |
