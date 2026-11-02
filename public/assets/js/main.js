@@ -361,7 +361,7 @@ const initPlatformTracking = () => {
 
   // Shows link tracking: un CTA por tarjeta. El label viene del HTML
   // (data-shows-link="<show>_<destino>", p. ej. "oct31_tickets" o
-  // "oct31_announce_instagram") para distinguir venta externa, venta propia y
+  // "next_announce_instagram" en la tarjeta sin fechas) para distinguir venta externa, venta propia y
   // anuncio sin tocar el JS al agregar fechas.
   document.querySelectorAll('[data-shows-link]').forEach((link) => {
     link.addEventListener('click', () => {

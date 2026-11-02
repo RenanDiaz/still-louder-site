@@ -73,21 +73,11 @@ export const CONFIG = {
   // index.html (el HTML es la fuente del copy; aquí viven las URLs y fechas).
   // Orden cronológico: la primera es la "próxima fecha".
   shows: {
-    upcoming: {
-      // 31 oct: fecha propia, venta directa en el ticket-system (evento
-      // `halloween-party`, ver docs/features/entradas-31-10.md). Preventa $10 (primeras
-      // 100) desde el 1 oct a las 00:00; general $12.
-      oct31: {
-        name: "Still Louder's Halloween Party",
-        guests: 'Elefreak & John Key',
-        dateISO: '2026-10-31T20:00:00-05:00',
-        dateLabel: '31 · 10 · 2026',
-        venue: 'Hops Food & Drinks',
-        city: 'David, Chiriquí',
-        presaleStartISO: '2026-10-01T00:00:00-05:00',
-        ticketsUrl: 'https://entradas.still-louder.com/halloween-party'
-      }
-    },
+    // Sin fechas anunciadas: el último show (Still Louder's Halloween Party,
+    // 31 oct 2026, evento `halloween-party` del ticket-system) ya pasó. Al
+    // anunciar una fecha, agregar aquí su entrada { name, dateISO, venue,
+    // ticketsUrl, ... } y su tarjeta en #shows (index.html + en.html).
+    upcoming: {},
     // Canal donde se anuncian las fechas (destino del CTA mientras no hay venta).
     announceUrl: 'https://www.instagram.com/still_louder/',
     // Página de ayuda del sistema de entradas (FAQ del evento actual + canales).
@@ -256,6 +246,5 @@ Object.freeze(CONFIG.messages.en);
 Object.freeze(CONFIG.store);
 Object.freeze(CONFIG.shows);
 Object.freeze(CONFIG.shows.upcoming);
-Object.freeze(CONFIG.shows.upcoming.oct31);
 
 export default CONFIG;

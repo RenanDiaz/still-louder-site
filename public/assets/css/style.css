@@ -810,6 +810,8 @@ body {
 }
 
 /* Tarjeta de fecha. Variantes:
+   --empty: sin fechas anunciadas (estado + titular + CTA a Instagram),
+     centrada y angosta.
    --featured: show anunciado con flyer (poster + cuerpo). En desktop el
      poster va a la izquierda y el cuerpo alineado a la izquierda.
    --next: fecha propia en modo coming soon (solo la fecha, centrada). Al
@@ -822,6 +824,21 @@ body {
 
 .shows-card:hover {
   transform: none;
+}
+
+.shows-card--empty {
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.shows-card__headline {
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-normal);
+  letter-spacing: var(--letter-spacing-wide);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--spacing-sm);
 }
 
 .shows-card--featured {
