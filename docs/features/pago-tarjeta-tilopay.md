@@ -10,7 +10,9 @@ No implementado. Fuentes revisadas el 15 nov 2026: los Términos y Condiciones y
 política de privacidad de Tilopay para Panamá, la OpenAPI pública
 (`tilopay.com/developers/openapi.json`) y el portal de desarrolladores completo
 (`tilopay.com/llms.txt` → texto completo, páginas con `last_verified` entre ago y
-oct 2026). Resolvieron lo que bloqueaba el diseño: hay consulta de transacción
+oct 2026; la colección pública de Postman "TILOPAY API", publicada el 21 ene 2026,
+no agrega nada: es una versión anterior del mismo contenido).
+Resolvieron lo que bloqueaba el diseño: hay consulta de transacción
 por número de orden (`consult`), reembolso por API (`processModification`),
 cuenta de pruebas propia y tarjetas de prueba. Quedan abiertas P3b (Apple/Google
 Pay en la página alojada), P5 (retenciones y costos en Panamá), P6 (afiliación)
@@ -64,7 +66,7 @@ por parámetro. Convenciones que rompen integraciones tipadas (portal,
 |---|---|---|
 | `POST /api/v1/login` `{ apiuser, password }` | Token bearer | `expires_in: 86400` (24 h). |
 | `POST /api/v1/processPayment` | Crea la transacción de la página alojada | Body: `key`, `amount` (string `"12.99"`), `currency: "USD"`, `orderNumber`, `capture: "1"`, `redirect` (URL GET de retorno), `billTo*` (todos requeridos, P7), `subscription: "0"`, `platform`, `returnData` (base64), `token_version: "v2"`. Respuesta `{ type: "100", url }` → redirigir al comprador a `url`. Tiene webhook, pero su especificación se entrega solo abriendo un caso en soporte, **se envía una sola vez** (sin reintentos) y no tiene verificación de origen pública (ver D13). |
-| Redirect de retorno (GET) | Vuelve el comprador | Query: `code` (`1` = aprobada), `description`, `auth`, `order`, `tilopay-transaction`, `OrderHash`, `returnData`. El algoritmo de `OrderHash` no es público (se pide a soporte) → **no lo usamos**: verificamos con `consult`. |
+| Redirect de retorno (GET) | Vuelve el comprador | Query: `code` (`1` = aprobada), `description`, `auth`, `order`, `tilopay-transaction`, `OrderHash`, `returnData`. El algoritmo de `OrderHash` no es público (se pide a sac@tilopay.com) → **no lo usamos**: verificamos con `consult`. |
 | `POST /api/v1/consult` `{ key, orderNumber }` | **Fuente de verdad** del pago | Devuelve un **arreglo** de transacciones de esa orden: `id_tilopay`, `amount`, `currency`, `code` (`"1"` = pago aprobado, `"1101"` = reembolso), `auth`, `type` (`"Payment"`…), `environment` (`"Test"`/`"Production"`), y el desglose `commission`, `iva_commission`, `retention_iva`, `retention_rent`, `cost`, `cost_iva`, `net_to_liquidate`. El portal manda usarlo antes de entregar el producto. |
 | `POST /api/v1/processModification` `{ key, orderNumber, type, amount }` | Reembolso (`type: "2"`) o reverso (`"3"`) | `type: "100"` = se procesó; resultado en `ReasonCode` (`"1101"` = aprobado). El monto nunca puede superar el de la venta. |
 | `POST /api/v1/consultTransactions` | Listado por rango de fechas (filtros `orderNumber`, `onlyAproved`, `environment`) | Para conciliación/cierre, no para emitir. |
