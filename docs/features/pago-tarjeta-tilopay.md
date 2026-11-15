@@ -6,7 +6,8 @@
 
 ## Estado: borrador (15 nov 2026)
 
-No implementado. Fuentes revisadas el 15 nov 2026: la OpenAPI pública
+No implementado. Fuentes revisadas el 15 nov 2026: los Términos y Condiciones y la
+política de privacidad de Tilopay para Panamá, la OpenAPI pública
 (`tilopay.com/developers/openapi.json`) y el portal de desarrolladores completo
 (`tilopay.com/llms.txt` → texto completo, páginas con `last_verified` entre ago y
 oct 2026). Resolvieron lo que bloqueaba el diseño: hay consulta de transacción
@@ -95,7 +96,7 @@ por parámetro. Convenciones que rompen integraciones tipadas (portal,
 | D3 | Fuente de verdad del pago | **`consult` por `orderNumber`**, nunca los parámetros del redirect (`code`, `OrderHash`) ni ningún aviso entrante. El retorno del comprador y la conciliación periódica (D13) solo disparan una verificación server-side. | Mismo principio del IPN de Yappy (nada se emite sin verificar). Evita depender del algoritmo privado de `OrderHash`. |
 | D4 | Condición para emitir | Entre las transacciones de **todos los intentos** de la orden (D6), **alguna** con `String(code) === "1"`, `type === "Payment"`, `amount` (cadena → centavos) == `orders.total_cents`, `currency === "USD"` y **`environment` == el esperado** (`TILOPAY_ENV`, comparando sin distinguir mayúsculas: `consult` dice `"Production"`/`"Test"` y `Init()` dice `"PROD"`/`"TEST"`), y **ningún** reembolso (`code === "1101"`) sobre ella. Si hay una aprobada pero algo no cuadra: no emitir, `console.error` y dejar la orden para revisión humana. | `consult` devuelve un arreglo (intentos rechazados, aprobados y reembolsos). El chequeo de `environment` es **crítico**: el portal advierte que, al compartir host, se puede creer que se está en pruebas y estar en producción (o al revés). Con D4 una tarjeta de prueba nunca emite entradas reales. |
 | D5 | Emisión | `issueOrder(order.id, <auth>)` — la misma rutina idempotente que usan el admin y el IPN de Yappy. | Invariante de emisión independiente del proveedor. Retorno + conciliación pueden verificar la misma orden varias veces sin duplicar nada. |
-| D6 | `orderNumber` | **Uno por intento**: `<order_ref>-<n>`, con `n` = columna nueva `orders.tilopay_attempts` (se incrementa **y persiste antes** de llamar a `processPayment`). Máximo 5 intentos por orden. `verify` consulta los números `1..n`. `create-payment` primero corre `verify`: si un intento anterior ya está aprobado, emite y no abre otro. Al emitir se guardan el `orderNumber` aprobado en `tilopay_order_number`, `id_tilopay` en `tilopay_transaction_id`, `auth` en `payment_ref` y `net_to_liquidate` en `processor_net_cents` (D14). | `orderNumber` es único para siempre y repetirlo es un rechazo, así que un reintento tras un pago rechazado necesita uno nuevo. Pero si solo se guardara el último, un pago hecho en una pestaña vieja (intento 1) después de abrir el intento 2 no se vería: se cobra y no se emite. Consultar todos los intentos lo cubre. Persistir antes de llamar permite consultar tras un timeout, como pide el portal. |
+| D6 | `orderNumber` | **Uno por intento**: `<order_ref>-<n>`, con `n` = columna nueva `orders.tilopay_attempts` (se incrementa **y persiste antes** de llamar a `processPayment`). Máximo 3 intentos por orden (D18). `verify` consulta los números `1..n`. `create-payment` primero corre `verify`: si un intento anterior ya está aprobado, emite y no abre otro. Al emitir se guardan el `orderNumber` aprobado en `tilopay_order_number`, `id_tilopay` en `tilopay_transaction_id`, `auth` en `payment_ref` y `net_to_liquidate` en `processor_net_cents` (D14). | `orderNumber` es único para siempre y repetirlo es un rechazo, así que un reintento tras un pago rechazado necesita uno nuevo. Pero si solo se guardara el último, un pago hecho en una pestaña vieja (intento 1) después de abrir el intento 2 no se vería: se cobra y no se emite. Consultar todos los intentos lo cubre. Persistir antes de llamar permite consultar tras un timeout, como pide el portal. |
 | D7 | Reserva | `RESERVATION_MINUTES.tilopay = 20`. | Pago síncrono como Yappy (15 min) + margen por 3-D Secure y redirect. |
 | D8 | Comisión | `PAYMENT_FEES.tilopay = { pct: 0.0375, fixedCents: 50, minFeeCents: 0 }` en `pricing.ts` **y** su espejo en `src/shared/config.ts`. Si en Panamá se descuenta ITBMS sobre la comisión o hay retenciones **(P5)**, se ajusta `pct`/`fixedCents` antes de abrir venta para que el neto liquidado siga ≥ precio base. | Gross-up por transacción igual que hoy: la banda recibe el precio base. `consult` confirma que el desglose existe (`iva_commission`, `retention_*`, `cost_iva`). |
 | D8b | Costo del depósito | La transferencia ACH de cada liquidación a la cuenta de la banda cuesta **$2 por depósito** (dato de la banda, 15 nov 2026; falta confirmar si lleva `transfer_iva` encima). **No** entra en `PAYMENT_FEES`: es por depósito, no por orden, y la banda lo absorbe. El cierre de Reportes lo muestra como línea aparte (`depósitos × $2`, cantidad de depósitos ingresada a mano o leída del historial de liquidaciones si se integra después). | Repartirlo por orden exigiría adivinar cuántas órdenes caen en cada liquidación. Con depósitos semanales durante ~4 semanas de venta son ~$8 por evento (≈ $0.08 por orden con 100 órdenes con tarjeta): no justifica complicar el gross-up. Pedir la liquidación menos frecuente posible (P5) lo reduce. |
@@ -105,7 +106,11 @@ por parámetro. Convenciones que rompen integraciones tipadas (portal,
 | D12 | Pago sobre orden cancelada | Si `consult` muestra un pago aprobado de una orden ya `cancelled`, **no se emite**: `console.error` + la orden aparece en el admin para reembolso (D15) o emisión manual. | Mismo criterio que `api/yappy/ipn.ts`. Con D13 debería ser rarísimo. |
 | D13 | Conciliación por cron (en vez del webhook) | Nuevo cron **cada 5 min** en `wrangler.jsonc`: toma órdenes `tilopay` `pending` creadas en las últimas 24 h y llama `verify` a cada una. Además, la limpieza diaria verifica con `consult` antes de cancelar una orden `tilopay` vencida. El webhook de `processPayment` queda fuera de la Fase 1. | El webhook de compras **se envía una sola vez** (cualquier respuesta que no sea 200 se pierde), su contrato hay que pedirlo a soporte y su única verificación de origen es un `orderHash` de algoritmo privado: no sirve como fuente de verdad ni como única red. El cron cubre al comprador que paga y cierra la pestaña: recibe su QR en ≤ 5 min. Con 20 min de reserva son ~4 consultas por orden abandonada. Si después se quiere bajar la espera, el webhook se agrega como disparador de `verify`, nunca como prueba de pago. |
 | D14 | Neto real | Columna `orders.processor_net_cents` con `net_to_liquidate` de `consult` (solo `tilopay` por ahora). El cierre de Reportes usa el neto real cuando existe y la estimación de `estimateProcessorFeeCents` cuando no. | Hoy la comisión del cierre es una estimación (`reportes-admin.md`, D5); Tilopay da el dato exacto, incluidas retenciones. |
-| D15 | Reembolsos | `refund.ts` llama a `processModification` (`type: "2"`, monto completo, `orderNumber` = `tilopay_order_number`) para órdenes `tilopay`, con el mismo contrato que Yappy: éxito solo con `type: "100"` **y** `ReasonCode: "1101"`; si no, no toca la BD y el admin puede caer al reembolso manual. | Elimina el paso manual también al reembolsar. Reverso (`"3"`) solo si Tilopay indica que aplica antes de liquidar **(P4)**. |
+| D15 | Reembolsos | `refund.ts` llama a `processModification` (`type: "2"`, monto completo, `orderNumber` = `tilopay_order_number`) para órdenes `tilopay`, con el mismo contrato que Yappy: éxito solo con `type: "100"` **y** `ReasonCode: "1101"`; si no, no toca la BD y el admin puede caer al reembolso manual. Pasados **60 días** desde el cobro, Tilopay ya no permite reembolsar: el admin muestra "solo reembolso manual" y no llama al API. El diálogo de reembolso avisa el costo: la comisión original **no se devuelve** y se cobran **$0.35** adicionales por reembolso (T&C Panamá, §4). | Elimina el paso manual también al reembolsar. Hoy la política es "todas las compras son finales" (`/entradas`, `/ayuda`), así que esto cubre sobre todo cancelaciones de evento y errores. Reverso (`"3"`) solo si Tilopay indica que aplica antes de liquidar **(P4)**. |
+| D17 | Dirección de facturación | Con método `tilopay`, el formulario de `/entradas` pide **dirección, ciudad y provincia** (selector con los códigos ISO de Panamá: `PA-1`…`PA-10`, comarcas) y **país** (por defecto Panamá; otros países, campo de estado libre). El teléfono pasa a ser obligatorio con tarjeta (`billToTelephone` es requerido). Esos datos **se envían a Tilopay y no se guardan** en nuestra BD; viven solo en la sesión del navegador mientras la orden esté pendiente, para reintentos. Código postal: lo que Tilopay acepte (P7). | Los T&C de Panamá (§2) obligan al comercio a enviar "en todo momento" el correo y la **dirección física de facturación** del cliente, para prevención de fraude: mandar valores fijos incumpliría el contrato. No guardarlos evita sumar datos personales que no necesitamos (ya hay correo, nombre y teléfono). |
+| D18 | Protección contra pruebas de tarjetas | Máximo **3** intentos por orden (no 5). Límite de intentos `tilopay` por IP y por correo (p. ej. 5/h) en `create-payment`. Si aun así hay ataques, agregar Cloudflare Turnstile antes de `create-payment`. Alerta (`console.error` + reporte) si la tasa de rechazos del día supera 10%. | Los T&C (§10) permiten **restringir la cuenta con 20% de transacciones denegadas en 30 días**. Con nuestro volumen (decenas de órdenes por evento), un bot probando tarjetas robadas llega a ese 20% en minutos y nos bloquea en plena venta. |
+| D19 | Cumplimiento visible al comprador | (a) Junto al botón "Pagar con tarjeta": "Tu pago lo procesa Tilopay" con enlace a su política de privacidad. (b) La política "todas las compras son finales" que ya muestra `/entradas` se mantiene **antes** del pago (también sirve como evidencia ante reclamos). (c) La afiliación declara el dominio exacto `entradas.still-louder.com` y la actividad "venta de entradas a conciertos de la banda". | Los T&C exigen que el comercio obtenga la autorización del cliente para que Tilopay trate sus datos (su política incluye **usarlos para su propia publicidad y perfiles de consumo**), que tenga publicadas sus políticas de devolución, y castigan vender bajo otro nombre o desde un dominio distinto al contratado (§2, §6, §11). |
+| D20 | Evidencia para reclamos | En `/admin`, por orden `tilopay`: "Exportar evidencia" (PDF/HTML imprimible con orden, montos, fecha y hora del pago, `auth`, correo de entrega enviado, entradas emitidas y **hora de check-in** de cada una, y el texto de la política aceptada). Fase 2. | Un reclamo cuesta **$75 de penalidad** (no reembolsable aunque se gane), retiene el monto en disputa y da **3–5 días hábiles** para responder; pasar a arbitraje cuesta ≥ $500. Más de 3 reclamos en 30 días, o más de 1% de reclamos sobre ventas dos meses seguidos, permite a Tilopay cancelar la afiliación (§4, §11). El check-in en puerta es la mejor prueba de servicio entregado, y ya lo tenemos. |
 | D16 | Cuentas | **Cuenta de desarrollador** (registro en `tilopay.com/developers/registro`, Tilopay habilita una cuenta de pruebas con credenciales propias) para desarrollo y staging; **cuenta de la banda** solo en producción. Nunca se alterna el modo de la cuenta de producción para probar. | El modo es de toda la cuenta: probar en la de producción la deja sin cobrar de verdad mientras dura la prueba. Con dos cuentas, `TILOPAY_ENV` es fijo por despliegue. |
 
 ## Flujo
@@ -188,9 +193,12 @@ de producción es usar otra cuenta (D16).
 - Admin / soporte (`src/admin/App.tsx`, `src/support/App.tsx`,
   `ReportesTab.tsx`): etiqueta "Tarjeta (Tilopay)" para distinguirla de
   CuantoApp mientras convivan.
+- Formulario de `/entradas` con tarjeta: campos de facturación de D17 y aviso
+  de D19.
 - Textos al comprador: `src/ayuda/App.tsx` y `src/como-comprar/App.tsx`
   mencionan CuantoApp; actualizar cuando Tilopay esté activo (`/como-comprar`
-  cita las etiquetas del formulario — mantenerlas en sync).
+  cita las etiquetas del formulario — mantenerlas en sync, incluidos los campos
+  nuevos de D17).
 - Analytics: eventos de cliente `tilopay_redirect` y `tilopay_return`
   (`{ result }`), sin PII. `purchase` sigue saliendo del servidor desde
   `issue.ts`.
@@ -237,13 +245,17 @@ corresponda).
 12. Ningún secreto `TILOPAY_*` aparece en el bundle del cliente ni en
     respuestas de la API.
 13. `npm run typecheck` pasa.
+14. Con tarjeta, no se puede pagar sin dirección, ciudad, provincia, país y
+    teléfono, y esos datos no aparecen en ninguna tabla de Supabase.
+15. Un cuarto intento de la misma orden devuelve `409 too_many_attempts`, y
+    superar el límite por IP/correo devuelve `429` sin llamar a Tilopay.
 
 ## Fases
 
 | Fase | Alcance | Salida |
 |---|---|---|
 | 0 | Registrar la cuenta de desarrollador (D16). Resolver P3b, P5–P7 con Tilopay; abrir la cuenta de la banda (P6). | Respuestas anotadas en este spec. |
-| 1 | Todo lo de "Cambios", probado con la cuenta de desarrollador y las tarjetas de prueba → credenciales de la banda en producción → compra real de $1 en un evento de prueba temporal (`on_sale`, sin enlazar; se archiva después) → reembolsarla por API. | Tarjeta automática en el próximo evento, CuantoApp como respaldo (D10). |
+| 1 | Todo lo de "Cambios", probado con la cuenta de desarrollador y las tarjetas de prueba → credenciales de la banda en producción → compra real de $1 en un evento de prueba temporal (`on_sale`, sin enlazar; se archiva después), **con la tarjeta de alguien que no sea titular de la afiliación** (los T&C, §5, prohíben pagar con tarjetas del propio comercio) → reembolsarla por API (cuesta la comisión + $0.35). | Tarjeta automática en el próximo evento, CuantoApp como respaldo (D10). |
 | 1b | Apple Pay con el SDK, solo si la página alojada no lo trae (P3b) y vale el costo de D2. Requisitos del portal: cuenta en **producción** (en pruebas el botón no aparece: **no se puede probar antes de salir**), dominio exacto `entradas.still-louder.com` certificado vía caso de soporte, solo Safari en dispositivos Apple. La hoja de Apple Pay muestra país `CR` y la etiqueta "Tilopay: <comercio>". | Decisión documentada. |
 | 2 | Tras un evento completo sin incidentes: retirar CuantoApp (`cuantoapp.ts`, `CuantoappTab`, `CUANTOAPP_PAYMENT_URL_*`, copy). El valor `cuantoapp` se queda en el check de la BD (órdenes históricas). | Un solo flujo de tarjeta. |
 
@@ -258,10 +270,10 @@ corresponda).
 | P2 | Sandbox. | **Resuelta:** cuenta de pruebas propia vía registro de desarrollador (D16); 27 tarjetas de prueba con resultado fijo (aprobada, rechazada, fondos insuficientes, CVV incorrecto, con y sin challenge 3DS; código del challenge `3ds2`). |
 | P3 | Apple Pay / Google Pay. | **Parcial:** Apple Pay está documentado **solo para el SDK** (requisitos en la Fase 1b). Google Pay **no aparece** en la documentación de desarrolladores, pese a estar en la tabla de tarifas. |
 | P3b | ¿La página alojada (`processPayment`) muestra Apple Pay o Google Pay? ¿Google Pay existe por API o solo en plugins? | Abierta — Tilopay. Decide si hace falta la Fase 1b. |
-| P4 | Reembolsos por API. | **Resuelta:** `processModification` (`2` reembolso, `3` reverso; aprobado = `ReasonCode "1101"`) → D15. Falta: costo del reembolso y cuándo aplica reverso vs. reembolso. |
-| P5 | En Panamá, ¿qué se descuenta además del 3.75% + $0.50? El ejemplo de `consult` (probablemente Costa Rica) liquida **$4.04 de $5.00**: comisión + IVA, `retention_iva`, `retention_rent`, costo + IVA. La liquidación además descuenta `transfer` + `transfer_iva`: **resuelto en parte, $2 por depósito ACH** (D8b); falta si lleva ITBMS. ¿Frecuencia de liquidación y si se puede elegir (semanal, mensual)? Costo de contracargos. | Abierta en parte — asesor comercial. **Bloquea D8** antes de abrir venta: si hay retenciones, el gross-up tiene que cubrirlas o la banda recibe menos que el precio base. La documentación técnica no da tarifas por país. |
-| P6 | Requisitos de afiliación para la banda (persona natural vs. jurídica, cuenta bancaria en Panamá). | Abierta — banda + Tilopay. |
-| P7 | `processPayment` exige todos los `billTo*` (dirección, ciudad, estado, código postal, país, teléfono) y nosotros solo pedimos nombre, correo y teléfono opcional. ¿Se aceptan valores fijos (`PA`, `PA-8`, "Panamá"…) o afecta la aprobación/antifraude? ¿La página alojada los vuelve a pedir? | Abierta — Tilopay. Si exigen datos reales, el formulario de tarjeta pide país (y quizá dirección): cambio de UX a evaluar. |
+| P4 | Reembolsos por API. | **Resuelta:** `processModification` (`2` reembolso, `3` reverso; aprobado = `ReasonCode "1101"`) → D15. **Costo (T&C §4):** no se devuelve la comisión + $0.35 por reembolso; plazo máximo 60 días; parcial permitido. Falta: cuándo aplica reverso vs. reembolso. |
+| P5 | En Panamá, ¿qué se descuenta además del 3.75% + $0.50? El ejemplo de `consult` (probablemente Costa Rica) liquida **$4.04 de $5.00**: comisión + IVA, `retention_iva`, `retention_rent`, costo + IVA. La liquidación además descuenta `transfer` + `transfer_iva`: **resuelto en parte, $2 por depósito ACH** (D8b); falta si lleva ITBMS. **Frecuencia:** la elige el comercio (T&C §1) → pedir la menos frecuente que ofrezcan. **Reclamos:** $75 por reclamo, ≥ $500 si va a arbitraje (D20). | Abierta en parte — asesor comercial. **Bloquea D8** antes de abrir venta: si hay retenciones, el gross-up tiene que cubrirlas o la banda recibe menos que el precio base. Los T&C remiten las tarifas al **contrato de afiliación**: pedirlo antes de firmar. |
+| P6 | Requisitos de afiliación para la banda (persona natural vs. jurídica). | Abierta en parte — banda + Tilopay. **T&C §3:** la cuenta bancaria de los depósitos tiene que estar **a nombre de quien se afilia**; si se afilia un integrante como persona natural, el dinero llega a su cuenta personal. Hay KYC y se aprueba solo la actividad declarada. |
+| P7 | Dirección de facturación. | **Resuelta en contra (T&C §2):** hay que enviar la dirección física real del cliente → D17. Falta: qué mandar como código postal en Panamá (casi nadie lo usa) y si la página alojada vuelve a pedir los datos. |
 | P8 | ¿Se puede reusar el mismo `orderNumber` tras un intento rechazado? | **Resuelta:** no. Es único para siempre y repetirlo es "Transacción duplicada" → un número por intento (D6). Solo se puede reusar si `consult` muestra que el número nunca llegó a crear una transacción (timeout). |
 
 ## Riesgos
@@ -282,3 +294,21 @@ corresponda).
   espera para quien cierra la pestaña antes del redirect.
 - **Proveedor nuevo en producción.** Mitigado por D9/D10 (respaldo a
   CuantoApp sin cambiar código) y la prueba de $1 con reembolso.
+- **Cuenta inactiva entre shows.** Los T&C (§10) inhabilitan la afiliación
+  tras **180 días sin transacciones**; reactivarla es una solicitud desde el
+  portal con hasta 24 horas hábiles de respuesta (y quizá revalidación).
+  Mitigación: agregar a la lista "Para el próximo evento" del README del
+  ticket-system "verificar que Tilopay esté activo" **antes** de abrir venta;
+  mientras tanto, D10 cae a CuantoApp.
+- **Bloqueo o retención de fondos.** Tilopay puede retener fondos durante
+  validaciones, congelar 3 meses una cuenta bloqueada y retener 30–120 días al
+  cerrar la afiliación (§3, §9, §11). El dinero de un evento puede no llegar a
+  tiempo para pagar venue y bandas: no comprometer pagos contra el depósito de
+  Tilopay.
+- **Rechazos y reclamos.** Ver D18 (20% de rechazos restringe la cuenta) y D20
+  ($75 por reclamo; más de 3 en 30 días permite cancelar la afiliación).
+- **Privacidad.** La política de Tilopay para Panamá permite usar los datos del
+  comprador para publicidad propia de Tilopay y perfiles de consumo (§3), y cita
+  la ley de datos de Costa Rica (Ley 8968), no la de Panamá (Ley 81 de 2019).
+  Mitigado en parte por D17 (no enviamos más de lo exigido) y D19 (aviso al
+  comprador); vale la pena preguntarlo en la afiliación.
